@@ -15,6 +15,10 @@ public class Automata implements Serializable {
         states = new ArrayList<AutomataState>();
     }
 
+    public void addState(AutomataState state) {
+        states.add(state);
+    }
+
     public List<AutomataState> getStates() {
         return states;
     }
@@ -44,9 +48,25 @@ public class Automata implements Serializable {
         }
     }
 
-    public float pointDistance(float x1, float y1, float x2, float y2) {
+    public void setCurrentState(AutomataState state) {
+        currentState = state;
+    }
+
+    public void removeState(AutomataState state) {
+        state.removeIncomingTransitions();
+        states.remove(state);
+    }
+
+    public static float pointDistance(float x1, float y1, float x2, float y2) {
         float dx = Math.abs(x1 - x2);
         float dy = Math.abs(y1 - y2);
         return (float)Math.sqrt(dx * dx + dy * dy);
+    }
+
+    public static float pointDistance(AutomataState state, float x, float y) {
+        if (state == null) {
+            return Float.MAX_VALUE;
+        }
+        return pointDistance(state.getX(), state.getY(), x, y);
     }
 }

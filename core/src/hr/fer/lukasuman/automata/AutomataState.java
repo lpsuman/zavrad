@@ -74,4 +74,23 @@ public class AutomataState implements Serializable {
     public void setLabel(String label) {
         this.label = label;
     }
+
+    public Map<TransitionInput, AutomataState> getTransitions() {
+        return transitions;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        AutomataState that = (AutomataState) o;
+
+        return label.equals(that.label);
+    }
+
+    @Override
+    public int hashCode() {
+        return label.hashCode();
+    }
 }

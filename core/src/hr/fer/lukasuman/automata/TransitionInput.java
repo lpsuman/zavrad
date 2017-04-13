@@ -4,6 +4,14 @@ public class TransitionInput {
 
     String inputKey;
 
+    public TransitionInput(String inputKey) {
+        this.inputKey = inputKey;
+    }
+
+    public String getInputKey() {
+        return inputKey;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

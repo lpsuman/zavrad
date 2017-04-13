@@ -19,6 +19,7 @@ public class AutomataGame extends ApplicationAdapter {
 		Gdx.app.setLogLevel(Application.LOG_DEBUG);
 		gameController = new GameController();
 		gameRenderer = new GameRenderer(gameController);
+		Gdx.input.setInputProcessor(gameController);
 	}
 
 	@Override
