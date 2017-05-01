@@ -1,13 +1,15 @@
-package hr.fer.lukasuman;
+package hr.fer.lukasuman.game;
 
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import hr.fer.lukasuman.automata.TransitionInput;
 
 public class Constants {
     public static final float VIEWPORT_WIDTH = 1000;
     public static final float VIEWPORT_HEIGHT = 500;
+
+    public static final float VIEWPORT_GUI_WIDTH = 1000;
+    public static final float VIEWPORT_GUI_HEIGHT = 500;
 
     public static final float STATE_SIZE = 100;
     public static final int STATE_SPRITE_SIZE = 128;
@@ -26,11 +28,14 @@ public class Constants {
     public static final BitmapFont TRANSITION_FONT = new BitmapFont();
     public static final float TRANSITION_FONT_SIZE = 20.0f;
 
+    public static final String AUTOMATA_STATE_TEXTURE = "state.png";
+    public static final String TEXTURE_ATLAS_OBJECTS = "images/automata.pack";
+    public static final String MENU_BACKGROUND_TEXTURE = "gear_background.jpg";
+    public static final String LEVEL_PATH = "levels/level_01.png";
+
     public static final int EMPTY_KEY = Input.Keys.E;
-    public static final char EMPTY_CHAR = '.';
     public static final String EMPTY_LABEL = "empty";
 
     public static final int WALL_KEY = Input.Keys.W;
-    public static final char WALL_CHAR = '#';
     public static final String WALL_LABEL = "wall";
 }

@@ -1,4 +1,4 @@
-package hr.fer.lukasuman.automata;
+package hr.fer.lukasuman.game.automata;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -6,46 +6,48 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class AutomataState implements Serializable {
+public class AutomatonState implements Serializable {
 
     private float x;
     private float y;
     private String label;
+    private Automaton parent;
 
-    private Map<TransitionInput, AutomataState> transitions;
-    private Set<AutomataState> incomingStates;
+    private Map<String, AutomatonState> transitions;
+    private Set<AutomatonState> incomingStates;
 
-    public AutomataState(float x, float y, String label) {
+    public AutomatonState(float x, float y, String label, Automaton parent) {
         this.x = x;
         this.y = y;
         this.label = label;
-        transitions = new HashMap<TransitionInput, AutomataState>();
-        incomingStates = new HashSet<AutomataState>();
+        this.parent = parent;
+        transitions = new HashMap<String, AutomatonState>();
+        incomingStates = new HashSet<AutomatonState>();
     }
 
-    public void addTransition(TransitionInput input, AutomataState newState) {
+    public void addTransition(String input, AutomatonState newState) {
         transitions.put(input, newState);
         newState.addIncomingState(this);
     }
 
-    public AutomataState transition(TransitionInput input) {
-        AutomataState nextState = transitions.get(input);
+    public AutomatonState transition(String input) {
+        AutomatonState nextState = transitions.get(input);
         if (nextState == null) {
             nextState = this;
         }
         return nextState;
     }
 
-    public void addIncomingState(AutomataState state) {
+    public void addIncomingState(AutomatonState state) {
         incomingStates.add(state);
     }
 
-    public void removeTransition(AutomataState state) {
+    public void removeTransition(AutomatonState state) {
         while (transitions.values().remove(state));
     }
 
     public void removeIncomingTransitions() {
-        for (AutomataState state : incomingStates) {
+        for (AutomatonState state : incomingStates) {
             state.removeTransition(this);
         }
         incomingStates.clear();
@@ -75,7 +77,11 @@ public class AutomataState implements Serializable {
         this.label = label;
     }
 
-    public Map<TransitionInput, AutomataState> getTransitions() {
+    public Automaton getParent() {
+        return parent;
+    }
+
+    public Map<String, AutomatonState> getTransitions() {
         return transitions;
     }
 
@@ -84,13 +90,16 @@ public class AutomataState implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        AutomataState that = (AutomataState) o;
+        AutomatonState that = (AutomatonState) o;
 
-        return label.equals(that.label);
+        if (!label.equals(that.label)) return false;
+        return parent.equals(that.parent);
     }
 
     @Override
     public int hashCode() {
-        return label.hashCode();
+        int result = label.hashCode();
+        result = 31 * result + parent.hashCode();
+        return result;
     }
 }
