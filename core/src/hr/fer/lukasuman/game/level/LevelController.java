@@ -1,6 +1,5 @@
 package hr.fer.lukasuman.game.level;
 
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import hr.fer.lukasuman.game.Constants;
 
 import java.util.ArrayList;
@@ -23,7 +22,11 @@ public class LevelController {
         currentPosition = currentLevel.getStart();
     }
 
-    public void render(SpriteBatch batch) {
+    public Level getCurrentLevel() {
+        return currentLevel;
+    }
 
+    public Position getCurrentPosition() {
+        return currentPosition;
     }
 }

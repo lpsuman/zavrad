@@ -13,8 +13,8 @@ public class Assets implements Disposable, AssetErrorListener {
     public static final String TAG = Assets.class.getName();
     private static final Assets instance = new Assets();
 
-    public AssetManager assetManager;
-    public AssetFonts fonts;
+    private AssetManager assetManager;
+    private AssetFonts fonts;
 
     private Assets () {}
 
@@ -25,8 +25,13 @@ public class Assets implements Disposable, AssetErrorListener {
     public void init (AssetManager assetManager) {
         this.assetManager = assetManager;
         assetManager.setErrorListener(this);
-        assetManager.load(Constants.AUTOMATA_STATE_TEXTURE, Texture.class);
         assetManager.load(Constants.MENU_BACKGROUND_TEXTURE, Texture.class);
+        assetManager.load(Constants.AUTOMATA_STATE_TEXTURE, Texture.class);
+        assetManager.load(Constants.WALL_TEXTURE, Texture.class);
+        assetManager.load(Constants.START_TEXTURE, Texture.class);
+        assetManager.load(Constants.GOAL_TEXTURE, Texture.class);
+        assetManager.load(Constants.PLAYER_TEXTURE, Texture.class);
+
         assetManager.finishLoading();
 
         fonts = new AssetFonts();
@@ -67,5 +72,13 @@ public class Assets implements Disposable, AssetErrorListener {
             defaultNormal.getRegion().getTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
             defaultBig.getRegion().getTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         }
+    }
+
+    public AssetManager getAssetManager() {
+        return assetManager;
+    }
+
+    public AssetFonts getFonts() {
+        return fonts;
     }
 }

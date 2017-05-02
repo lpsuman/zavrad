@@ -2,20 +2,37 @@ package hr.fer.lukasuman.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import hr.fer.lukasuman.game.automata.AutomatonState;
+import hr.fer.lukasuman.game.level.Level;
+import hr.fer.lukasuman.game.level.blocks.AbstractBlock;
 
 import java.util.Map;
 
 public class GameRenderer implements Disposable {
-    private OrthographicCamera camera;
+
+    private static final String TAG = GameRenderer.class.getName();
+
+    private OrthographicCamera fullCamera;
+    private OrthographicCamera leftCamera;
+    private OrthographicCamera rightCamera;
+    private OrthographicCamera cameraGUI;
+
+    private ScreenViewport leftViewport;
+    private ScreenViewport rightViewport;
+
     private SpriteBatch batch;
     private GameController gameController;
     private ShapeRenderer transitionRenderer;
-    private OrthographicCamera cameraGUI;
+
+    private Sprite playerSprite;
 
     public GameRenderer (GameController gameController) {
         this.gameController = gameController;
@@ -23,31 +40,75 @@ public class GameRenderer implements Disposable {
     }
 
     private void init () {
-        transitionRenderer = new ShapeRenderer();
+        fullCamera = new OrthographicCamera(Constants.VIEWPORT_WIDTH, Constants.VIEWPORT_HEIGHT);
+        leftCamera = new OrthographicCamera(Constants.VIEWPORT_WIDTH / 2, Constants.VIEWPORT_HEIGHT);
+        rightCamera = new OrthographicCamera(Constants.VIEWPORT_WIDTH / 2, Constants.VIEWPORT_HEIGHT);
+
+        leftViewport = new ScreenViewport(leftCamera);
+        rightViewport = new ScreenViewport(rightCamera);
+
         batch = new SpriteBatch();
-        camera = new OrthographicCamera(Constants.VIEWPORT_WIDTH, Constants.VIEWPORT_HEIGHT);
-        gameController.setCamera(camera);
-        camera.position.set(0, 0, 0);
-        camera.update();
+        transitionRenderer = new ShapeRenderer();
+
+        gameController.setFullCamera(fullCamera);
+        gameController.setAutomataCamera(leftCamera);
+        gameController.setLevelCamera(rightCamera);
+
+        fullCamera.position.set(0, 0, 0);
+        fullCamera.update();
+        leftCamera.position.set(0, 0, 0);
+        leftCamera.update();
+        rightCamera.position.set(0, 0, 0);
+        rightCamera.update();
+
+//        Gdx.app.debug(TAG, "left camera center at " + leftCamera.unproject(new Vector3(0.0f, 0.0f, 0.0f)));
+//        Gdx.app.debug(TAG, "right camera center at " + rightCamera.unproject(new Vector3(0.0f, 0.0f, 0.0f)));
 
         cameraGUI = new OrthographicCamera(Constants.VIEWPORT_GUI_WIDTH, Constants.VIEWPORT_GUI_HEIGHT);
         cameraGUI.position.set(0, 0, 0);
         cameraGUI.setToOrtho(true); // flip y-axis
         cameraGUI.update();
+
+        playerSprite = new Sprite((Texture)Assets.getInstance().getAssetManager().get(Constants.PLAYER_TEXTURE));
+
+        resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
     public void render () {
+        renderAutomata(batch);
         renderLevel(batch);
         renderGUI(batch);
+    }
+
+    private void renderAutomata(SpriteBatch batch) {
+        leftViewport.apply();
+        batch.setProjectionMatrix(leftCamera.combined);
+        batch.begin();
+        for(Sprite sprite : gameController.getAutomataController().getCurrentAutomaton().getStateSprites().values()) {
+            sprite.draw(batch);
+        }
         renderTransitionLines();
-        renderStateObjects();
-        renderTransitionTexts();
+        batch.end();
     }
 
     private void renderLevel(SpriteBatch batch) {
-        batch.setProjectionMatrix(camera.combined);
+        rightViewport.apply();
+        batch.setProjectionMatrix(rightCamera.combined);
+        Level level = gameController.getLevelController().getCurrentLevel();
+        AbstractBlock[][] blocks = level.getBlocks();
         batch.begin();
-        gameController.levelController.render(batch);
+        for (int x = 0; x < level.getWidth(); x++) {
+            for (int y = 0; y < level.getHeight(); y++) {
+                blocks[x][y].render(batch);
+            }
+        }
+        playerSprite.setSize(level.getBlockSize(), level.getBlockSize());
+        float halfWidth = playerSprite.getWidth() / 2.0f;
+        float halfHeight = playerSprite.getHeight() / 2.0f;
+        playerSprite.setOrigin(halfWidth, halfHeight);
+        Vector2 playerPos = level.calcPos(level.getCurrentX(), level.getCurrentY());
+        playerSprite.setPosition(playerPos.x - halfWidth, playerPos.y - halfHeight);
+        playerSprite.draw(batch);
         batch.end();
     }
 
@@ -58,22 +119,13 @@ public class GameRenderer implements Disposable {
         batch.end();
     }
 
-    private void renderStateObjects() {
-        batch.setProjectionMatrix(camera.combined);
-        batch.begin();
-        for(Sprite sprite : gameController.stateSprites.values()) {
-            sprite.draw(batch);
-        }
-        batch.end();
-    }
-
     private void renderTransitionLines() {
         Gdx.gl.glLineWidth(Constants.TRANSITIONS_LINE_WIDTH);
-        transitionRenderer.setProjectionMatrix(camera.combined);
+        transitionRenderer.setProjectionMatrix(leftCamera.combined);
         transitionRenderer.begin(ShapeRenderer.ShapeType.Line);
         transitionRenderer.setColor(Constants.TRANSITION_COLOR);
 
-        for (AutomatonState state : gameController.automataController.getStates()) {
+        for (AutomatonState state : gameController.getAutomataController().getCurrentAutomaton().getStates()) {
             for (Map.Entry<String, AutomatonState> entry : state.getTransitions().entrySet()) {
                 String input = entry.getKey();
                 AutomatonState nextState = entry.getValue();
@@ -86,29 +138,11 @@ public class GameRenderer implements Disposable {
         Gdx.gl.glLineWidth(1);
     }
 
-    private void renderTransitionTexts() {
-        batch.setProjectionMatrix(camera.combined);
-        batch.begin();
-
-        for (AutomatonState state : gameController.automataController.getStates()) {
-            for (Map.Entry<String, AutomatonState> entry : state.getTransitions().entrySet()) {
-                String input = entry.getKey();
-                AutomatonState nextState = entry.getValue();
-
-                float middleX = (state.getX() + nextState.getX()) / 2;
-                float middleY = (state.getY() + nextState.getY()) / 2;
-                middleX = (state.getX() + middleX) / 2;
-                middleY = (state.getY() + middleY) / 2;
-                Constants.TRANSITION_FONT.draw(batch, input, middleX, middleY);
-            }
-        }
-
-        batch.end();
-    }
-
     public void resize (int width, int height) {
-        camera.viewportWidth = (Constants.VIEWPORT_HEIGHT / height) * width;
-        camera.update();
+        leftViewport.update(width / 2, height);
+        rightViewport.update(width / 2, height);
+        rightViewport.setScreenX(width / 2);
+
         cameraGUI.viewportHeight = Constants.VIEWPORT_GUI_HEIGHT;
         cameraGUI.viewportWidth = (Constants.VIEWPORT_GUI_HEIGHT / (float)height) * (float)width;
         cameraGUI.position.set(cameraGUI.viewportWidth / 2, cameraGUI.viewportHeight / 2, 0);

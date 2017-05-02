@@ -35,7 +35,7 @@ public class MenuScreen extends AbstractGameScreen {
 
     private void rebuildStage () {
         textButtonStyle = new TextButton.TextButtonStyle();
-        textButtonStyle.font = Assets.getInstance().fonts.defaultNormal;
+        textButtonStyle.font = Assets.getInstance().getFonts().defaultNormal;
         Table layerBackground = buildBackgroundLayer();
         Table layerControls = buildControlsLayer();
         Table layerOptionsWindow = buildOptionsWindowLayer();
@@ -51,7 +51,7 @@ public class MenuScreen extends AbstractGameScreen {
 
     private Table buildBackgroundLayer () {
         Table layer = new Table();
-        imgBackground = new Image((Texture)Assets.getInstance().assetManager.get(Constants.MENU_BACKGROUND_TEXTURE));
+        imgBackground = new Image((Texture)Assets.getInstance().getAssetManager().get(Constants.MENU_BACKGROUND_TEXTURE));
         layer.add(imgBackground);
         return layer;
     }
