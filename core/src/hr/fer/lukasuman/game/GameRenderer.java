@@ -3,6 +3,7 @@ package hr.fer.lukasuman.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -66,7 +67,7 @@ public class GameRenderer implements Disposable {
 
         cameraGUI = new OrthographicCamera(Constants.VIEWPORT_GUI_WIDTH, Constants.VIEWPORT_GUI_HEIGHT);
         cameraGUI.position.set(0, 0, 0);
-        cameraGUI.setToOrtho(true); // flip y-axis
+        cameraGUI.setToOrtho(false); // flip y-axis
         cameraGUI.update();
 
         playerSprite = new Sprite((Texture)Assets.getInstance().getAssetManager().get(Constants.PLAYER_TEXTURE));
@@ -115,7 +116,8 @@ public class GameRenderer implements Disposable {
     private void renderGUI(SpriteBatch batch) {
         batch.setProjectionMatrix(cameraGUI.combined);
         batch.begin();
-        //TODO
+        renderGuiScore(batch);
+        renderGuiFpsCounter(batch);
         batch.end();
     }
 
@@ -136,6 +138,29 @@ public class GameRenderer implements Disposable {
 
         transitionRenderer.end();
         Gdx.gl.glLineWidth(1);
+    }
+
+    private void renderGuiScore (SpriteBatch batch) {
+        float x = -15;
+        float y = -15;
+        Assets.getInstance().getFonts().defaultBig.draw(batch,"" + gameController.getScore(),x + 75, y + 37);
+    }
+
+    private void renderGuiFpsCounter (SpriteBatch batch) {
+        float fontScale = Assets.getInstance().getFonts().defaultNormal.getScaleX();
+        float x = cameraGUI.viewportWidth - 55 * fontScale;
+        float y = 15 * fontScale;
+        int fps = Gdx.graphics.getFramesPerSecond();
+        BitmapFont fpsFont = Assets.getInstance().getFonts().defaultNormal;
+        if (fps >= 45) {
+            fpsFont.setColor(0, 1, 0, 1);
+        } else if (fps >= 30) {
+            fpsFont.setColor(1, 1, 0, 1);
+        } else {
+            fpsFont.setColor(1, 0, 0, 1);
+        }
+        fpsFont.draw(batch, "FPS: " + fps, x, y);
+        fpsFont.setColor(1, 1, 1, 1); // white
     }
 
     public void resize (int width, int height) {

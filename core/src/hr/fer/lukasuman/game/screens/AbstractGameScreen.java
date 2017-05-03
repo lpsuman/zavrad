@@ -1,14 +1,16 @@
 package hr.fer.lukasuman.game.screens;
 
 import com.badlogic.gdx.Game;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
 import hr.fer.lukasuman.game.Assets;
+import hr.fer.lukasuman.game.DirectedGame;
 
-public abstract class AbstractGameScreen implements Screen{
-    protected Game game;
+public abstract class AbstractGameScreen implements Screen {
+    protected DirectedGame game;
 
-    public AbstractGameScreen (Game game) {
+    public AbstractGameScreen (DirectedGame game) {
         this.game = game;
     }
 
@@ -25,4 +27,6 @@ public abstract class AbstractGameScreen implements Screen{
     public void dispose () {
         Assets.getInstance().dispose();
     }
+
+    public abstract InputProcessor getInputProcessor();
 }

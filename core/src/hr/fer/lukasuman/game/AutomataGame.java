@@ -8,7 +8,7 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import hr.fer.lukasuman.game.screens.MenuScreen;
 
-public class AutomataGame extends Game {
+public class AutomataGame extends DirectedGame {
 
 	private static final String TAG = AutomataGame.class.getName();
 	

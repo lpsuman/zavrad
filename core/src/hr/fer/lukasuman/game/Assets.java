@@ -64,8 +64,8 @@ public class Assets implements Disposable, AssetErrorListener {
             defaultNormal = new BitmapFont();
             defaultBig = new BitmapFont();
 
-            defaultSmall.getData().setScale(0.66f);
-            defaultNormal.getData().setScale(1.0f);
+            defaultSmall.getData().setScale(1.0f);
+            defaultNormal.getData().setScale(1.5f);
             defaultBig.getData().setScale(2.0f);
 
             defaultSmall.getRegion().getTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);

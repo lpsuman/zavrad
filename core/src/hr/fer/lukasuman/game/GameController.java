@@ -6,13 +6,14 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import hr.fer.lukasuman.game.automata.AutomataController;
 import hr.fer.lukasuman.game.automata.AutomatonState;
 import hr.fer.lukasuman.game.automata.DrawableAutomaton;
 import hr.fer.lukasuman.game.level.LevelController;
-import hr.fer.lukasuman.game.screens.MenuScreen;
+import hr.fer.lukasuman.game.screens.*;
 
 import java.util.Map;
 
@@ -23,12 +24,12 @@ public class GameController extends InputAdapter {
     private OrthographicCamera automataCamera;
     private OrthographicCamera levelCamera;
 
-    private Game game;
+    private DirectedGame game;
     private AutomataController automataController;
     private LevelController levelController;
     private int score;
 
-    public GameController(Game game) {
+    public GameController(DirectedGame game) {
         this.game = game;
         init();
     }
@@ -120,15 +121,22 @@ public class GameController extends InputAdapter {
     }
 
     @Override
-    public boolean keyDown(int keycode) {
+    public boolean keyUp(int keycode) {
         if (automataController.getCurrentAutomaton().getCurrentState() != null) {
-            if (Gdx.input.isKeyPressed(Input.Keys.FORWARD_DEL)) {
+            if (keycode == Input.Keys.FORWARD_DEL) {
                 removeSelectedState();
-            } else if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
-                game.setScreen(new MenuScreen(game));
             }
         }
+        if (keycode == Input.Keys.ESCAPE) {
+            backToMenu();
+        }
         return true;
+    }
+
+    private void backToMenu() {
+        ScreenTransition transition = ScreenTransitionSlide.init(0.75f,
+                ScreenTransitionSlide.DOWN, false, Interpolation.bounceOut);
+        game.setScreen(new MenuScreen(game), transition);
     }
 
     private void removeSelectedState() {
