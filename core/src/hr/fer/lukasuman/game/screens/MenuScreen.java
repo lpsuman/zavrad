@@ -1,17 +1,15 @@
 package hr.fer.lukasuman.game.screens;
 
-import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.utils.viewport.StretchViewport;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.DirectedGame;
@@ -27,10 +25,9 @@ public class MenuScreen extends AbstractGameScreen {
     private Window winOptions;
     private TextButton btnWinOptSave;
     private TextButton btnWinOptCancel;
-    TextButton.TextButtonStyle textButtonStyle;
     private CheckBox chkShowFpsCounter;
 
-    private Skin skinLibgdx;
+    private Skin skin;
     //debug
     private final float DEBUG_REBUILD_INTERVAL = 5.0f;
     private boolean debugEnabled = false;
@@ -41,11 +38,8 @@ public class MenuScreen extends AbstractGameScreen {
     }
 
     private void rebuildStage () {
-        skinLibgdx = new Skin(Gdx.files.internal(Constants.SKIN_LIBGDX_UI),
-                new TextureAtlas(Constants.TEXTURE_ATLAS_LIBGDX_UI));
+        skin = Assets.getInstance().getAssetManager().get(Constants.SKIN_LIBGDX_UI);
 
-        textButtonStyle = new TextButton.TextButtonStyle();
-        textButtonStyle.font = Assets.getInstance().getFonts().defaultNormal;
         Table layerBackground = buildBackgroundLayer();
         Table layerControls = buildControlsLayer();
         Table layerOptionsWindow = buildOptionsWindowLayer();
@@ -68,7 +62,7 @@ public class MenuScreen extends AbstractGameScreen {
 
     private Table buildControlsLayer () {
         Table layer = new Table();
-        btnMenuPlay = new TextButton("Play", textButtonStyle);
+        btnMenuPlay = new TextButton("Play", skin);
         layer.add(btnMenuPlay);
         btnMenuPlay.addListener(new ChangeListener() {
             @Override
@@ -77,7 +71,7 @@ public class MenuScreen extends AbstractGameScreen {
             }
         });
         layer.row();
-        btnMenuOptions = new TextButton("Options", textButtonStyle);
+        btnMenuOptions = new TextButton("Options", skin);
         layer.add(btnMenuOptions);
         btnMenuOptions.addListener(new ChangeListener() {
             @Override
@@ -90,7 +84,7 @@ public class MenuScreen extends AbstractGameScreen {
     }
 
     private Table buildOptionsWindowLayer () {
-        winOptions = new Window("Options", skinLibgdx);
+        winOptions = new Window("Options", skin);
         // + Debug: Show FPS Counter
         winOptions.add(buildOptWinDebug()).row();
         // + Separator and Buttons (Save, Cancel)
@@ -113,13 +107,13 @@ public class MenuScreen extends AbstractGameScreen {
         Table tbl = new Table();
 
         tbl.pad(10, 10, 0, 10);
-        tbl.add(new Label("Debug", skinLibgdx, "default-font", Color.RED)).colspan(3);
+        tbl.add(new Label("Debug", skin, "default-font", Color.RED)).colspan(3);
         tbl.row();
         tbl.columnDefaults(0).padRight(10);
         tbl.columnDefaults(1).padRight(10);
 
-        chkShowFpsCounter = new CheckBox("", skinLibgdx);
-        tbl.add(new Label("Show FPS Counter", skinLibgdx));
+        chkShowFpsCounter = new CheckBox("", skin);
+        tbl.add(new Label("Show FPS Counter", skin));
         tbl.add(chkShowFpsCounter);
         tbl.row();
         return tbl;
@@ -127,20 +121,20 @@ public class MenuScreen extends AbstractGameScreen {
 
     private Table buildOptWinButtons () {
         Table tbl = new Table();
-        Label lbl = new Label("", skinLibgdx);
+        Label lbl = new Label("", skin);
         lbl.setColor(0.75f, 0.75f, 0.75f, 1);
         lbl.setStyle(new Label.LabelStyle(lbl.getStyle()));
-        lbl.getStyle().background = skinLibgdx.newDrawable("white");
+        lbl.getStyle().background = skin.newDrawable("white");
         tbl.add(lbl).colspan(2).height(1).width(220).pad(0, 0, 0, 1);
         tbl.row();
-        lbl = new Label("", skinLibgdx);
+        lbl = new Label("", skin);
         lbl.setColor(0.5f, 0.5f, 0.5f, 1);
         lbl.setStyle(new Label.LabelStyle(lbl.getStyle()));
-        lbl.getStyle().background = skinLibgdx.newDrawable("white");
+        lbl.getStyle().background = skin.newDrawable("white");
         tbl.add(lbl).colspan(2).height(1).width(220).pad(0, 1, 5, 0);
         tbl.row();
         // + Save Button with event handler
-        btnWinOptSave = new TextButton("Save", skinLibgdx);
+        btnWinOptSave = new TextButton("Save", skin);
         tbl.add(btnWinOptSave).padRight(30);
         btnWinOptSave.addListener(new ChangeListener() {
             @Override
@@ -149,7 +143,7 @@ public class MenuScreen extends AbstractGameScreen {
             }
         });
         // + Cancel Button with event handler
-        btnWinOptCancel = new TextButton("Cancel", skinLibgdx);
+        btnWinOptCancel = new TextButton("Cancel", skin);
         tbl.add(btnWinOptCancel);
         btnWinOptCancel.addListener(new ChangeListener() {
             @Override
@@ -215,13 +209,13 @@ public class MenuScreen extends AbstractGameScreen {
     }
 
     @Override public void show () {
-        stage = new Stage(new StretchViewport(Constants.VIEWPORT_GUI_WIDTH, Constants.VIEWPORT_GUI_HEIGHT));
+        stage = new Stage(new FitViewport(Constants.VIEWPORT_GUI_WIDTH, Constants.VIEWPORT_GUI_HEIGHT));
         rebuildStage();
     }
 
     @Override public void hide () {
         stage.dispose();
-        skinLibgdx.dispose();
+        skin.dispose();
     }
 
     @Override public void pause () { }

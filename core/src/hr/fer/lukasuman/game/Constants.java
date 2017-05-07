@@ -1,29 +1,29 @@
 package hr.fer.lukasuman.game;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 
 public class Constants {
     public static final String TITLE = "Automata Game";
-    public static final int DEFAULT_WINDOW_WIDTH = 1000;
-    public static final int DEFAULT_WINDOW_HEIGHT = 500;
 
-    public static final float VIEWPORT_WIDTH = 1000;
-    public static final float VIEWPORT_HEIGHT = 500;
-    public static final float LEFT_VIEWPORT_BORDER = 50;
-    public static final float RIGHT_VIEWPORT_BORDER = 50;
+    private static final int BASE_SIZE = 500;
+    public static final float UPPER_BORDER_RATIO = 0.1f;
+    public static final float LOWER_BORDER_RATIO = 0.1f;
+    public static final int DEFAULT_WINDOW_WIDTH = BASE_SIZE * 2;
+    public static final int DEFAULT_WINDOW_HEIGHT = (int)(BASE_SIZE * (UPPER_BORDER_RATIO + 1.0f + LOWER_BORDER_RATIO));
 
-    public static final float VIEWPORT_GUI_WIDTH = 1000;
-    public static final float VIEWPORT_GUI_HEIGHT = 500;
+    public static final float VIEWPORT_WIDTH = 500;
+    public static final float VIEWPORT_HEIGHT = VIEWPORT_WIDTH;
 
-    public static final float STATE_SIZE = VIEWPORT_HEIGHT / 10;
-    public static final String STATE_TEXTURE = "box_arrow.png";
-    public static final int STATE_SPRITE_SIZE = 128;
+    public static final float VIEWPORT_GUI_WIDTH = 2.0f * VIEWPORT_WIDTH;
+    public static final float UPPER_BORDER = VIEWPORT_GUI_WIDTH / 2.0f * UPPER_BORDER_RATIO;
+    public static final float LOWER_BORDER = VIEWPORT_GUI_WIDTH / 2.0f * LOWER_BORDER_RATIO;
+    public static final float VIEWPORT_GUI_HEIGHT = UPPER_BORDER + VIEWPORT_GUI_WIDTH / 2.0f + LOWER_BORDER;
+
+    public static final float STATE_SIZE = VIEWPORT_WIDTH / 10;
     public static final String DEFAULT_STATE_LABEL = "state";
 
     public static final float TRANSITIONS_LINE_WIDTH = 2.0f;
     public static final Color TRANSITION_COLOR = new Color(0, 0, 0, 1);
-    public static final BitmapFont TRANSITION_FONT = new BitmapFont();
     public static final float TRANSITION_FONT_SIZE = 20.0f;
 
     public static final String PREFERENCES_FILE = "preferences";

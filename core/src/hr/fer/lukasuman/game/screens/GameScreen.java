@@ -40,6 +40,7 @@ public class GameScreen extends AbstractGameScreen {
         GamePreferences.getInstance().load();
         gameController = new GameController(game);
         gameRenderer = new GameRenderer(gameController);
+        gameController.setGameRenderer(gameRenderer);
         Gdx.input.setInputProcessor(gameController);
         Gdx.input.setCatchBackKey(true);
     }

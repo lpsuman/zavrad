@@ -5,6 +5,10 @@ import com.badlogic.gdx.math.Vector2;
 
 public class StartBlock extends AbstractBlock {
 
+    public StartBlock(Texture texture) {
+        super(texture);
+    }
+
     public StartBlock(Texture texture, Vector2 spritePos, float spriteSize) {
         super(texture, spritePos, spriteSize);
     }

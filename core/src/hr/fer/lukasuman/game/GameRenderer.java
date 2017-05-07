@@ -1,6 +1,7 @@
 package hr.fer.lukasuman.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -8,7 +9,8 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import hr.fer.lukasuman.game.automata.AutomatonState;
@@ -28,12 +30,22 @@ public class GameRenderer implements Disposable {
 
     private ScreenViewport leftViewport;
     private ScreenViewport rightViewport;
+    private ScreenViewport viewportGUI;
 
     private SpriteBatch batch;
     private GameController gameController;
     private ShapeRenderer transitionRenderer;
 
     private Sprite playerSprite;
+
+    private Stage stage;
+    private Skin skin;
+    private Label scoreLabel;
+    private Label fpsLabel;
+    private ButtonGroup buttonGroup;
+    private TextButton selectionButton;
+    private TextButton createStateButton;
+    private TextButton createTransition;
 
     public GameRenderer (GameController gameController) {
         this.gameController = gameController;
@@ -42,11 +54,13 @@ public class GameRenderer implements Disposable {
 
     private void init () {
         fullCamera = new OrthographicCamera(Constants.VIEWPORT_WIDTH, Constants.VIEWPORT_HEIGHT);
-        leftCamera = new OrthographicCamera(Constants.VIEWPORT_WIDTH / 2, Constants.VIEWPORT_HEIGHT);
-        rightCamera = new OrthographicCamera(Constants.VIEWPORT_WIDTH / 2, Constants.VIEWPORT_HEIGHT);
+        leftCamera = new OrthographicCamera(Constants.VIEWPORT_WIDTH, Constants.VIEWPORT_HEIGHT);
+        rightCamera = new OrthographicCamera(Constants.VIEWPORT_WIDTH, Constants.VIEWPORT_HEIGHT);
+        cameraGUI = new OrthographicCamera(Constants.VIEWPORT_GUI_WIDTH, Constants.VIEWPORT_GUI_HEIGHT);
 
         leftViewport = new ScreenViewport(leftCamera);
         rightViewport = new ScreenViewport(rightCamera);
+        viewportGUI = new ScreenViewport(cameraGUI);
 
         batch = new SpriteBatch();
         transitionRenderer = new ShapeRenderer();
@@ -65,20 +79,50 @@ public class GameRenderer implements Disposable {
 //        Gdx.app.debug(TAG, "left camera center at " + leftCamera.unproject(new Vector3(0.0f, 0.0f, 0.0f)));
 //        Gdx.app.debug(TAG, "right camera center at " + rightCamera.unproject(new Vector3(0.0f, 0.0f, 0.0f)));
 
-        cameraGUI = new OrthographicCamera(Constants.VIEWPORT_GUI_WIDTH, Constants.VIEWPORT_GUI_HEIGHT);
         cameraGUI.position.set(0, 0, 0);
         cameraGUI.setToOrtho(false); // flip y-axis
         cameraGUI.update();
 
         playerSprite = new Sprite((Texture)Assets.getInstance().getAssetManager().get(Constants.PLAYER_TEXTURE));
 
+        stage = new Stage(viewportGUI);
+        rebuildStage();
+
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+    }
+
+    private void rebuildStage () {
+        skin = Assets.getInstance().getAssetManager().get(Constants.SKIN_LIBGDX_UI);
+
+        Table table = new Table();
+        table.setFillParent(true);
+        HorizontalGroup northGroup = new HorizontalGroup();
+        table.top().add(northGroup);
+        HorizontalGroup southGroup = new HorizontalGroup();
+        table.top().add(southGroup);
+
+        HorizontalGroup automataNorth = new HorizontalGroup();
+        HorizontalGroup levelNorth = new HorizontalGroup();
+        northGroup.left().addActor(automataNorth);
+        northGroup.right().addActor(levelNorth);
+
+        scoreLabel = new Label("0", skin, "default-font", Color.WHITE);
+        automataNorth.addActor(scoreLabel);
+        fpsLabel = new Label("FPS: 60", skin);
+        table.add(fpsLabel);
+
+        buttonGroup = new ButtonGroup();
+        createStateButton = new TextButton("add state", skin);
+        buttonGroup.add(createStateButton);
+        table.add(createStateButton);
+
+        stage.addActor(table);
     }
 
     public void render () {
         renderAutomata(batch);
         renderLevel(batch);
-        renderGUI(batch);
+        renderGUI();
     }
 
     private void renderAutomata(SpriteBatch batch) {
@@ -96,6 +140,7 @@ public class GameRenderer implements Disposable {
         rightViewport.apply();
         batch.setProjectionMatrix(rightCamera.combined);
         Level level = gameController.getLevelController().getCurrentLevel();
+        level.updateSprites(rightCamera);
         AbstractBlock[][] blocks = level.getBlocks();
         batch.begin();
         for (int x = 0; x < level.getWidth(); x++) {
@@ -110,14 +155,6 @@ public class GameRenderer implements Disposable {
         Vector2 playerPos = level.calcPos(level.getCurrentX(), level.getCurrentY());
         playerSprite.setPosition(playerPos.x - halfWidth, playerPos.y - halfHeight);
         playerSprite.draw(batch);
-        batch.end();
-    }
-
-    private void renderGUI(SpriteBatch batch) {
-        batch.setProjectionMatrix(cameraGUI.combined);
-        batch.begin();
-        renderGuiScore(batch);
-        renderGuiFpsCounter(batch);
         batch.end();
     }
 
@@ -140,42 +177,49 @@ public class GameRenderer implements Disposable {
         Gdx.gl.glLineWidth(1);
     }
 
-    private void renderGuiScore (SpriteBatch batch) {
-        float x = -15;
-        float y = -15;
-        Assets.getInstance().getFonts().defaultBig.draw(batch,"" + gameController.getScore(),x + 75, y + 37);
+    private void renderGUI() {
+        viewportGUI.apply();
+        updateScore();
+        updateFpsCounter();
+        stage.draw();
     }
 
-    private void renderGuiFpsCounter (SpriteBatch batch) {
-        float fontScale = Assets.getInstance().getFonts().defaultNormal.getScaleX();
-        float x = cameraGUI.viewportWidth - 55 * fontScale;
-        float y = 15 * fontScale;
+    private void updateScore() {
+        scoreLabel.setText("states: " + gameController.getScore());
+    }
+
+    private void updateFpsCounter() {
         int fps = Gdx.graphics.getFramesPerSecond();
-        BitmapFont fpsFont = Assets.getInstance().getFonts().defaultNormal;
         if (fps >= 45) {
-            fpsFont.setColor(0, 1, 0, 1);
+            fpsLabel.setColor(0, 1, 0, 1);
         } else if (fps >= 30) {
-            fpsFont.setColor(1, 1, 0, 1);
+            fpsLabel.setColor(1, 1, 0, 1);
         } else {
-            fpsFont.setColor(1, 0, 0, 1);
+            fpsLabel.setColor(1, 0, 0, 1);
         }
-        fpsFont.draw(batch, "FPS: " + fps, x, y);
-        fpsFont.setColor(1, 1, 1, 1); // white
+        fpsLabel.setText("FPS: " + fps);
     }
 
     public void resize (int width, int height) {
-        leftViewport.update(width / 2, height);
-        rightViewport.update(width / 2, height);
+        int borderY = (int)(height * Constants.UPPER_BORDER_RATIO);
+        int heightWithoutBorder = (int)(height * (1.0f - Constants.UPPER_BORDER_RATIO - Constants.LOWER_BORDER_RATIO));
+        leftViewport.update(width / 2, heightWithoutBorder);
+        leftViewport.setScreenY(borderY);
+        rightViewport.update(width / 2, heightWithoutBorder);
         rightViewport.setScreenX(width / 2);
+        rightViewport.setScreenY(borderY);
 
-        cameraGUI.viewportHeight = Constants.VIEWPORT_GUI_HEIGHT;
-        cameraGUI.viewportWidth = (Constants.VIEWPORT_GUI_HEIGHT / (float)height) * (float)width;
-        cameraGUI.position.set(cameraGUI.viewportWidth / 2, cameraGUI.viewportHeight / 2, 0);
-        cameraGUI.update();
+        viewportGUI.update(width, height, true);
+
+        Gdx.app.debug(TAG, "right camera (" + rightCamera.viewportWidth + ", " + rightCamera.viewportHeight + ")");
     }
 
     @Override
     public void dispose () {
         batch.dispose();
+    }
+
+    public Stage getStage() {
+        return stage;
     }
 }

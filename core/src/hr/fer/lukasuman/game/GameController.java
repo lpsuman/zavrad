@@ -1,13 +1,11 @@
 package hr.fer.lukasuman.game;
 
-import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Interpolation;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import hr.fer.lukasuman.game.automata.AutomataController;
 import hr.fer.lukasuman.game.automata.AutomatonState;
@@ -20,6 +18,7 @@ import java.util.Map;
 public class GameController extends InputAdapter {
     private static final String TAG = GameController.class.getName();
 
+    private GameRenderer gameRenderer;
     private OrthographicCamera fullCamera;
     private OrthographicCamera automataCamera;
     private OrthographicCamera levelCamera;
@@ -28,6 +27,8 @@ public class GameController extends InputAdapter {
     private AutomataController automataController;
     private LevelController levelController;
     private int score;
+
+    private AutomatonState selectedState;
 
     public GameController(DirectedGame game) {
         this.game = game;
@@ -41,6 +42,8 @@ public class GameController extends InputAdapter {
     }
 
     public void update(float deltaTime) {
+        gameRenderer.getStage().act(deltaTime);
+
         updateStateObjects();
     }
 
@@ -60,62 +63,66 @@ public class GameController extends InputAdapter {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        if (screenX < Gdx.graphics.getWidth() / 2) {
-            Vector3 posInGame = getPosInGame(screenX, screenY, automataCamera);
-
-            if (!checkInside(posInGame, automataCamera)) {
-                return false;
+        Vector3 posInGame = getPosInGame(screenX, screenY, automataCamera);
+        if (checkInside(posInGame, automataCamera)) {
+            automataTouchDown(posInGame, button);
+        } else {
+            posInGame = getPosInGame(screenX, screenY, levelCamera);
+            if (checkInside(posInGame, levelCamera)) {
+                levelTouchDown(posInGame, button);
             }
-//            Gdx.app.debug(TAG, "click on automata screen");
+        }
+        posInGame = getPosInGame(screenX, screenY, fullCamera);
+        touchDownGUI(posInGame, button);
+        return false;
+    }
 
+    private void touchDownGUI(Vector3 posInGame, int button) {
+        Gdx.app.debug(TAG, "click on GUI");
+    }
+
+    private void automataTouchDown(Vector3 posInGame, int button) {
+        Gdx.app.debug(TAG, "click on automata screen");
+        if (button == Input.Buttons.LEFT) {
             AutomatonState closestState = automataController.getCurrentAutomaton().getClosestState(posInGame.x, posInGame.y);
             float distance = DrawableAutomaton.pointDistance(closestState, posInGame.x, posInGame.y);
 
             if (closestState != null) {
-                if (button == Input.Buttons.LEFT) {
-                    if (distance <= Constants.STATE_SIZE / 2) {
-                        automataController.getCurrentAutomaton().setCurrentState(closestState);
-                    } else {
-                        automataController.getCurrentAutomaton().setCurrentState(null);
-                    }
+                if (distance <= Constants.STATE_SIZE / 2) {
+                    selectedState = closestState;
+                } else {
+                    selectedState = null;
                 }
             }
-
-            if (button == Input.Buttons.RIGHT) {
-                if (distance > Constants.STATE_SIZE) {
-                    automataController.getCurrentAutomaton().createState(posInGame.x, posInGame.y);
-                }
-            }
-        } else {
-            Vector3 posInGame = getPosInGame(screenX, screenY, levelCamera);
-
-            if (!checkInside(posInGame, levelCamera)) {
-                return false;
-            }
-//            Gdx.app.debug(TAG, "click on level screen");
-            //TODO click on level
+        } else if (button == Input.Buttons.RIGHT) {
+            //TODO left click on automata
         }
-        return false;
+    }
+
+    private void levelTouchDown(Vector3 posInGame, int button) {
+        Gdx.app.debug(TAG, "click on level screen");
+        //TODO click on level
     }
 
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
-        if (screenX < Gdx.graphics.getWidth() / 2) {
-            Vector3 posInGame = getPosInGame(screenX, screenY, automataCamera);
-
-            if (!checkInside(posInGame, automataCamera)) {
-                return false;
+        Vector3 posInGame = getPosInGame(screenX, screenY, automataCamera);
+        if (checkInside(posInGame, automataCamera)) {
+            if (selectedState != null) {
+                selectedState.setX(posInGame.x);
+                selectedState.setY(posInGame.y);
             }
+        }
 
-            AutomatonState closestState = automataController.getCurrentAutomaton().getClosestState(posInGame.x, posInGame.y);
-            float distance = DrawableAutomaton.pointDistance(closestState, posInGame.x, posInGame.y);
+        //TODO drag on level
+        return false;
+    }
 
-            if (distance <= Constants.STATE_SIZE / 2) {
-                closestState.setX(posInGame.x);
-                closestState.setY(posInGame.y);
-            }
-        } else {
-            //TODO drag on level
+    @Override
+    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        Vector3 posInGame = getPosInGame(screenX, screenY, automataCamera);
+        if (checkInside(posInGame, automataCamera)) {
+            selectedState = null;
         }
         return false;
     }
@@ -171,7 +178,7 @@ public class GameController extends InputAdapter {
     }
 
     public Vector3 getPosInGame(int x, int y, Camera camera) {
-        Gdx.app.debug(TAG, "input pos (" + x + " " + y + ")");
+//        Gdx.app.debug(TAG, "input pos (" + x + " " + y + ")");
         if (camera.equals(automataCamera)) {
             x *= 2;
         } else if (camera.equals(levelCamera)) {
@@ -179,7 +186,7 @@ public class GameController extends InputAdapter {
             x *= 2;
         }
         Vector3 result = camera.unproject(new Vector3(x, y, 0));
-        Gdx.app.debug(TAG, "output pos (" + result.x + " " + result.y + ") with " + x);
+//        Gdx.app.debug(TAG, "output pos (" + result.x + " " + result.y + ") with " + x);
         return result;
     }
 
@@ -205,5 +212,9 @@ public class GameController extends InputAdapter {
 
     public int getScore() {
         return score;
+    }
+
+    public void setGameRenderer(GameRenderer gameRenderer) {
+        this.gameRenderer = gameRenderer;
     }
 }

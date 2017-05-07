@@ -10,18 +10,32 @@ public abstract class AbstractBlock {
 
     protected AbstractBlock() {}
 
-    protected AbstractBlock(Texture texture, Vector2 spritePos, float spriteSize) {
+    protected AbstractBlock(Texture texture) {
         sprite = new Sprite(texture);
-        sprite.setSize(spriteSize, spriteSize);
-        float halfWidth = sprite.getWidth() / 2.0f;
-        float halfHeight = sprite.getHeight() / 2.0f;
-        sprite.setOrigin(halfWidth, halfHeight);
-        sprite.setPosition(spritePos.x - sprite.getWidth() / 2.0f, spritePos.y - sprite.getHeight() / 2.0f);
+        sprite.setOriginCenter();
+    }
+
+    protected AbstractBlock(Texture texture, Vector2 spritePos, float spriteSize) {
+        this(texture);
+        setSpriteSize(spriteSize);
+        setSpritePos(spritePos);
     }
 
     public void render(SpriteBatch batch) {
         if (sprite != null) {
             sprite.draw(batch);
+        }
+    }
+
+    public void setSpriteSize(float spriteSize) {
+        if (sprite != null) {
+            sprite.setSize(spriteSize, spriteSize);
+        }
+    }
+
+    public void setSpritePos(Vector2 spritePos) {
+        if (sprite != null) {
+            sprite.setPosition(spritePos.x - sprite.getWidth() / 2.0f, spritePos.y - sprite.getHeight() / 2.0f);
         }
     }
 }

@@ -1,15 +1,16 @@
 package hr.fer.lukasuman.game.level;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Disposable;
 import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.level.blocks.*;
 
-public class Level {
+public class Level implements Disposable {
     public static final String TAG = Level.class.getName();
 
     public enum BLOCK_TYPE {
@@ -45,6 +46,7 @@ public class Level {
     private int width;
     private int height;
 
+    private Pixmap levelPixmap;
     private AbstractBlock[][] blocks;
     private float blockSize;
     private float effectiveWidth;
@@ -62,47 +64,56 @@ public class Level {
     }
 
     private void init (String filename) {
-        Pixmap pixmap = new Pixmap(Gdx.files.internal(filename));
-        width = pixmap.getWidth();
-        height = pixmap.getHeight();
+        levelPixmap = new Pixmap(Gdx.files.internal(filename));
+        width = levelPixmap.getWidth();
+        height = levelPixmap.getHeight();
         blocks = new AbstractBlock[width][height];
 
-        effectiveWidth = (Constants.VIEWPORT_WIDTH / 2.0f) - Constants.RIGHT_VIEWPORT_BORDER;
-        effectiveHeight = Constants.VIEWPORT_HEIGHT - Constants.RIGHT_VIEWPORT_BORDER;
-        blockSize = Math.min(effectiveWidth / pixmap.getWidth(), effectiveHeight / pixmap.getHeight());
+        for (int pixelY = 0; pixelY < height; pixelY++) {
+            for (int pixelX = 0; pixelX < width; pixelX++) {
 
-        for (int pixelY = 0; pixelY < pixmap.getHeight(); pixelY++) {
-            for (int pixelX = 0; pixelX < pixmap.getWidth(); pixelX++) {
-                AbstractBlock block = null;
                 int posY = height - 1 - pixelY;
+                AbstractBlock block;
+                int currentPixel = levelPixmap.getPixel(pixelX, pixelY);
 
-                Vector2 gamePos = calcPos(pixelX, posY);
-
-                int currentPixel = pixmap.getPixel(pixelX, pixelY);
                 if (BLOCK_TYPE.EMPTY.sameColor(currentPixel)) {
                     block = new EmptyBlock();
                 } else if (BLOCK_TYPE.WALL.sameColor(currentPixel)) {
-                    block = new WallBlock((Texture)Assets.getInstance().getAssetManager().get(Constants.WALL_TEXTURE),
-                            gamePos, blockSize);
+                    block = new WallBlock((Texture)Assets.getInstance().getAssetManager().get(Constants.WALL_TEXTURE));
                 } else if (BLOCK_TYPE.START.sameColor(currentPixel)) {
                     start = new Position(pixelX, posY);
-                    block = new StartBlock((Texture)Assets.getInstance().getAssetManager().get(Constants.START_TEXTURE),
-                            gamePos, blockSize);
+                    block = new StartBlock((Texture)Assets.getInstance().getAssetManager().get(Constants.START_TEXTURE));
                 } else if (BLOCK_TYPE.GOAL.sameColor(currentPixel)) {
                     goal = new Position(pixelX, posY);
-                    block = new GoalBlock((Texture)Assets.getInstance().getAssetManager().get(Constants.GOAL_TEXTURE),
-                            gamePos, blockSize);
+                    block = new GoalBlock((Texture)Assets.getInstance().getAssetManager().get(Constants.GOAL_TEXTURE));
+                } else {
+                    Gdx.app.error(TAG, "Invalid block type in level " + filename
+                            + " replaced with an empty block instead");
+                    block = new EmptyBlock();
                 }
-
                 blocks[pixelX][posY] = block;
             }
         }
-        pixmap.dispose();
 
         resetLevel();
 
         Gdx.app.debug(TAG, "level '" + filename + "' loaded: " + width + "x" + height
                 + " start(" + start.x + ", " + start.y + ") end(" + goal.x + ", " + goal.y + ")");
+    }
+
+    public void updateSprites(Camera camera) {
+        effectiveWidth = camera.viewportWidth;
+        effectiveHeight = camera.viewportHeight;
+        blockSize = Math.min(effectiveWidth / levelPixmap.getWidth(), effectiveHeight / levelPixmap.getHeight());
+
+        for (int j = 0; j < height; j++) {
+            for (int i = 0; i < width; i++) {
+                Vector2 gamePos = calcPos(i, j);
+
+                blocks[i][j].setSpriteSize(blockSize);
+                blocks[i][j].setSpritePos(gamePos);
+            }
+        }
     }
 
     public Vector2 calcPos(int x, int y) {
@@ -114,6 +125,11 @@ public class Level {
         currentX = start.x;
         currentY = start.y;
         currentDirection = DIRECTION.NORTH;
+    }
+
+    @Override
+    public void dispose() {
+        levelPixmap.dispose();
     }
 
     public int getWidth() {

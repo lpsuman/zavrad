@@ -5,6 +5,10 @@ import com.badlogic.gdx.math.Vector2;
 
 public class GoalBlock extends AbstractBlock {
 
+    public GoalBlock(Texture texture) {
+        super(texture);
+    }
+
     public GoalBlock(Texture texture, Vector2 spritePos, float spriteSize) {
         super(texture, spritePos, spriteSize);
     }

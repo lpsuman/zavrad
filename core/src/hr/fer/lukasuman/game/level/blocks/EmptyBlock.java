@@ -9,6 +9,10 @@ public class EmptyBlock extends AbstractBlock {
         super();
     }
 
+    public EmptyBlock(Texture texture) {
+        super(texture);
+    }
+
     public EmptyBlock(Texture texture, Vector2 spritePos, float spriteSize) {
         super(texture, spritePos, spriteSize);
     }

@@ -50,7 +50,12 @@ public class DirectedGame implements ApplicationListener {
 
     @Override
     public void resize(int width, int height) {
-
+        if (currScreen != null) {
+            currScreen.resize(width, height);
+        }
+        if (nextScreen != null) {
+            nextScreen.resize(width, height);
+        }
     }
 
     @Override
@@ -79,14 +84,14 @@ public class DirectedGame implements ApplicationListener {
                 nextScreen = null;
                 screenTransition = null;
             } else {
-// render screens to FBOs
+                // render screens to FBOs
                 currFbo.begin();
                 if (currScreen != null) currScreen.render(deltaTime);
                 currFbo.end();
                 nextFbo.begin();
                 nextScreen.render(deltaTime);
                 nextFbo.end();
-// render transition effect to screen
+                // render transition effect to screen
                 float alpha = t / duration;
                 screenTransition.render(batch,
                         currFbo.getColorBufferTexture(), nextFbo.getColorBufferTexture(),
