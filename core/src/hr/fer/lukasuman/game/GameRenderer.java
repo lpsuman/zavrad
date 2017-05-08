@@ -4,13 +4,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import hr.fer.lukasuman.game.automata.AutomatonState;
@@ -45,7 +46,10 @@ public class GameRenderer implements Disposable {
     private ButtonGroup buttonGroup;
     private TextButton selectionButton;
     private TextButton createStateButton;
-    private TextButton createTransition;
+    private TextButton deleteStateButton;
+    private TextButton createTransitionButton;
+    private TextButton deleteTransitionButton;
+    private Slider simulationSpeedSlider;
 
     public GameRenderer (GameController gameController) {
         this.gameController = gameController;
@@ -96,25 +100,53 @@ public class GameRenderer implements Disposable {
 
         Table table = new Table();
         table.setFillParent(true);
-        HorizontalGroup northGroup = new HorizontalGroup();
-        table.top().add(northGroup);
-        HorizontalGroup southGroup = new HorizontalGroup();
-        table.top().add(southGroup);
 
         HorizontalGroup automataNorth = new HorizontalGroup();
-        HorizontalGroup levelNorth = new HorizontalGroup();
-        northGroup.left().addActor(automataNorth);
-        northGroup.right().addActor(levelNorth);
+        table.add(automataNorth).uniform().left();
 
         scoreLabel = new Label("0", skin, "default-font", Color.WHITE);
         automataNorth.addActor(scoreLabel);
+
+        HorizontalGroup levelNorth = new HorizontalGroup();
+        table.add(levelNorth).uniform().right();
+
         fpsLabel = new Label("FPS: 60", skin);
-        table.add(fpsLabel);
+        levelNorth.addActor(fpsLabel);
+
+        table.row();
+        Label tempLabel = new Label("", skin);
+        table.add(tempLabel).expand();
+        table.row();
+
+        HorizontalGroup automataSouth = new HorizontalGroup();
+        table.add(automataSouth).uniform().left();
 
         buttonGroup = new ButtonGroup();
+        selectionButton = new TextButton("select state", skin);
+        buttonGroup.add(selectionButton);
+        automataSouth.addActor(selectionButton);
+
         createStateButton = new TextButton("add state", skin);
         buttonGroup.add(createStateButton);
-        table.add(createStateButton);
+        automataSouth.addActor(createStateButton);
+
+        deleteStateButton = new TextButton("delete state", skin);
+        buttonGroup.add(deleteStateButton);
+        automataSouth.addActor(deleteStateButton);
+
+        createTransitionButton = new TextButton("create transition", skin);
+        buttonGroup.add(createTransitionButton);
+        automataSouth.addActor(createTransitionButton);
+
+        deleteTransitionButton = new TextButton("delete transition", skin);
+        buttonGroup.add(deleteTransitionButton);
+        automataSouth.addActor(deleteTransitionButton);
+
+        HorizontalGroup levelSouth = new HorizontalGroup();
+        table.add(levelSouth).uniform().right();
+
+        simulationSpeedSlider = new Slider(1.0f, 10.0f, 1.0f, false, skin);
+        levelSouth.addActor(simulationSpeedSlider);
 
         stage.addActor(table);
     }
@@ -201,17 +233,18 @@ public class GameRenderer implements Disposable {
     }
 
     public void resize (int width, int height) {
-        int borderY = (int)(height * Constants.UPPER_BORDER_RATIO);
-        int heightWithoutBorder = (int)(height * (1.0f - Constants.UPPER_BORDER_RATIO - Constants.LOWER_BORDER_RATIO));
-        leftViewport.update(width / 2, heightWithoutBorder);
+        int borderY = (int)(width / 2 * Constants.UPPER_BORDER_RATIO);
+        leftViewport.update(width / 2, width / 2);
         leftViewport.setScreenY(borderY);
-        rightViewport.update(width / 2, heightWithoutBorder);
-        rightViewport.setScreenX(width / 2);
-        rightViewport.setScreenY(borderY);
+        rightViewport.update(width / 2, width / 2);
+        rightViewport.setScreenPosition(width / 2, borderY);
 
-        viewportGUI.update(width, height, true);
+        viewportGUI.update((int)(width * (1.0f - 2 * Constants.GUI_BORDER_FACTOR)),
+                (int)(height * (1.0f - 2 * Constants.GUI_BORDER_FACTOR)), true);
+        viewportGUI.setScreenPosition((int)(width * Constants.GUI_BORDER_FACTOR),
+                (int)(height * Constants.GUI_BORDER_FACTOR));
 
-        Gdx.app.debug(TAG, "right camera (" + rightCamera.viewportWidth + ", " + rightCamera.viewportHeight + ")");
+//        Gdx.app.debug(TAG, "right camera (" + rightCamera.viewportWidth + ", " + rightCamera.viewportHeight + ")");
     }
 
     @Override
@@ -221,5 +254,33 @@ public class GameRenderer implements Disposable {
 
     public Stage getStage() {
         return stage;
+    }
+
+    public ButtonGroup getButtonGroup() {
+        return buttonGroup;
+    }
+
+    public TextButton getSelectionButton() {
+        return selectionButton;
+    }
+
+    public TextButton getCreateStateButton() {
+        return createStateButton;
+    }
+
+    public TextButton getDeleteStateButton() {
+        return deleteStateButton;
+    }
+
+    public TextButton getCreateTransitionButton() {
+        return createTransitionButton;
+    }
+
+    public TextButton getDeleteTransitionButton() {
+        return deleteTransitionButton;
+    }
+
+    public Slider getSimulationSpeedSlider() {
+        return simulationSpeedSlider;
     }
 }

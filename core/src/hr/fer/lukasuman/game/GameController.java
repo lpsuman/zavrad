@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import hr.fer.lukasuman.game.automata.AutomataController;
 import hr.fer.lukasuman.game.automata.AutomatonState;
 import hr.fer.lukasuman.game.automata.DrawableAutomaton;
@@ -87,13 +88,27 @@ public class GameController extends InputAdapter {
             AutomatonState closestState = automataController.getCurrentAutomaton().getClosestState(posInGame.x, posInGame.y);
             float distance = DrawableAutomaton.pointDistance(closestState, posInGame.x, posInGame.y);
 
-            if (closestState != null) {
-                if (distance <= Constants.STATE_SIZE / 2) {
-                    selectedState = closestState;
-                } else {
-                    selectedState = null;
+            Button checkedButton = gameRenderer.getButtonGroup().getChecked();
+            if (checkedButton.equals(gameRenderer.getSelectionButton())) {
+                if (closestState != null) {
+                    if (distance <= Constants.STATE_SIZE / 2) {
+                        selectedState = closestState;
+                    } else {
+                        selectedState = null;
+                    }
+                }
+            } else if (checkedButton.equals(gameRenderer.getCreateStateButton())) {
+                if (closestState == null || distance > Constants.STATE_SIZE) {
+                    automataController.getCurrentAutomaton().createState(posInGame.x, posInGame.y);
+                }
+            } else if (checkedButton.equals(gameRenderer.getDeleteStateButton())) {
+                if (closestState != null) {
+                    if (distance <= Constants.STATE_SIZE / 2) {
+                        automataController.getCurrentAutomaton().removeState(closestState);
+                    }
                 }
             }
+
         } else if (button == Input.Buttons.RIGHT) {
             //TODO left click on automata
         }

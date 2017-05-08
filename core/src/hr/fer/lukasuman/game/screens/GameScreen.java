@@ -1,6 +1,7 @@
 package hr.fer.lukasuman.game.screens;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL20;
 import hr.fer.lukasuman.game.DirectedGame;
@@ -14,6 +15,7 @@ public class GameScreen extends AbstractGameScreen {
     private GameController gameController;
     private GameRenderer gameRenderer;
     private boolean paused;
+    private InputMultiplexer inputMultiplexer;
 
     public GameScreen (DirectedGame game) {
         super(game);
@@ -41,7 +43,12 @@ public class GameScreen extends AbstractGameScreen {
         gameController = new GameController(game);
         gameRenderer = new GameRenderer(gameController);
         gameController.setGameRenderer(gameRenderer);
-        Gdx.input.setInputProcessor(gameController);
+
+        inputMultiplexer = new InputMultiplexer();
+        inputMultiplexer.addProcessor(gameController);
+        inputMultiplexer.addProcessor(gameRenderer.getStage());
+        Gdx.input.setInputProcessor(inputMultiplexer);
+
         Gdx.input.setCatchBackKey(true);
     }
 
@@ -64,6 +71,6 @@ public class GameScreen extends AbstractGameScreen {
 
     @Override
     public InputProcessor getInputProcessor() {
-        return gameController;
+        return inputMultiplexer;
     }
 }

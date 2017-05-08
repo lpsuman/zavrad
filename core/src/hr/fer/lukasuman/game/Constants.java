@@ -18,6 +18,7 @@ public class Constants {
     public static final float UPPER_BORDER = VIEWPORT_GUI_WIDTH / 2.0f * UPPER_BORDER_RATIO;
     public static final float LOWER_BORDER = VIEWPORT_GUI_WIDTH / 2.0f * LOWER_BORDER_RATIO;
     public static final float VIEWPORT_GUI_HEIGHT = UPPER_BORDER + VIEWPORT_GUI_WIDTH / 2.0f + LOWER_BORDER;
+    public static final float GUI_BORDER_FACTOR = 0.01f;
 
     public static final float STATE_SIZE = VIEWPORT_WIDTH / 10;
     public static final String DEFAULT_STATE_LABEL = "state";
