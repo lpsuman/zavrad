@@ -4,16 +4,17 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL20;
-import hr.fer.lukasuman.game.DirectedGame;
-import hr.fer.lukasuman.game.GameController;
+import hr.fer.lukasuman.game.control.GameController;
 import hr.fer.lukasuman.game.GamePreferences;
-import hr.fer.lukasuman.game.GameRenderer;
+import hr.fer.lukasuman.game.control.InputController;
+import hr.fer.lukasuman.game.render.GameRenderer;
 
 public class GameScreen extends AbstractGameScreen {
     private static final String TAG = GameScreen.class.getName();
 
     private GameController gameController;
     private GameRenderer gameRenderer;
+    private InputController inputController;
     private boolean paused;
     private InputMultiplexer inputMultiplexer;
 
@@ -44,8 +45,10 @@ public class GameScreen extends AbstractGameScreen {
         gameRenderer = new GameRenderer(gameController);
         gameController.setGameRenderer(gameRenderer);
 
+        inputController = new InputController(gameController, gameRenderer);
+
         inputMultiplexer = new InputMultiplexer();
-        inputMultiplexer.addProcessor(gameController);
+        inputMultiplexer.addProcessor(inputController);
         inputMultiplexer.addProcessor(gameRenderer.getStage());
         Gdx.input.setInputProcessor(inputMultiplexer);
 

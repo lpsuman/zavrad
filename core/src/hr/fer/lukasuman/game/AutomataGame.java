@@ -1,11 +1,9 @@
 package hr.fer.lukasuman.game;
 
 import com.badlogic.gdx.Application;
-import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.graphics.GL20;
+import hr.fer.lukasuman.game.screens.DirectedGame;
 import hr.fer.lukasuman.game.screens.MenuScreen;
 
 public class AutomataGame extends DirectedGame {

@@ -34,4 +34,12 @@ public class Automaton implements Serializable {
     public void setStartState(AutomatonState state) {
         startState = state;
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

@@ -1,4 +1,4 @@
-package hr.fer.lukasuman.game;
+package hr.fer.lukasuman.game.screens;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;

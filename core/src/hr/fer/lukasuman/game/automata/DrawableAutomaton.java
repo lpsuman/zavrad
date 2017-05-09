@@ -13,6 +13,7 @@ public class DrawableAutomaton extends Automaton {
     private Map<AutomatonState, Sprite> stateSprites;
     private AutomatonState currentState;
     private int stateID = 1;
+    private Map<AutomatonState, Map<String, AutomatonTransition>> transitionsMap;
 
     public DrawableAutomaton(Texture stateTexture) {
         super();
@@ -22,6 +23,12 @@ public class DrawableAutomaton extends Automaton {
             addSpriteForState(state);
         }
         currentState = getStartState();
+        transitionsMap = new HashMap<AutomatonState, Map<String, AutomatonTransition>>();
+        for (AutomatonState startState : getStates()) {
+            for (Map.Entry<String, AutomatonState> entry : startState.getTransitions().entrySet()) {
+                addTransition(entry.getKey(), startState, entry.getValue());
+            }
+        }
     }
 
     private void addSpriteForState(AutomatonState state) {
@@ -34,8 +41,7 @@ public class DrawableAutomaton extends Automaton {
     }
 
     public void createState(float posX, float posY) {
-        AutomatonState newState = new AutomatonState(posX, posY,
-                Constants.DEFAULT_STATE_LABEL + (stateID++), this);
+        AutomatonState newState = new AutomatonState(Constants.DEFAULT_STATE_LABEL + (stateID++), posX, posY, this);
         addState(newState);
     }
 
@@ -49,6 +55,14 @@ public class DrawableAutomaton extends Automaton {
     public void removeState(AutomatonState state) {
         super.removeState(state);
         stateSprites.remove(state);
+    }
+
+    public void addTransition(String trigger, AutomatonState startState, AutomatonState endState) {
+        if (transitionsMap.get(startState) == null) {
+            transitionsMap.put(startState, new HashMap<String, AutomatonTransition>());
+        }
+        startState.addTransition(trigger, endState);
+        transitionsMap.get(startState).put(trigger, new AutomatonTransition(trigger, startState, endState));
     }
 
     public Map<AutomatonState, Sprite> getStateSprites() {

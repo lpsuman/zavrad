@@ -1,4 +1,4 @@
-package hr.fer.lukasuman.game;
+package hr.fer.lukasuman.game.render;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -8,13 +8,16 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import hr.fer.lukasuman.game.Assets;
+import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.automata.AutomatonState;
+import hr.fer.lukasuman.game.control.GameController;
 import hr.fer.lukasuman.game.level.Level;
 import hr.fer.lukasuman.game.level.blocks.AbstractBlock;
 
@@ -49,6 +52,8 @@ public class GameRenderer implements Disposable {
     private TextButton deleteStateButton;
     private TextButton createTransitionButton;
     private TextButton deleteTransitionButton;
+    private TextButton startSimulationButton;
+    private TextButton pauseSimulationButton;
     private Slider simulationSpeedSlider;
 
     public GameRenderer (GameController gameController) {
@@ -87,7 +92,7 @@ public class GameRenderer implements Disposable {
         cameraGUI.setToOrtho(false); // flip y-axis
         cameraGUI.update();
 
-        playerSprite = new Sprite((Texture)Assets.getInstance().getAssetManager().get(Constants.PLAYER_TEXTURE));
+        playerSprite = new Sprite((Texture) Assets.getInstance().getAssetManager().get(Constants.PLAYER_TEXTURE));
 
         stage = new Stage(viewportGUI);
         rebuildStage();
@@ -145,7 +150,31 @@ public class GameRenderer implements Disposable {
         HorizontalGroup levelSouth = new HorizontalGroup();
         table.add(levelSouth).uniform().right();
 
+        startSimulationButton = new TextButton(Constants.START_SIM_BTN_TEXT, skin);
+        startSimulationButton.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                gameController.startSimulation();
+            }
+        });
+        levelSouth.addActor(startSimulationButton);
+
+        pauseSimulationButton = new TextButton(Constants.PAUSE_SIM_BTN_TEXT, skin);
+        pauseSimulationButton.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                gameController.pauseSimulation();
+            }
+        });
+        levelSouth.addActor(pauseSimulationButton);
+
         simulationSpeedSlider = new Slider(1.0f, 10.0f, 1.0f, false, skin);
+        simulationSpeedSlider.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                gameController.setSimulationSpeed(((Slider)actor).getValue());
+            }
+        });
         levelSouth.addActor(simulationSpeedSlider);
 
         stage.addActor(table);
@@ -184,7 +213,7 @@ public class GameRenderer implements Disposable {
         float halfWidth = playerSprite.getWidth() / 2.0f;
         float halfHeight = playerSprite.getHeight() / 2.0f;
         playerSprite.setOrigin(halfWidth, halfHeight);
-        Vector2 playerPos = level.calcPos(level.getCurrentX(), level.getCurrentY());
+        Vector2 playerPos = level.calcPos(level.getCurrentPosition().x, level.getCurrentPosition().y);
         playerSprite.setPosition(playerPos.x - halfWidth, playerPos.y - halfHeight);
         playerSprite.draw(batch);
         batch.end();
@@ -278,6 +307,14 @@ public class GameRenderer implements Disposable {
 
     public TextButton getDeleteTransitionButton() {
         return deleteTransitionButton;
+    }
+
+    public TextButton getStartSimulationButton() {
+        return startSimulationButton;
+    }
+
+    public TextButton getPauseSimulationButton() {
+        return pauseSimulationButton;
     }
 
     public Slider getSimulationSpeedSlider() {

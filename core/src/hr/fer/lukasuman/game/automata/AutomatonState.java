@@ -1,5 +1,7 @@
 package hr.fer.lukasuman.game.automata;
 
+import hr.fer.lukasuman.game.Constants;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,18 +10,24 @@ import java.util.Set;
 
 public class AutomatonState implements Serializable {
 
+    private String label;
     private float x;
     private float y;
-    private String label;
+    private AutomatonAction action;
     private Automaton parent;
 
     private Map<String, AutomatonState> transitions;
     private Set<AutomatonState> incomingStates;
 
-    public AutomatonState(float x, float y, String label, Automaton parent) {
+    public AutomatonState(String label, float x, float y, Automaton parent) {
+        this(label, x, y, Constants.DEFAULT_ACTION, parent);
+    }
+
+    public AutomatonState(String label, float x, float y, AutomatonAction action, Automaton parent) {
+        this.label = label;
         this.x = x;
         this.y = y;
-        this.label = label;
+        this.action = action;
         this.parent = parent;
         transitions = new HashMap<String, AutomatonState>();
         incomingStates = new HashSet<AutomatonState>();
@@ -75,6 +83,14 @@ public class AutomatonState implements Serializable {
 
     public void setLabel(String label) {
         this.label = label;
+    }
+
+    public AutomatonAction getAction() {
+        return action;
+    }
+
+    public void setAction(AutomatonAction action) {
+        this.action = action;
     }
 
     public Automaton getParent() {

@@ -10,6 +10,10 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.Disposable;
+import hr.fer.lukasuman.game.level.blocks.EmptyBlock;
+import hr.fer.lukasuman.game.level.blocks.GoalBlock;
+import hr.fer.lukasuman.game.level.blocks.StartBlock;
+import hr.fer.lukasuman.game.level.blocks.WallBlock;
 
 public class Assets implements Disposable, AssetErrorListener {
 
@@ -30,9 +34,9 @@ public class Assets implements Disposable, AssetErrorListener {
         assetManager.setErrorListener(this);
         assetManager.load(Constants.MENU_BACKGROUND_TEXTURE, Texture.class);
         assetManager.load(Constants.AUTOMATA_STATE_TEXTURE, Texture.class);
-        assetManager.load(Constants.WALL_TEXTURE, Texture.class);
-        assetManager.load(Constants.START_TEXTURE, Texture.class);
-        assetManager.load(Constants.GOAL_TEXTURE, Texture.class);
+
+        loadBlockTextures();
+
         assetManager.load(Constants.PLAYER_TEXTURE, Texture.class);
         assetManager.load(Constants.TEXTURE_ATLAS_LIBGDX_UI, TextureAtlas.class);
         assetManager.load(Constants.SKIN_LIBGDX_UI, Skin.class, new SkinLoader.SkinParameter(Constants.TEXTURE_ATLAS_LIBGDX_UI));
@@ -44,6 +48,15 @@ public class Assets implements Disposable, AssetErrorListener {
         Gdx.app.debug(TAG, "# of assets loaded: " + assetManager.getAssetNames().size);
         for (String a : assetManager.getAssetNames())
             Gdx.app.debug(TAG, "asset: " + a);
+    }
+
+    private void loadBlockTextures() {
+        if (EmptyBlock.TEXTURE != null) {
+            assetManager.load(EmptyBlock.TEXTURE, Texture.class);
+        }
+        assetManager.load(WallBlock.TEXTURE, Texture.class);
+        assetManager.load(StartBlock.TEXTURE, Texture.class);
+        assetManager.load(GoalBlock.TEXTURE, Texture.class);
     }
 
     @Override

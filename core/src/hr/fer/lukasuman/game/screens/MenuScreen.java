@@ -12,7 +12,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
-import hr.fer.lukasuman.game.DirectedGame;
 import hr.fer.lukasuman.game.GamePreferences;
 
 public class MenuScreen extends AbstractGameScreen {

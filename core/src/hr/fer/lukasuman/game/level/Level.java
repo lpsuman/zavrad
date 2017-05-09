@@ -30,19 +30,6 @@ public class Level implements Disposable {
         }
     }
 
-    public enum DIRECTION {
-        NORTH(0),
-        EAST(1),
-        SOUTH(2),
-        WEST(3);
-
-        private int direction;
-
-        DIRECTION(int direction) {
-            this.direction = direction;
-        }
-    }
-
     private int width;
     private int height;
 
@@ -55,9 +42,8 @@ public class Level implements Disposable {
     private Position start;
     private Position goal;
 
-    private int currentX;
-    private int currentY;
-    private DIRECTION currentDirection;
+    private Position currentPosition;
+    private Direction currentDirection;
 
     public Level (String filename) {
         init(filename);
@@ -79,13 +65,13 @@ public class Level implements Disposable {
                 if (BLOCK_TYPE.EMPTY.sameColor(currentPixel)) {
                     block = new EmptyBlock();
                 } else if (BLOCK_TYPE.WALL.sameColor(currentPixel)) {
-                    block = new WallBlock((Texture)Assets.getInstance().getAssetManager().get(Constants.WALL_TEXTURE));
+                    block = new WallBlock();
                 } else if (BLOCK_TYPE.START.sameColor(currentPixel)) {
                     start = new Position(pixelX, posY);
-                    block = new StartBlock((Texture)Assets.getInstance().getAssetManager().get(Constants.START_TEXTURE));
+                    block = new StartBlock();
                 } else if (BLOCK_TYPE.GOAL.sameColor(currentPixel)) {
                     goal = new Position(pixelX, posY);
-                    block = new GoalBlock((Texture)Assets.getInstance().getAssetManager().get(Constants.GOAL_TEXTURE));
+                    block = new GoalBlock();
                 } else {
                     Gdx.app.error(TAG, "Invalid block type in level " + filename
                             + " replaced with an empty block instead");
@@ -122,9 +108,16 @@ public class Level implements Disposable {
     }
 
     public void resetLevel() {
-        currentX = start.x;
-        currentY = start.y;
-        currentDirection = DIRECTION.NORTH;
+        currentPosition = start;
+        currentDirection = Direction.NORTH;
+    }
+
+    public AbstractBlock getBlockAt(int x, int y) {
+        return blocks[x][y];
+    }
+
+    public AbstractBlock getBlockAt(Position pos) {
+        return getBlockAt(pos.x, pos.y);
     }
 
     @Override
@@ -156,27 +149,19 @@ public class Level implements Disposable {
         return blockSize;
     }
 
-    public int getCurrentX() {
-        return currentX;
+    public Position getCurrentPosition() {
+        return currentPosition;
     }
 
-    public void setCurrentX(int currentX) {
-        this.currentX = currentX;
+    public void setCurrentPosition(Position currentPosition) {
+        this.currentPosition = currentPosition;
     }
 
-    public int getCurrentY() {
-        return currentY;
-    }
-
-    public void setCurrentY(int currentY) {
-        this.currentY = currentY;
-    }
-
-    public DIRECTION getCurrentDirection() {
+    public Direction getCurrentDirection() {
         return currentDirection;
     }
 
-    public void setCurrentDirection(DIRECTION currentDirection) {
+    public void setCurrentDirection(Direction currentDirection) {
         this.currentDirection = currentDirection;
     }
 }

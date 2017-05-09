@@ -1,6 +1,8 @@
 package hr.fer.lukasuman.game;
 
 import com.badlogic.gdx.graphics.Color;
+import hr.fer.lukasuman.game.automata.AutomatonAction;
+import hr.fer.lukasuman.game.level.blocks.EmptyBlock;
 
 public class Constants {
     public static final String TITLE = "Automata Game";
@@ -39,12 +41,13 @@ public class Constants {
 
     public static final String PLAYER_TEXTURE = "box_arrow.png";
 
-    public static final String EMPTY_TEXTURE = null;
-    public static final String EMPTY_LABEL = "empty";
-    public static final String WALL_TEXTURE = "wall_tile.png";
-    public static final String WALL_LABEL = "wall";
-    public static final String START_TEXTURE = "door_open.png";
-    public static final String START_LABEL = "start";
-    public static final String GOAL_TEXTURE = "door_closed.png";
-    public static final String GOAL_LABEL = "goal";
+    public static final float SIMULATION_SPEED_FACTOR = 1.0f;
+
+    public static final String START_SIM_BTN_TEXT = "start";
+    public static final String STOP_SIM_BTN_TEXT = "stop";
+    public static final String PAUSE_SIM_BTN_TEXT = "pause";
+    public static final String RESUME_SIM_BTN_TEXT = "resume";
+
+    public static final AutomatonAction DEFAULT_ACTION = AutomatonAction.MOVE_FORWARD;
+    public static final String DEFAULT_TRANSITION_TRIGGER = EmptyBlock.LABEL;
 }
