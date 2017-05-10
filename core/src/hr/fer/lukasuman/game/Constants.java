@@ -42,7 +42,7 @@ public class Constants {
 
     public static final String TEXTURE_ATLAS_OBJECTS = "images/automata.pack";
     public static final String MENU_BACKGROUND_TEXTURE = "gear_background.jpg";
-    public static final String LEVEL_PATH = "levels/level_01.png";
+    public static final String LEVEL_PATH = "levels/level_02.png";
 
     public static final String PLAYER_TEXTURE = "box_arrow.png";
 
