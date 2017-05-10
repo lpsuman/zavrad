@@ -1,5 +1,8 @@
 package hr.fer.lukasuman.game.automata;
 
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Bezier;
 import com.badlogic.gdx.math.Vector2;
@@ -124,10 +127,7 @@ public class AutomatonTransition {
         for(int i = 0; i < points.length - 1; i++) {
             transitionRenderer.line(points[i], points[i+1]);
         }
-        drawArrow(transitionRenderer);
-    }
 
-    private void drawArrow(ShapeRenderer transitionRenderer) {
         transitionRenderer.line(leftArrowPoint, dataSet[3]);
         transitionRenderer.line(rightArrowPoint, dataSet[3]);
     }
@@ -136,5 +136,40 @@ public class AutomatonTransition {
         for(int i = 0; i < dataSet.length - 1; i++) {
             transitionRenderer.line(dataSet[i], dataSet[i+1]);
         }
+    }
+
+    public Vector2 getMiddlePoint() {
+        return middlePoint;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        AutomatonState tempState = startState.getTransitions().get(this.label);
+        startState.getTransitions().remove(this.label);
+        this.label = label;
+        startState.getTransitions().put(this.label, tempState);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        AutomatonTransition that = (AutomatonTransition) o;
+
+        if (!label.equals(that.label)) return false;
+        if (!startState.equals(that.startState)) return false;
+        return endState.equals(that.endState);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = label.hashCode();
+        result = 31 * result + startState.hashCode();
+        result = 31 * result + endState.hashCode();
+        return result;
     }
 }

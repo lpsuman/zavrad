@@ -4,6 +4,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -16,19 +18,18 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
-import hr.fer.lukasuman.game.automata.AutomatonState;
-import hr.fer.lukasuman.game.automata.AutomatonTransition;
-import hr.fer.lukasuman.game.automata.Consumer;
-import hr.fer.lukasuman.game.automata.DrawableAutomaton;
+import hr.fer.lukasuman.game.automata.*;
 import hr.fer.lukasuman.game.control.GameController;
 import hr.fer.lukasuman.game.level.Level;
-import hr.fer.lukasuman.game.level.blocks.AbstractBlock;
+import hr.fer.lukasuman.game.level.blocks.*;
 
 import java.util.Map;
 
 public class GameRenderer implements Disposable {
 
     private static final String TAG = GameRenderer.class.getName();
+
+    private GameController gameController;
 
     private OrthographicCamera fullCamera;
     private OrthographicCamera leftCamera;
@@ -39,14 +40,19 @@ public class GameRenderer implements Disposable {
     private ScreenViewport rightViewport;
     private ScreenViewport viewportGUI;
 
+    private Texture stateTexture;
+    private Texture selectedStateTexture;
+    private Texture runningStateTexture;
     private SpriteBatch batch;
-    private GameController gameController;
-
     private Sprite playerSprite;
+    private ShapeRenderer transitionRenderer;
+    private GlyphLayout glyphLayout;
 
     private Stage stage;
     private Skin skin;
     private Label scoreLabel;
+    private SelectBox<AutomatonAction> actionSelectBox;
+    private SelectBox<String> transitionSelectBox;
     private Label fpsLabel;
     private ButtonGroup buttonGroup;
     private TextButton selectionButton;
@@ -93,7 +99,12 @@ public class GameRenderer implements Disposable {
         cameraGUI.setToOrtho(false); // flip y-axis
         cameraGUI.update();
 
+        stateTexture = Assets.getInstance().getAssetManager().get(Constants.AUTOMATA_STATE_TEXTURE);
+        selectedStateTexture = Assets.getInstance().getAssetManager().get(Constants.AUTOMATA_SELECTED_STATE_TEXTURE);
+        runningStateTexture = Assets.getInstance().getAssetManager().get(Constants.AUTOMATA_RUNNING_STATE_TEXTURE);
         playerSprite = new Sprite((Texture) Assets.getInstance().getAssetManager().get(Constants.PLAYER_TEXTURE));
+        transitionRenderer = new ShapeRenderer();
+        glyphLayout = new GlyphLayout();
 
         stage = new Stage(viewportGUI);
         rebuildStage();
@@ -107,25 +118,69 @@ public class GameRenderer implements Disposable {
         Table table = new Table();
         table.setFillParent(true);
 
-        HorizontalGroup automataNorth = new HorizontalGroup();
-        table.add(automataNorth).uniform().left();
 
-        scoreLabel = new Label("0", skin, "default-font", Color.WHITE);
-        automataNorth.addActor(scoreLabel);
-
-        HorizontalGroup levelNorth = new HorizontalGroup();
-        table.add(levelNorth).uniform().right();
-
-        fpsLabel = new Label("FPS: 60", skin);
-        levelNorth.addActor(fpsLabel);
+        table.add(rebuildAutomataNorth()).uniform().left();
+        table.add(rebuildLevelNorth()).uniform().right();
 
         table.row();
         Label tempLabel = new Label("", skin);
         table.add(tempLabel).expand();
         table.row();
 
+        table.add(rebuildAutomataSouth()).uniform().left();
+        table.add(rebuildLevelSouth()).uniform().right();
+
+        stage.addActor(table);
+    }
+
+    private HorizontalGroup rebuildAutomataNorth() {
+        HorizontalGroup automataNorth = new HorizontalGroup();
+
+        scoreLabel = new Label("0", skin, "default-font", Color.WHITE);
+        automataNorth.addActor(scoreLabel);
+
+        actionSelectBox = new SelectBox<AutomatonAction>(skin);
+        actionSelectBox.setItems(AutomatonAction.MOVE_FORWARD, AutomatonAction.ROTATE_LEFT, AutomatonAction.ROTATE_RIGHT);
+        actionSelectBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                gameController.setIgnoreNextClick(true);
+                AutomatonState selectedState = gameController.getSelectedState();
+                if (selectedState != null) {
+                    selectedState.setAction(actionSelectBox.getSelected());
+                }
+            }
+        });
+        automataNorth.addActor(actionSelectBox);
+
+        transitionSelectBox = new SelectBox<String>(skin);
+        transitionSelectBox.setItems(EmptyBlock.LABEL, WallBlock.LABEL, StartBlock.LABEL, GoalBlock.LABEL);
+        transitionSelectBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                gameController.setIgnoreNextClick(true);
+                AutomatonTransition selectedTransition = gameController.getSelectedTransition();
+                if (selectedTransition != null) {
+                    selectedTransition.setLabel(transitionSelectBox.getSelected());
+                }
+            }
+        });
+        automataNorth.addActor(transitionSelectBox);
+
+        return automataNorth;
+    }
+
+    private HorizontalGroup rebuildLevelNorth() {
+        HorizontalGroup levelNorth = new HorizontalGroup();
+
+        fpsLabel = new Label("FPS: 60", skin);
+        levelNorth.addActor(fpsLabel);
+
+        return levelNorth;
+    }
+
+    private HorizontalGroup rebuildAutomataSouth() {
         HorizontalGroup automataSouth = new HorizontalGroup();
-        table.add(automataSouth).uniform().left();
 
         buttonGroup = new ButtonGroup();
         selectionButton = new TextButton("select state", skin);
@@ -148,8 +203,11 @@ public class GameRenderer implements Disposable {
         buttonGroup.add(deleteTransitionButton);
         automataSouth.addActor(deleteTransitionButton);
 
+        return automataSouth;
+    }
+
+    private HorizontalGroup rebuildLevelSouth() {
         HorizontalGroup levelSouth = new HorizontalGroup();
-        table.add(levelSouth).uniform().right();
 
         startSimulationButton = new TextButton(Constants.START_SIM_BTN_TEXT, skin);
         startSimulationButton.addListener(new ChangeListener() {
@@ -178,7 +236,7 @@ public class GameRenderer implements Disposable {
         });
         levelSouth.addActor(simulationSpeedSlider);
 
-        stage.addActor(table);
+        return levelSouth;
     }
 
     public void render () {
@@ -196,14 +254,18 @@ public class GameRenderer implements Disposable {
         for (Map.Entry<AutomatonState, Sprite> entry : automaton.getStateSprites().entrySet()) {
             AutomatonState state = entry.getKey();
             Sprite sprite = entry.getValue();
-            Color spriteColor = sprite.getColor().cpy();
             if (state.equals(automaton.getCurrentState())) {
-                sprite.setColor(255, 0.0f, 0.0f, 1.0f);
+                sprite.setTexture(runningStateTexture);
             } else if (state.equals(gameController.getSelectedState())){
-                batch.setColor(0.0f, 255.0f, 0.0f, 1.0f);
+                sprite.setTexture(selectedStateTexture);
             }
             sprite.draw(batch);
-            sprite.setColor(spriteColor);
+            sprite.setTexture(stateTexture);
+
+            BitmapFont font = Assets.getInstance().getFonts().defaultSmall;
+            String text = state.getAction().toString();
+            glyphLayout.setText(font, text);
+            font.draw(batch, text, state.getX() - glyphLayout.width / 2.0f, state.getY() + glyphLayout.height / 2.0f);
         }
         batch.end();
     }
@@ -232,17 +294,32 @@ public class GameRenderer implements Disposable {
 
     private void renderTransitionLines() {
         Gdx.gl.glLineWidth(Constants.TRANSITIONS_LINE_WIDTH);
-        DrawableAutomaton automaton = gameController.getAutomataController().getCurrentAutomaton();
-        ShapeRenderer transitionRenderer = automaton.getTransitionRenderer();
 
         transitionRenderer.setProjectionMatrix(leftCamera.combined);
         transitionRenderer.begin(ShapeRenderer.ShapeType.Line);
         transitionRenderer.setColor(Constants.TRANSITION_COLOR);
 
-        gameController.getAutomataController().getCurrentAutomaton().drawTransitions();
+        for (AutomatonTransition transition : gameController.getAutomataController().getCurrentAutomaton().getTransitionSet()) {
+            if (transition.equals(gameController.getSelectedTransition())) {
+                transitionRenderer.setColor(Constants.SELECTED_TRANSITION_COLOR);
+                transition.draw(transitionRenderer);
+                transitionRenderer.setColor(Constants.TRANSITION_COLOR);
+            }
+            transition.draw(transitionRenderer);
+        }
 
         transitionRenderer.end();
         Gdx.gl.glLineWidth(1);
+
+        BitmapFont font = Assets.getInstance().getFonts().defaultSmall;
+        batch.begin();
+        for (AutomatonTransition transition : gameController.getAutomataController().getCurrentAutomaton().getTransitionSet()) {
+            String text = transition.getLabel();
+            glyphLayout.setText(font, text);
+            font.draw(batch, text, transition.getMiddlePoint().x - glyphLayout.width / 2.0f,
+                    transition.getMiddlePoint().y + glyphLayout.height / 2.0f);
+        }
+        batch.end();
     }
 
     private void renderGUI() {
@@ -292,6 +369,14 @@ public class GameRenderer implements Disposable {
 
     public Stage getStage() {
         return stage;
+    }
+
+    public SelectBox<AutomatonAction> getActionSelectBox() {
+        return actionSelectBox;
+    }
+
+    public SelectBox<String> getTransitionSelectBox() {
+        return transitionSelectBox;
     }
 
     public ButtonGroup getButtonGroup() {

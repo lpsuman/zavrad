@@ -34,6 +34,8 @@ public class Assets implements Disposable, AssetErrorListener {
         assetManager.setErrorListener(this);
         assetManager.load(Constants.MENU_BACKGROUND_TEXTURE, Texture.class);
         assetManager.load(Constants.AUTOMATA_STATE_TEXTURE, Texture.class);
+        assetManager.load(Constants.AUTOMATA_SELECTED_STATE_TEXTURE, Texture.class);
+        assetManager.load(Constants.AUTOMATA_RUNNING_STATE_TEXTURE, Texture.class);
 
         loadBlockTextures();
 

@@ -29,10 +29,14 @@ public class GameController {
     private int score;
 
     private AutomatonState selectedState;
+    private AutomatonTransition selectedTransition;
+
     private boolean isSimulationStarted;
     private boolean isSimulationRunning;
     private float simulationSpeed;
     private float timeUntilNextMove;
+
+    private boolean ignoreNextClick;
 
     public GameController(DirectedGame game) {
         this.game = game;
@@ -62,6 +66,7 @@ public class GameController {
         } else {
             isSimulationStarted = false;
             isSimulationRunning = false;
+            automataController.getCurrentAutomaton().setCurrentState(null);
         }
     }
 
@@ -84,6 +89,7 @@ public class GameController {
     }
 
     public void update(float deltaTime) {
+        ignoreNextClick = false;
         gameRenderer.getStage().act(deltaTime);
         if (isSimulationRunning) {
             timeUntilNextMove -= deltaTime * simulationSpeed * Constants.SIMULATION_SPEED_FACTOR;
@@ -124,6 +130,7 @@ public class GameController {
                 Gdx.app.error(TAG, "unsupported action");
         }
 
+
     }
 
     private void updateStateObjects() {
@@ -162,6 +169,20 @@ public class GameController {
 
     public void setSelectedState(AutomatonState selectedState) {
         this.selectedState = selectedState;
+        if (this.selectedState != null) {
+            gameRenderer.getActionSelectBox().setSelected(this.selectedState.getAction());
+        }
+    }
+
+    public AutomatonTransition getSelectedTransition() {
+        return selectedTransition;
+    }
+
+    public void setSelectedTransition(AutomatonTransition selectedTransition) {
+        this.selectedTransition = selectedTransition;
+        if (this.selectedTransition != null) {
+            gameRenderer.getTransitionSelectBox().setSelected(this.selectedTransition.getLabel());
+        }
     }
 
     public void setSimulationSpeed(float simulationSpeed) {
@@ -198,5 +219,13 @@ public class GameController {
 
     public void setGameRenderer(GameRenderer gameRenderer) {
         this.gameRenderer = gameRenderer;
+    }
+
+    public boolean isIgnoreNextClick() {
+        return ignoreNextClick;
+    }
+
+    public void setIgnoreNextClick(boolean ignoreNextClick) {
+        this.ignoreNextClick = ignoreNextClick;
     }
 }

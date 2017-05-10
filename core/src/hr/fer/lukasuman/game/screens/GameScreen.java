@@ -48,8 +48,8 @@ public class GameScreen extends AbstractGameScreen {
         inputController = new InputController(gameController, gameRenderer);
 
         inputMultiplexer = new InputMultiplexer();
-        inputMultiplexer.addProcessor(inputController);
         inputMultiplexer.addProcessor(gameRenderer.getStage());
+        inputMultiplexer.addProcessor(inputController);
         Gdx.input.setInputProcessor(inputMultiplexer);
 
         Gdx.input.setCatchBackKey(true);

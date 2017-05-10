@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.automata.AutomatonState;
+import hr.fer.lukasuman.game.automata.AutomatonTransition;
 import hr.fer.lukasuman.game.automata.DrawableAutomaton;
 import hr.fer.lukasuman.game.render.GameRenderer;
 import hr.fer.lukasuman.game.screens.MenuScreen;
@@ -23,6 +24,7 @@ public class InputController extends InputAdapter {
     private GameRenderer gameRenderer;
 
     private boolean wasStateMoved;
+    private boolean touchedDown;
 
     public InputController(GameController gameController, GameRenderer gameRenderer) {
         this.gameController = gameController;
@@ -31,6 +33,11 @@ public class InputController extends InputAdapter {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        if (gameController.isIgnoreNextClick()) {
+            gameController.setIgnoreNextClick(false);
+            return false;
+        }
+        touchedDown = true;
         Vector3 posInGame = getPosInGame(screenX, screenY, gameController.getAutomataCamera());
         if (gameController.checkInside(posInGame, gameController.getAutomataCamera())) {
             automataTouchDown(posInGame, button);
@@ -52,28 +59,35 @@ public class InputController extends InputAdapter {
     private void automataTouchDown(Vector3 posInGame, int button) {
 //        Gdx.app.debug(TAG, "click on automata screen");
         if (button == Input.Buttons.LEFT) {
-            AutomatonState closestState = gameController.getAutomataController()
-                    .getCurrentAutomaton().getClosestState(posInGame.x, posInGame.y);
+            DrawableAutomaton automaton = gameController.getAutomataController().getCurrentAutomaton();
+            AutomatonState closestState = automaton.getClosestState(posInGame.x, posInGame.y);
             float distance = DrawableAutomaton.pointDistance(closestState, posInGame.x, posInGame.y);
 
             Button checkedButton = gameRenderer.getButtonGroup().getChecked();
-            if (checkedButton.equals(gameRenderer.getSelectionButton())
-                    || checkedButton.equals(gameRenderer.getCreateTransitionButton())) {
+            if (checkedButton.equals(gameRenderer.getSelectionButton())) {
                 if (closestState != null) {
                     if (distance <= Constants.STATE_SIZE / 2) {
                         gameController.setSelectedState(closestState);
                     } else {
                         gameController.setSelectedState(null);
+                        gameController.setSelectedTransition(
+                                automaton.getClosestTransition(posInGame, Constants.STATE_SIZE / 2.0f));
                     }
                 }
             } else if (checkedButton.equals(gameRenderer.getCreateStateButton())) {
                 if (closestState == null || distance > Constants.STATE_SIZE) {
-                    gameController.getAutomataController().getCurrentAutomaton().createState(posInGame.x, posInGame.y);
+                    gameController.setSelectedState(automaton.createState(posInGame.x, posInGame.y));
                 }
             } else if (checkedButton.equals(gameRenderer.getDeleteStateButton())) {
                 if (closestState != null) {
                     if (distance <= Constants.STATE_SIZE / 2) {
-                        gameController.getAutomataController().getCurrentAutomaton().removeState(closestState);
+                        automaton.removeState(closestState);
+                    }
+                }
+            } else if (checkedButton.equals(gameRenderer.getCreateTransitionButton())) {
+                if (closestState != null) {
+                    if (distance <= Constants.STATE_SIZE / 2) {
+                        gameController.setSelectedState(closestState);
                     }
                 }
             }
@@ -89,6 +103,9 @@ public class InputController extends InputAdapter {
 
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
+        if (!touchedDown) {
+            return false;
+        }
         Vector3 posInGame = getPosInGame(screenX, screenY, gameController.getAutomataCamera());
         if (gameController.checkInside(posInGame, gameController.getAutomataCamera())) {
             automataTouchDragged(posInGame);
@@ -124,6 +141,7 @@ public class InputController extends InputAdapter {
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        touchedDown = false;
         Vector3 posInGame = getPosInGame(screenX, screenY, gameController.getAutomataCamera());
         if (gameController.checkInside(posInGame, gameController.getAutomataCamera())) {
             Button checkedButton = gameRenderer.getButtonGroup().getChecked();
@@ -141,7 +159,7 @@ public class InputController extends InputAdapter {
 
                     if (distance <= Constants.STATE_SIZE / 2) {
                         gameController.getAutomataController().getCurrentAutomaton().addTransition(
-                                Constants.DEFAULT_TRANSITION_TRIGGER, startState, endState);
+                                gameRenderer.getTransitionSelectBox().getSelected(), startState, endState);
                     }
                 }
             }
