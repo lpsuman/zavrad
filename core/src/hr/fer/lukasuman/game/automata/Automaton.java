@@ -19,6 +19,9 @@ public class Automaton implements Serializable {
     }
 
     public void addState(AutomatonState state) {
+        if (states.isEmpty()) {
+            startState = state;
+        }
         states.add(state);
     }
 

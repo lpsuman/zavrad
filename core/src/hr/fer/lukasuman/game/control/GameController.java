@@ -4,7 +4,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.scenes.scene2d.EventListener;
 import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.automata.*;
 import hr.fer.lukasuman.game.level.Level;
@@ -30,6 +29,7 @@ public class GameController {
     private int score;
 
     private AutomatonState selectedState;
+    private boolean isSimulationStarted;
     private boolean isSimulationRunning;
     private float simulationSpeed;
     private float timeUntilNextMove;
@@ -43,26 +43,35 @@ public class GameController {
         automataController = new AutomataController();
         levelController = new LevelController();
         score = 0;
+        isSimulationStarted = false;
         isSimulationRunning = false;
         simulationSpeed = 1.0f;
         resetTimeUntilNextMove();
     }
 
     public void startSimulation() {
-        if (isSimulationRunning == false) {
-            isSimulationRunning = true;
+        automataController.getCurrentAutomaton().reset();
+        levelController.getCurrentLevel().resetLevel();
+        resetTimeUntilNextMove();
+        if (isSimulationStarted == false) {
+            if (!automataController.getCurrentAutomaton().getStates().isEmpty()) {
+                isSimulationStarted = true;
+                isSimulationRunning = true;
+            }
+
         } else {
+            isSimulationStarted = false;
             isSimulationRunning = false;
-            levelController.getCurrentLevel().resetLevel();
-            resetTimeUntilNextMove();
         }
     }
 
     public void pauseSimulation() {
-        if (isSimulationRunning == false) {
-            isSimulationRunning = true;
-        } else {
-            isSimulationRunning = false;
+        if (isSimulationStarted) {
+            if (isSimulationRunning == true) {
+                isSimulationRunning = false;
+            } else {
+                isSimulationRunning = true;
+            }
         }
     }
 

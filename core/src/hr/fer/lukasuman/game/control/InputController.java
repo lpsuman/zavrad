@@ -22,6 +22,8 @@ public class InputController extends InputAdapter {
     private GameController gameController;
     private GameRenderer gameRenderer;
 
+    private boolean wasStateMoved;
+
     public InputController(GameController gameController, GameRenderer gameRenderer) {
         this.gameController = gameController;
         this.gameRenderer = gameRenderer;
@@ -104,8 +106,12 @@ public class InputController extends InputAdapter {
         Button checkedButton = gameRenderer.getButtonGroup().getChecked();
         if (checkedButton.equals(gameRenderer.getSelectionButton())) {
             if (selectedState != null) {
+                wasStateMoved = true;
                 selectedState.setX(posInGame.x);
                 selectedState.setY(posInGame.y);
+
+                //might be cpu intensive
+                gameController.getAutomataController().getCurrentAutomaton().recalculateTransitions();
             }
         } else if (checkedButton.equals(gameRenderer.getCreateTransitionButton())) {
 
@@ -122,7 +128,10 @@ public class InputController extends InputAdapter {
         if (gameController.checkInside(posInGame, gameController.getAutomataCamera())) {
             Button checkedButton = gameRenderer.getButtonGroup().getChecked();
             if (checkedButton.equals(gameRenderer.getSelectionButton())) {
-                gameController.setSelectedState(null);
+                if (wasStateMoved) {
+                    wasStateMoved = false;
+                    gameController.getAutomataController().getCurrentAutomaton().recalculateTransitions();
+                }
             } else {
                 AutomatonState startState = gameController.getSelectedState();
                 if (checkedButton.equals(gameRenderer.getCreateTransitionButton()) && (startState != null)) {
@@ -167,6 +176,9 @@ public class InputController extends InputAdapter {
             x -= Gdx.graphics.getWidth() / 2;
             x *= 2;
         }
+        float innerHeight = Gdx.graphics.getHeight() / (1.0f + Constants.UPPER_BORDER_RATIO + Constants.UPPER_BORDER_RATIO);
+        y -= innerHeight * Constants.UPPER_BORDER_RATIO;
+        y *= Gdx.graphics.getHeight() / innerHeight;
         Vector3 result = camera.unproject(new Vector3(x, y, 0));
 //        Gdx.app.debug(TAG, "output pos (" + result.x + " " + result.y + ") with " + x);
         return result;

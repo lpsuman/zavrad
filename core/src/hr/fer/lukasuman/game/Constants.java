@@ -28,6 +28,7 @@ public class Constants {
     public static final float TRANSITIONS_LINE_WIDTH = 2.0f;
     public static final Color TRANSITION_COLOR = new Color(0, 0, 0, 1);
     public static final float TRANSITION_FONT_SIZE = 20.0f;
+    public static final float BEZIER_FIDELITY = 1.0f;
 
     public static final String PREFERENCES_FILE = "preferences";
 

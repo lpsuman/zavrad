@@ -17,6 +17,9 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.automata.AutomatonState;
+import hr.fer.lukasuman.game.automata.AutomatonTransition;
+import hr.fer.lukasuman.game.automata.Consumer;
+import hr.fer.lukasuman.game.automata.DrawableAutomaton;
 import hr.fer.lukasuman.game.control.GameController;
 import hr.fer.lukasuman.game.level.Level;
 import hr.fer.lukasuman.game.level.blocks.AbstractBlock;
@@ -38,7 +41,6 @@ public class GameRenderer implements Disposable {
 
     private SpriteBatch batch;
     private GameController gameController;
-    private ShapeRenderer transitionRenderer;
 
     private Sprite playerSprite;
 
@@ -72,7 +74,6 @@ public class GameRenderer implements Disposable {
         viewportGUI = new ScreenViewport(cameraGUI);
 
         batch = new SpriteBatch();
-        transitionRenderer = new ShapeRenderer();
 
         gameController.setFullCamera(fullCamera);
         gameController.setAutomataCamera(leftCamera);
@@ -189,11 +190,21 @@ public class GameRenderer implements Disposable {
     private void renderAutomata(SpriteBatch batch) {
         leftViewport.apply();
         batch.setProjectionMatrix(leftCamera.combined);
-        batch.begin();
-        for(Sprite sprite : gameController.getAutomataController().getCurrentAutomaton().getStateSprites().values()) {
-            sprite.draw(batch);
-        }
         renderTransitionLines();
+        DrawableAutomaton automaton = gameController.getAutomataController().getCurrentAutomaton();
+        batch.begin();
+        for (Map.Entry<AutomatonState, Sprite> entry : automaton.getStateSprites().entrySet()) {
+            AutomatonState state = entry.getKey();
+            Sprite sprite = entry.getValue();
+            Color spriteColor = sprite.getColor().cpy();
+            if (state.equals(automaton.getCurrentState())) {
+                sprite.setColor(255, 0.0f, 0.0f, 1.0f);
+            } else if (state.equals(gameController.getSelectedState())){
+                batch.setColor(0.0f, 255.0f, 0.0f, 1.0f);
+            }
+            sprite.draw(batch);
+            sprite.setColor(spriteColor);
+        }
         batch.end();
     }
 
@@ -221,18 +232,14 @@ public class GameRenderer implements Disposable {
 
     private void renderTransitionLines() {
         Gdx.gl.glLineWidth(Constants.TRANSITIONS_LINE_WIDTH);
+        DrawableAutomaton automaton = gameController.getAutomataController().getCurrentAutomaton();
+        ShapeRenderer transitionRenderer = automaton.getTransitionRenderer();
+
         transitionRenderer.setProjectionMatrix(leftCamera.combined);
         transitionRenderer.begin(ShapeRenderer.ShapeType.Line);
         transitionRenderer.setColor(Constants.TRANSITION_COLOR);
 
-        for (AutomatonState state : gameController.getAutomataController().getCurrentAutomaton().getStates()) {
-            for (Map.Entry<String, AutomatonState> entry : state.getTransitions().entrySet()) {
-                String input = entry.getKey();
-                AutomatonState nextState = entry.getValue();
-
-                transitionRenderer.line(state.getX(), state.getY(), nextState.getX(), nextState.getY());
-            }
-        }
+        gameController.getAutomataController().getCurrentAutomaton().drawTransitions();
 
         transitionRenderer.end();
         Gdx.gl.glLineWidth(1);
@@ -246,7 +253,7 @@ public class GameRenderer implements Disposable {
     }
 
     private void updateScore() {
-        scoreLabel.setText("states: " + gameController.getScore());
+        scoreLabel.setText("states: " + gameController.getAutomataController().getCurrentAutomaton().getStates().size());
     }
 
     private void updateFpsCounter() {
@@ -272,6 +279,8 @@ public class GameRenderer implements Disposable {
                 (int)(height * (1.0f - 2 * Constants.GUI_BORDER_FACTOR)), true);
         viewportGUI.setScreenPosition((int)(width * Constants.GUI_BORDER_FACTOR),
                 (int)(height * Constants.GUI_BORDER_FACTOR));
+
+        gameController.getAutomataController().getCurrentAutomaton().recalculateTransitions();
 
 //        Gdx.app.debug(TAG, "right camera (" + rightCamera.viewportWidth + ", " + rightCamera.viewportHeight + ")");
     }

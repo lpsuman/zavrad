@@ -2,6 +2,7 @@ package hr.fer.lukasuman.game.automata;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import hr.fer.lukasuman.game.Constants;
 
 import java.util.HashMap;
@@ -14,6 +15,10 @@ public class DrawableAutomaton extends Automaton {
     private AutomatonState currentState;
     private int stateID = 1;
     private Map<AutomatonState, Map<String, AutomatonTransition>> transitionsMap;
+
+    private Consumer<AutomatonTransition> drawConsumer;
+    private Consumer<AutomatonTransition> recalculateConsumer;
+    private ShapeRenderer transitionRenderer;
 
     public DrawableAutomaton(Texture stateTexture) {
         super();
@@ -29,6 +34,37 @@ public class DrawableAutomaton extends Automaton {
                 addTransition(entry.getKey(), startState, entry.getValue());
             }
         }
+        reset();
+
+        transitionRenderer = new ShapeRenderer();
+        drawConsumer = new Consumer<AutomatonTransition>() {
+            @Override
+            public void accept(AutomatonTransition transition) {
+                transition.draw(DrawableAutomaton.this.transitionRenderer);
+            }
+        };
+        recalculateConsumer = new Consumer<AutomatonTransition>() {
+            @Override
+            public void accept(AutomatonTransition transition) {
+                transition.recalculate();
+            }
+        };
+    }
+
+    private void doOnTransitions(Consumer<AutomatonTransition> consumer) {
+        for (Map.Entry<AutomatonState, Map<String, AutomatonTransition>> transMap : transitionsMap.entrySet()) {
+            for (Map.Entry<String, AutomatonTransition> entry : transMap.getValue().entrySet()) {
+                consumer.accept(entry.getValue());
+            }
+        }
+    }
+
+    public void recalculateTransitions() {
+        doOnTransitions(recalculateConsumer);
+    }
+
+    public void drawTransitions() {
+        doOnTransitions(drawConsumer);
     }
 
     private void addSpriteForState(AutomatonState state) {
@@ -58,11 +94,18 @@ public class DrawableAutomaton extends Automaton {
     }
 
     public void addTransition(String trigger, AutomatonState startState, AutomatonState endState) {
+        if (startState.equals(endState)) {
+            return;
+        }
         if (transitionsMap.get(startState) == null) {
             transitionsMap.put(startState, new HashMap<String, AutomatonTransition>());
         }
         startState.addTransition(trigger, endState);
         transitionsMap.get(startState).put(trigger, new AutomatonTransition(trigger, startState, endState));
+    }
+
+    public void reset() {
+        currentState = getStartState();
     }
 
     public Map<AutomatonState, Sprite> getStateSprites() {
@@ -109,5 +152,13 @@ public class DrawableAutomaton extends Automaton {
             return Float.MAX_VALUE;
         }
         return pointDistance(state.getX(), state.getY(), x, y);
+    }
+
+    public Map<AutomatonState, Map<String, AutomatonTransition>> getTransitionsMap() {
+        return transitionsMap;
+    }
+
+    public ShapeRenderer getTransitionRenderer() {
+        return transitionRenderer;
     }
 }
