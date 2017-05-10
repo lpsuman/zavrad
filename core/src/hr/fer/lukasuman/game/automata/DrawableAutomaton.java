@@ -39,9 +39,9 @@ public class DrawableAutomaton extends Automaton {
         reset();
     }
 
-    public void addTransition(String trigger, AutomatonState startState, AutomatonState endState) {
+    public AutomatonTransition addTransition(String trigger, AutomatonState startState, AutomatonState endState) {
         if (startState.equals(endState)) {
-            return;
+            return null;
         }
         if (transitionsMap.get(startState) == null) {
             transitionsMap.put(startState, new HashMap<String, AutomatonTransition>());
@@ -50,6 +50,7 @@ public class DrawableAutomaton extends Automaton {
         AutomatonTransition newTransition = new AutomatonTransition(trigger, startState, endState);
         transitionsMap.get(startState).put(trigger, newTransition);
         transitionSet.add(newTransition);
+        return newTransition;
     }
 
     public AutomatonTransition getClosestTransition(Vector3 position, float maxDistance) {

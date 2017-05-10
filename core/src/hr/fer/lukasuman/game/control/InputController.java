@@ -158,8 +158,9 @@ public class InputController extends InputAdapter {
                     float distance = DrawableAutomaton.pointDistance(endState, posInGame.x, posInGame.y);
 
                     if (distance <= Constants.STATE_SIZE / 2) {
-                        gameController.getAutomataController().getCurrentAutomaton().addTransition(
+                        AutomatonTransition newTransition = gameController.getAutomataController().getCurrentAutomaton().addTransition(
                                 gameRenderer.getTransitionSelectBox().getSelected(), startState, endState);
+                        gameController.setSelectedTransition(newTransition);
                     }
                 }
             }

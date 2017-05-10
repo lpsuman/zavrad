@@ -288,6 +288,7 @@ public class GameRenderer implements Disposable {
         playerSprite.setOrigin(halfWidth, halfHeight);
         Vector2 playerPos = level.calcPos(level.getCurrentPosition().x, level.getCurrentPosition().y);
         playerSprite.setPosition(playerPos.x - halfWidth, playerPos.y - halfHeight);
+        playerSprite.setRotation(-90.0f * level.getCurrentDirection().getDegrees());
         playerSprite.draw(batch);
         batch.end();
     }
