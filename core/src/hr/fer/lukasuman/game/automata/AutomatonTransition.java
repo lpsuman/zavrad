@@ -153,6 +153,14 @@ public class AutomatonTransition {
         startState.getTransitions().put(this.label, tempState);
     }
 
+    public AutomatonState getStartState() {
+        return startState;
+    }
+
+    public AutomatonState getEndState() {
+        return endState;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

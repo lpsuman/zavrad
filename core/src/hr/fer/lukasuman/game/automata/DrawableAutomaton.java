@@ -106,6 +106,17 @@ public class DrawableAutomaton extends Automaton {
 
     @Override
     public void removeState(AutomatonState state) {
+        transitionsMap.remove(state);
+        for (Map.Entry<AutomatonState, Map<String, AutomatonTransition>> entry : transitionsMap.entrySet()) {
+            for (Map.Entry<String, AutomatonTransition> entry2 : entry.getValue().entrySet()) {
+
+            }
+        }
+        for (AutomatonTransition transition : transitionSet) {
+            if (!transition.getStartState().equals(state) || !transition.getEndState().equals(state)) {
+
+            }
+        }
         super.removeState(state);
         stateSprites.remove(state);
     }
