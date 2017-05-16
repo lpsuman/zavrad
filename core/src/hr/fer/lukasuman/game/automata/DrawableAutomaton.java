@@ -4,7 +4,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
+import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
 
 import java.util.*;
@@ -17,20 +17,28 @@ public class DrawableAutomaton extends Automaton {
     private int stateID = 1;
     private Set<AutomatonTransition> transitionSet;
 
-    public DrawableAutomaton(Texture stateTexture) {
-        super();
+    public DrawableAutomaton(Texture stateTexture, String name) {
+        super(name);
         this.stateTexture = stateTexture;
-        stateSprites = new HashMap<AutomatonState, Sprite>();
+        stateSprites = new HashMap<>();
+        transitionSet = new HashSet<>();
+        reset();
+    }
+
+    public DrawableAutomaton(Automaton automaton) {
+        super(automaton);
+        this.stateTexture = Assets.getInstance().getAssetManager().get(Constants.AUTOMATA_STATE_TEXTURE);
+        stateSprites = new HashMap<>();
         for (AutomatonState state : getStates()) {
             addSpriteForState(state);
         }
         currentState = getStartState();
+        transitionSet = new HashSet<>();
         for (AutomatonState startState : getStates()) {
             for (Map.Entry<String, AutomatonState> entry : startState.getTransitions().entrySet()) {
                 addTransition(entry.getKey(), startState, entry.getValue());
             }
         }
-        transitionSet = new HashSet<AutomatonTransition>();
         reset();
     }
 
@@ -88,8 +96,9 @@ public class DrawableAutomaton extends Automaton {
         stateSprites.put(state, sprite);
     }
 
-    public AutomatonState createState(float posX, float posY) {
+    public AutomatonState createState(float posX, float posY, AutomatonAction action) {
         AutomatonState newState = new AutomatonState(Constants.DEFAULT_STATE_LABEL + (stateID++), posX, posY, this);
+        newState.setAction(action);
         addState(newState);
         return newState;
     }
@@ -111,6 +120,10 @@ public class DrawableAutomaton extends Automaton {
         }
         super.removeState(state);
         stateSprites.remove(state);
+    }
+
+    public Automaton getSerializable() {
+        return new Automaton(this);
     }
 
     public void reset() {

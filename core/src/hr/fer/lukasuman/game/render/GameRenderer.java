@@ -1,6 +1,8 @@
 package hr.fer.lukasuman.game.render;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -15,9 +17,14 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Disposable;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.*;
+import com.kotcrab.vis.ui.VisUI;
+import com.kotcrab.vis.ui.widget.file.FileChooser;
+import com.kotcrab.vis.ui.widget.file.FileTypeFilter;
+import com.kotcrab.vis.ui.widget.file.SingleFileChooserListener;
 import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
+import hr.fer.lukasuman.game.GamePreferences;
 import hr.fer.lukasuman.game.automata.*;
 import hr.fer.lukasuman.game.control.GameController;
 import hr.fer.lukasuman.game.level.Level;
@@ -50,19 +57,28 @@ public class GameRenderer implements Disposable {
 
     private Stage stage;
     private Skin skin;
+
     private Label scoreLabel;
     private SelectBox<AutomatonAction> actionSelectBox;
     private SelectBox<String> transitionSelectBox;
+    private TextButton saveAutomatonButton;
+    private TextButton loadAutomatonButton;
+
     private Label fpsLabel;
+
     private ButtonGroup buttonGroup;
     private TextButton selectionButton;
     private TextButton createStateButton;
     private TextButton deleteStateButton;
     private TextButton createTransitionButton;
     private TextButton deleteTransitionButton;
+    private TextButton setStartStateButton;
+
     private TextButton startSimulationButton;
     private TextButton pauseSimulationButton;
     private Slider simulationSpeedSlider;
+
+    private FileChooser fileChooser;
 
     public GameRenderer (GameController gameController) {
         this.gameController = gameController;
@@ -70,6 +86,25 @@ public class GameRenderer implements Disposable {
     }
 
     private void init () {
+        initCameras();
+
+        batch = new SpriteBatch();
+        stateTexture = Assets.getInstance().getAssetManager().get(Constants.AUTOMATA_STATE_TEXTURE);
+        selectedStateTexture = Assets.getInstance().getAssetManager().get(Constants.AUTOMATA_SELECTED_STATE_TEXTURE);
+        runningStateTexture = Assets.getInstance().getAssetManager().get(Constants.AUTOMATA_RUNNING_STATE_TEXTURE);
+        playerSprite = new Sprite((Texture) Assets.getInstance().getAssetManager().get(Constants.PLAYER_TEXTURE));
+        transitionRenderer = new ShapeRenderer();
+        glyphLayout = new GlyphLayout();
+
+        initFileChooser();
+
+        stage = new Stage(new FitViewport(Constants.VIEWPORT_GUI_WIDTH, Constants.VIEWPORT_GUI_HEIGHT));
+        rebuildStage();
+
+        resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+    }
+
+    private void initCameras() {
         fullCamera = new OrthographicCamera(Constants.VIEWPORT_WIDTH, Constants.VIEWPORT_HEIGHT);
         leftCamera = new OrthographicCamera(Constants.VIEWPORT_WIDTH, Constants.VIEWPORT_HEIGHT);
         rightCamera = new OrthographicCamera(Constants.VIEWPORT_WIDTH, Constants.VIEWPORT_HEIGHT);
@@ -77,9 +112,6 @@ public class GameRenderer implements Disposable {
 
         leftViewport = new ScreenViewport(leftCamera);
         rightViewport = new ScreenViewport(rightCamera);
-        viewportGUI = new ScreenViewport(cameraGUI);
-
-        batch = new SpriteBatch();
 
         gameController.setFullCamera(fullCamera);
         gameController.setAutomataCamera(leftCamera);
@@ -98,18 +130,6 @@ public class GameRenderer implements Disposable {
         cameraGUI.position.set(0, 0, 0);
         cameraGUI.setToOrtho(false); // flip y-axis
         cameraGUI.update();
-
-        stateTexture = Assets.getInstance().getAssetManager().get(Constants.AUTOMATA_STATE_TEXTURE);
-        selectedStateTexture = Assets.getInstance().getAssetManager().get(Constants.AUTOMATA_SELECTED_STATE_TEXTURE);
-        runningStateTexture = Assets.getInstance().getAssetManager().get(Constants.AUTOMATA_RUNNING_STATE_TEXTURE);
-        playerSprite = new Sprite((Texture) Assets.getInstance().getAssetManager().get(Constants.PLAYER_TEXTURE));
-        transitionRenderer = new ShapeRenderer();
-        glyphLayout = new GlyphLayout();
-
-        stage = new Stage(viewportGUI);
-        rebuildStage();
-
-        resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
     private void rebuildStage () {
@@ -117,7 +137,6 @@ public class GameRenderer implements Disposable {
 
         Table table = new Table();
         table.setFillParent(true);
-
 
         table.add(rebuildAutomataNorth()).uniform().left();
         table.add(rebuildLevelNorth()).uniform().right();
@@ -166,6 +185,28 @@ public class GameRenderer implements Disposable {
         });
         automataNorth.addActor(transitionSelectBox);
 
+        saveAutomatonButton = new TextButton("save automaton", skin);
+        saveAutomatonButton.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                gameController.setFileProcessor(gameController::saveAutomaton);
+                fileChooser.setMode(FileChooser.Mode.SAVE);
+                showFileChooser();
+            }
+        });
+        automataNorth.addActor(saveAutomatonButton);
+
+        loadAutomatonButton = new TextButton("load automaton", skin);
+        loadAutomatonButton.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                gameController.setFileProcessor(gameController::loadAutomaton);
+                fileChooser.setMode(FileChooser.Mode.OPEN);
+                showFileChooser();
+            }
+        });
+        automataNorth.addActor(loadAutomatonButton);
+
         return automataNorth;
     }
 
@@ -202,6 +243,10 @@ public class GameRenderer implements Disposable {
         buttonGroup.add(deleteTransitionButton);
         automataSouth.addActor(deleteTransitionButton);
 
+        setStartStateButton = new TextButton("set start", skin);
+        buttonGroup.add(setStartStateButton);
+        automataSouth.addActor(setStartStateButton);
+
         return automataSouth;
     }
 
@@ -236,6 +281,28 @@ public class GameRenderer implements Disposable {
         levelSouth.addActor(simulationSpeedSlider);
 
         return levelSouth;
+    }
+
+    private void initFileChooser() {
+        VisUI.load();
+        FileChooser.setDefaultPrefsName("hr.fer.lukasuman.game.filechooser");
+        fileChooser = new FileChooser(FileChooser.Mode.OPEN);
+        fileChooser.setSelectionMode(FileChooser.SelectionMode.FILES_AND_DIRECTORIES);
+        FileTypeFilter typeFilter = new FileTypeFilter(false); //allow "All Types" mode where all files are shown
+        typeFilter.addRule("Java serializable files (*.ser)", "ser");
+        fileChooser.setFileTypeFilter(typeFilter);
+        fileChooser.setCenterOnAdd(true);
+        fileChooser.setListener(new SingleFileChooserListener() {
+            @Override
+            protected void selected(FileHandle file) {
+                gameController.getFileProcessor().processFile(file);
+                gameController.setFileProcessor(null);
+            }
+        });
+    }
+
+    public void showFileChooser() {
+        stage.addActor(fileChooser.fadeIn());
     }
 
     public void render () {
@@ -323,9 +390,16 @@ public class GameRenderer implements Disposable {
     }
 
     private void renderGUI() {
-        viewportGUI.apply();
+        stage.getViewport().apply();
         updateScore();
-        updateFpsCounter();
+        if (GamePreferences.getInstance().showFpsCounter) {
+            updateFpsCounter();
+            fpsLabel.setVisible(true);
+        } else {
+            fpsLabel.setVisible(false);
+        }
+
+        stage.act();
         stage.draw();
     }
 
@@ -358,10 +432,12 @@ public class GameRenderer implements Disposable {
 
         leftCamera.zoom = Constants.VIEWPORT_WIDTH / measure;
 
-        viewportGUI.update((int)(width * (1.0f - 2 * Constants.GUI_BORDER_FACTOR)),
-                (int)(height * (1.0f - 2 * Constants.GUI_BORDER_FACTOR)), true);
-        viewportGUI.setScreenPosition((int)(width * Constants.GUI_BORDER_FACTOR),
-                (int)(height * Constants.GUI_BORDER_FACTOR));
+        stage.getViewport().update(width, height, true);
+
+//        viewportGUI.update((int)(width * (1.0f - 2 * Constants.GUI_BORDER_FACTOR)),
+//                (int)(height * (1.0f - 2 * Constants.GUI_BORDER_FACTOR)), true);
+//        viewportGUI.setScreenPosition((int)(width * Constants.GUI_BORDER_FACTOR),
+//                (int)(height * Constants.GUI_BORDER_FACTOR));
 
         gameController.getAutomataController().getCurrentAutomaton().recalculateTransitions();
 
@@ -371,6 +447,7 @@ public class GameRenderer implements Disposable {
     @Override
     public void dispose () {
         batch.dispose();
+        VisUI.dispose();
     }
 
     public Stage getStage() {
@@ -409,6 +486,10 @@ public class GameRenderer implements Disposable {
         return deleteTransitionButton;
     }
 
+    public TextButton getSetStartStateButton() {
+        return setStartStateButton;
+    }
+
     public TextButton getStartSimulationButton() {
         return startSimulationButton;
     }
@@ -429,7 +510,11 @@ public class GameRenderer implements Disposable {
         return rightViewport;
     }
 
-    public ScreenViewport getViewportGUI() {
-        return viewportGUI;
+    public Viewport getViewportGUI() {
+        return stage.getViewport();
+    }
+
+    public FileChooser getFileChooser() {
+        return fileChooser;
     }
 }

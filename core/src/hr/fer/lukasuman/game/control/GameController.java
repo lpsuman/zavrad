@@ -1,6 +1,7 @@
 package hr.fer.lukasuman.game.control;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Vector2;
@@ -14,6 +15,7 @@ import hr.fer.lukasuman.game.screens.DirectedGame;
 import hr.fer.lukasuman.game.render.GameRenderer;
 import hr.fer.lukasuman.game.level.LevelController;
 
+import java.io.*;
 import java.util.Map;
 
 public class GameController {
@@ -39,6 +41,8 @@ public class GameController {
 
     private boolean ignoreNextClick;
 
+    private FileProcessor fileProcessor;
+
     public GameController(DirectedGame game) {
         this.game = game;
         init();
@@ -62,12 +66,14 @@ public class GameController {
             if (!automataController.getCurrentAutomaton().getStates().isEmpty()) {
                 isSimulationStarted = true;
                 isSimulationRunning = true;
+                gameRenderer.getStartSimulationButton().setText(Constants.STOP_SIM_BTN_TEXT);
             }
 
         } else {
             isSimulationStarted = false;
             isSimulationRunning = false;
             automataController.getCurrentAutomaton().setCurrentState(null);
+            gameRenderer.getStartSimulationButton().setText(Constants.START_SIM_BTN_TEXT);
         }
     }
 
@@ -75,10 +81,48 @@ public class GameController {
         if (isSimulationStarted) {
             if (isSimulationRunning == true) {
                 isSimulationRunning = false;
+                gameRenderer.getPauseSimulationButton().setText(Constants.RESUME_SIM_BTN_TEXT);
             } else {
                 isSimulationRunning = true;
+                gameRenderer.getPauseSimulationButton().setText(Constants.PAUSE_SIM_BTN_TEXT);
             }
         }
+    }
+
+    public boolean saveAutomaton(FileHandle file) {
+        try (FileOutputStream fileOut = new FileOutputStream(file.path());
+                ObjectOutputStream objOut = new ObjectOutputStream(fileOut)) {
+            Automaton automaton = automataController.getCurrentAutomaton().getSerializable();
+            automaton.getStates().forEach(s -> System.out.println(s));
+            objOut.writeObject(automaton);
+        } catch (FileNotFoundException exc) {
+            exc.printStackTrace();
+            return false;
+        } catch (IOException exc) {
+            exc.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    public boolean loadAutomaton(FileHandle file) {
+        try (FileInputStream fileOut = new FileInputStream(file.path());
+             ObjectInputStream objOut = new ObjectInputStream(fileOut)) {
+            Automaton automaton = (Automaton)objOut.readObject();
+            DrawableAutomaton newAutomaton = new DrawableAutomaton(automaton);
+            automataController.addAutomaton(newAutomaton);
+            automataController.setCurrentAutomaton(newAutomaton);
+        } catch (FileNotFoundException exc) {
+            exc.printStackTrace();
+            return false;
+        } catch (IOException exc) {
+            exc.printStackTrace();
+            return false;
+        } catch (ClassNotFoundException exc) {
+            exc.printStackTrace();
+            return false;
+        }
+        return true;
     }
 
     private void resetTimeUntilNextMove() {
@@ -228,5 +272,13 @@ public class GameController {
 
     public void setIgnoreNextClick(boolean ignoreNextClick) {
         this.ignoreNextClick = ignoreNextClick;
+    }
+
+    public FileProcessor getFileProcessor() {
+        return fileProcessor;
+    }
+
+    public void setFileProcessor(FileProcessor fileProcessor) {
+        this.fileProcessor = fileProcessor;
     }
 }

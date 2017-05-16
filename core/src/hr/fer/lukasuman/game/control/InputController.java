@@ -76,7 +76,8 @@ public class InputController extends InputAdapter {
                 }
             } else if (checkedButton.equals(gameRenderer.getCreateStateButton())) {
                 if (closestState == null || distance > Constants.STATE_SIZE) {
-                    gameController.setSelectedState(automaton.createState(posInGame.x, posInGame.y));
+                    gameController.setSelectedState(automaton.createState(
+                            posInGame.x, posInGame.y, gameRenderer.getActionSelectBox().getSelected()));
                 }
             } else if (checkedButton.equals(gameRenderer.getDeleteStateButton())) {
                 if (closestState != null) {
@@ -100,6 +101,10 @@ public class InputController extends InputAdapter {
                         gameController.setSelectedTransition(null);
                     }
                     automaton.removeTransition(closestTransition);
+                }
+            } else if (checkedButton.equals(gameRenderer.getSetStartStateButton())) {
+                if (closestState != null) {
+                    automaton.setStartState(closestState);
                 }
             }
         } else if (button == Input.Buttons.RIGHT) {

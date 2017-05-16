@@ -29,8 +29,18 @@ public class AutomatonState implements Serializable {
         this.y = y;
         this.action = action;
         this.parent = parent;
-        transitions = new HashMap<String, AutomatonState>();
-        incomingStates = new HashSet<AutomatonState>();
+        transitions = new HashMap<>();
+        incomingStates = new HashSet<>();
+    }
+
+    public AutomatonState(AutomatonState other) {
+        this.label = other.label;
+        this.x = other.x;
+        this.y = other.y;
+        this.action = other.action;
+        this.parent = other.parent;
+        transitions = new HashMap<>(other.transitions);
+        incomingStates = new HashSet<>(other.incomingStates);
     }
 
     public void addTransition(String input, AutomatonState newState) {
@@ -44,6 +54,16 @@ public class AutomatonState implements Serializable {
             nextState = this;
         }
         return nextState;
+    }
+
+    public void update(Automaton newParent, Map<AutomatonState, AutomatonState> parentMap) {
+        parent = newParent;
+        transitions.replaceAll((k, v) -> parentMap.get(v));
+        Set<AutomatonState> newIncomingStates = new HashSet<>();
+        for (AutomatonState oldState : incomingStates) {
+            newIncomingStates.add(parentMap.get(oldState));
+        }
+        incomingStates = newIncomingStates;
     }
 
     public void addIncomingState(AutomatonState state) {
@@ -97,6 +117,10 @@ public class AutomatonState implements Serializable {
         return parent;
     }
 
+    public void setParent(Automaton parent) {
+        this.parent = parent;
+    }
+
     public Map<String, AutomatonState> getTransitions() {
         return transitions;
     }
@@ -117,5 +141,10 @@ public class AutomatonState implements Serializable {
         int result = label.hashCode();
         result = 31 * result + parent.hashCode();
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "AutomatonState{" + label + " " + x + " " + y + "}";
     }
 }

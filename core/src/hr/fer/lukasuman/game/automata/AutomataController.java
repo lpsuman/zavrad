@@ -18,13 +18,24 @@ public class AutomataController implements Disposable {
     }
 
     public void init() {
-        automata = new ArrayList<DrawableAutomaton>();
+        automata = new ArrayList<>();
         stateTexture = new Texture(Constants.AUTOMATA_STATE_TEXTURE);
-        currentAutomaton = new DrawableAutomaton(stateTexture);
+        currentAutomaton = new DrawableAutomaton(stateTexture, "automaton");
     }
 
     public DrawableAutomaton getCurrentAutomaton() {
         return currentAutomaton;
+    }
+
+    public void setCurrentAutomaton(DrawableAutomaton currentAutomaton) {
+        if (!automata.contains(currentAutomaton)) {
+            return;
+        }
+        this.currentAutomaton = currentAutomaton;
+    }
+
+    public void addAutomaton(DrawableAutomaton automaton) {
+        automata.add(automaton);
     }
 
     @Override

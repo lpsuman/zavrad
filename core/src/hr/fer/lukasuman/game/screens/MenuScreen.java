@@ -9,6 +9,8 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Scaling;
+import com.badlogic.gdx.utils.viewport.FillViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
@@ -18,6 +20,7 @@ public class MenuScreen extends AbstractGameScreen {
     private static final String TAG = MenuScreen.class.getName();
 
     private Stage stage;
+    private Stack stack;
     private Image imgBackground;
     private TextButton btnMenuPlay;
     private TextButton btnMenuOptions;
@@ -44,7 +47,7 @@ public class MenuScreen extends AbstractGameScreen {
         Table layerOptionsWindow = buildOptionsWindowLayer();
 
         stage.clear();
-        Stack stack = new Stack();
+        stack = new Stack();
         stage.addActor(stack);
         stack.setSize(Constants.VIEWPORT_GUI_WIDTH, Constants.VIEWPORT_GUI_HEIGHT);
         stack.add(layerBackground);
@@ -55,7 +58,8 @@ public class MenuScreen extends AbstractGameScreen {
     private Table buildBackgroundLayer () {
         Table layer = new Table();
         imgBackground = new Image((Texture)Assets.getInstance().getAssetManager().get(Constants.MENU_BACKGROUND_TEXTURE));
-        layer.add(imgBackground);
+        imgBackground.setScaling(Scaling.fill);
+        layer.add(imgBackground).fill();
         return layer;
     }
 
@@ -173,6 +177,7 @@ public class MenuScreen extends AbstractGameScreen {
 
     private void saveSettings() {
         GamePreferences prefs = GamePreferences.getInstance();
+        prefs.showFpsCounter = chkShowFpsCounter.isChecked();
         prefs.save();
     }
 
@@ -187,7 +192,7 @@ public class MenuScreen extends AbstractGameScreen {
     }
 
     @Override
-    public void render (float deltaTime) {
+    public void render(float deltaTime) {
         Gdx.gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
@@ -208,7 +213,7 @@ public class MenuScreen extends AbstractGameScreen {
     }
 
     @Override public void show () {
-        stage = new Stage(new FitViewport(Constants.VIEWPORT_GUI_WIDTH, Constants.VIEWPORT_GUI_HEIGHT));
+        stage = new Stage(new FillViewport(Constants.VIEWPORT_GUI_WIDTH, Constants.VIEWPORT_GUI_HEIGHT));
         rebuildStage();
     }
 
