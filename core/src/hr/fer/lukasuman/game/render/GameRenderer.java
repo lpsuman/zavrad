@@ -135,8 +135,7 @@ public class GameRenderer implements Disposable {
 
     private HorizontalGroup rebuildAutomataNorth() {
         HorizontalGroup automataNorth = new HorizontalGroup();
-
-        scoreLabel = new Label("0", skin, "default-font", Color.WHITE);
+        scoreLabel = new Label("0", skin, Constants.DEFAULT_FONT_NAME, Color.WHITE);
         automataNorth.addActor(scoreLabel);
 
         actionSelectBox = new SelectBox<AutomatonAction>(skin);
@@ -347,11 +346,17 @@ public class GameRenderer implements Disposable {
     }
 
     public void resize (int width, int height) {
-        int borderY = (int)(width / 2 * Constants.UPPER_BORDER_RATIO);
-        leftViewport.update(width / 2, width / 2);
-        leftViewport.setScreenY(borderY);
-        rightViewport.update(width / 2, width / 2);
-        rightViewport.setScreenPosition(width / 2, borderY);
+        float viewportHeight = height / (1.0f + Constants.UPPER_BORDER_RATIO + Constants.LOWER_BORDER_RATIO);
+        int borderY = (int)(height - viewportHeight * (1.0f + Constants.UPPER_BORDER_RATIO));
+        int measure = (int)Math.min(width / 2.0f, viewportHeight);
+        int paddingX = ((int)(width / 2.0f) - measure) / 2;
+        int paddingY = ((int)viewportHeight - measure) / 2;
+        leftViewport.update(measure, measure);
+        leftViewport.setScreenPosition(paddingX, borderY + paddingY);
+        rightViewport.update(measure, measure);
+        rightViewport.setScreenPosition(width / 2 + paddingX, borderY + paddingY);
+
+        leftCamera.zoom = Constants.VIEWPORT_WIDTH / measure;
 
         viewportGUI.update((int)(width * (1.0f - 2 * Constants.GUI_BORDER_FACTOR)),
                 (int)(height * (1.0f - 2 * Constants.GUI_BORDER_FACTOR)), true);
@@ -414,5 +419,17 @@ public class GameRenderer implements Disposable {
 
     public Slider getSimulationSpeedSlider() {
         return simulationSpeedSlider;
+    }
+
+    public ScreenViewport getLeftViewport() {
+        return leftViewport;
+    }
+
+    public ScreenViewport getRightViewport() {
+        return rightViewport;
+    }
+
+    public ScreenViewport getViewportGUI() {
+        return viewportGUI;
     }
 }

@@ -33,8 +33,13 @@ public class Constants {
 
     public static final String PREFERENCES_FILE = "preferences";
 
-    public static final String TEXTURE_ATLAS_LIBGDX_UI = "images/uiskin.atlas";
-    public static final String SKIN_LIBGDX_UI = "images/uiskin.json";
+//    public static final String SKIN_NAME = "glassy-ui";
+//    public static final String DEFAULT_FONT_NAME = "font";
+    public static final String SKIN_NAME = "uiskin";
+    public static final String DEFAULT_FONT_NAME = "default-font";
+
+    public static final String TEXTURE_ATLAS_LIBGDX_UI = "images/" + SKIN_NAME + ".atlas";
+    public static final String SKIN_LIBGDX_UI = "images/" + SKIN_NAME + ".json";
 
     public static final String AUTOMATA_STATE_TEXTURE = "state.png";
     public static final String AUTOMATA_SELECTED_STATE_TEXTURE = "state_selected.png";

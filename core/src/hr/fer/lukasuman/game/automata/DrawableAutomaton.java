@@ -7,10 +7,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import hr.fer.lukasuman.game.Constants;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class DrawableAutomaton extends Automaton {
 
@@ -18,7 +15,6 @@ public class DrawableAutomaton extends Automaton {
     private Map<AutomatonState, Sprite> stateSprites;
     private AutomatonState currentState;
     private int stateID = 1;
-    private Map<AutomatonState, Map<String, AutomatonTransition>> transitionsMap;
     private Set<AutomatonTransition> transitionSet;
 
     public DrawableAutomaton(Texture stateTexture) {
@@ -29,7 +25,6 @@ public class DrawableAutomaton extends Automaton {
             addSpriteForState(state);
         }
         currentState = getStartState();
-        transitionsMap = new HashMap<AutomatonState, Map<String, AutomatonTransition>>();
         for (AutomatonState startState : getStates()) {
             for (Map.Entry<String, AutomatonState> entry : startState.getTransitions().entrySet()) {
                 addTransition(entry.getKey(), startState, entry.getValue());
@@ -43,17 +38,18 @@ public class DrawableAutomaton extends Automaton {
         if (startState.equals(endState)) {
             return null;
         }
-        if (transitionsMap.get(startState) == null) {
-            transitionsMap.put(startState, new HashMap<String, AutomatonTransition>());
-        }
         startState.addTransition(trigger, endState);
         AutomatonTransition newTransition = new AutomatonTransition(trigger, startState, endState);
-        transitionsMap.get(startState).put(trigger, newTransition);
         transitionSet.add(newTransition);
         return newTransition;
     }
 
-    public AutomatonTransition getClosestTransition(Vector3 position, float maxDistance) {
+    public void removeTransition(AutomatonTransition transition) {
+        transition.getStartState().getTransitions().remove(transition.getLabel());
+        transitionSet.remove(transition);
+    }
+
+    public AutomatonTransition getClosestTransition(Vector2 position, float maxDistance) {
         float minDistance = Float.MAX_VALUE;
         AutomatonTransition closestTransition = null;
 
@@ -106,15 +102,11 @@ public class DrawableAutomaton extends Automaton {
 
     @Override
     public void removeState(AutomatonState state) {
-        transitionsMap.remove(state);
-        for (Map.Entry<AutomatonState, Map<String, AutomatonTransition>> entry : transitionsMap.entrySet()) {
-            for (Map.Entry<String, AutomatonTransition> entry2 : entry.getValue().entrySet()) {
-
-            }
-        }
-        for (AutomatonTransition transition : transitionSet) {
+        Iterator<AutomatonTransition> iterator = transitionSet.iterator();
+        while (iterator.hasNext()) {
+            AutomatonTransition transition = iterator.next();
             if (!transition.getStartState().equals(state) || !transition.getEndState().equals(state)) {
-
+                iterator.remove();
             }
         }
         super.removeState(state);
@@ -164,7 +156,7 @@ public class DrawableAutomaton extends Automaton {
         return (float)Math.sqrt(dx * dx + dy * dy);
     }
 
-    public static float pointDistance(Vector3 pos1, Vector2 pos2) {
+    public static float pointDistance(Vector2 pos1, Vector2 pos2) {
         return pointDistance(pos1.x, pos1.y, pos2.x, pos2.y);
     }
 
@@ -173,10 +165,6 @@ public class DrawableAutomaton extends Automaton {
             return Float.MAX_VALUE;
         }
         return pointDistance(state.getX(), state.getY(), x, y);
-    }
-
-    public Map<AutomatonState, Map<String, AutomatonTransition>> getTransitionsMap() {
-        return transitionsMap;
     }
 
     public Set<AutomatonTransition> getTransitionSet() {

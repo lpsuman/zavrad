@@ -106,7 +106,7 @@ public class MenuScreen extends AbstractGameScreen {
         Table tbl = new Table();
 
         tbl.pad(10, 10, 0, 10);
-        tbl.add(new Label("Debug", skin, "default-font", Color.RED)).colspan(3);
+        tbl.add(new Label("Debug", skin, Constants.DEFAULT_FONT_NAME, Color.RED)).colspan(3);
         tbl.row();
         tbl.columnDefaults(0).padRight(10);
         tbl.columnDefaults(1).padRight(10);

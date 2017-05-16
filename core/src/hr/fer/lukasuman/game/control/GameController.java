@@ -3,6 +3,7 @@ package hr.fer.lukasuman.game.control;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.automata.*;
@@ -142,9 +143,9 @@ public class GameController {
         }
     }
 
-    public boolean checkInside(Vector3 pos, Camera camera) {
-        return ((Math.abs(pos.x) < camera.viewportWidth / 2)
-                && (Math.abs(pos.y) < camera.viewportHeight / 2));
+    public boolean checkInside(Vector2 pos) {
+        return ((Math.abs(pos.x) < Constants.VIEWPORT_WIDTH / 2)
+                && (Math.abs(pos.y) < Constants.VIEWPORT_WIDTH / 2));
     }
 
     public void removeSelectedState() {
