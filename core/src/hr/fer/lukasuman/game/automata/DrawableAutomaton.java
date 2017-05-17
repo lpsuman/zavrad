@@ -114,9 +114,12 @@ public class DrawableAutomaton extends Automaton {
         Iterator<AutomatonTransition> iterator = transitionSet.iterator();
         while (iterator.hasNext()) {
             AutomatonTransition transition = iterator.next();
-            if (!transition.getStartState().equals(state) || !transition.getEndState().equals(state)) {
+            if (transition.getStartState().equals(state) || transition.getEndState().equals(state)) {
                 iterator.remove();
             }
+        }
+        if (state.equals(currentState)) {
+            currentState = null;
         }
         super.removeState(state);
         stateSprites.remove(state);

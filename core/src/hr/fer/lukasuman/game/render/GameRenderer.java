@@ -1,7 +1,6 @@
 package hr.fer.lukasuman.game.render;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -31,6 +30,7 @@ import hr.fer.lukasuman.game.level.Level;
 import hr.fer.lukasuman.game.level.blocks.*;
 
 import java.util.Map;
+import java.util.Set;
 
 public class GameRenderer implements Disposable {
 
@@ -41,11 +41,9 @@ public class GameRenderer implements Disposable {
     private OrthographicCamera fullCamera;
     private OrthographicCamera leftCamera;
     private OrthographicCamera rightCamera;
-    private OrthographicCamera cameraGUI;
 
     private ScreenViewport leftViewport;
     private ScreenViewport rightViewport;
-    private ScreenViewport viewportGUI;
 
     private Texture stateTexture;
     private Texture selectedStateTexture;
@@ -55,7 +53,18 @@ public class GameRenderer implements Disposable {
     private ShapeRenderer transitionRenderer;
     private GlyphLayout glyphLayout;
 
-    private Stage stage;
+    private Stage upperLeftStage;
+    private Stage upperRightStage;
+    private Stage lowerLeftStage;
+    private Stage lowerRightStage;
+    private Stage fullStage;
+
+    private Viewport upperLeftViewport;
+    private Viewport upperRightViewport;
+    private Viewport lowerLeftViewport;
+    private Viewport lowerRightViewport;
+    private Viewport fullViewport;
+
     private Skin skin;
 
     private Label scoreLabel;
@@ -64,21 +73,32 @@ public class GameRenderer implements Disposable {
     private TextButton saveAutomatonButton;
     private TextButton loadAutomatonButton;
 
+    private SelectBox<String> blockTypeSelectBox;
+    private TextButton saveLevelButton;
+    private TextButton loadLevelButton;
     private Label fpsLabel;
 
-    private ButtonGroup buttonGroup;
+    private ButtonGroup automatonButtonGroup;
     private TextButton selectionButton;
     private TextButton createStateButton;
     private TextButton deleteStateButton;
     private TextButton createTransitionButton;
     private TextButton deleteTransitionButton;
     private TextButton setStartStateButton;
+    private TextButton setGoalStateButton;
 
+    private ButtonGroup levelButtonGroup;
+    private TextButton selectBlockButton;
+    private TextButton paintBlockButton;
     private TextButton startSimulationButton;
     private TextButton pauseSimulationButton;
     private Slider simulationSpeedSlider;
 
     private FileChooser fileChooser;
+    private FileTypeFilter serTypeFilter;
+    private FileTypeFilter pngTypeFilter;
+
+    private GamePreferences prefs;
 
     public GameRenderer (GameController gameController) {
         this.gameController = gameController;
@@ -98,7 +118,17 @@ public class GameRenderer implements Disposable {
 
         initFileChooser();
 
-        stage = new Stage(new FitViewport(Constants.VIEWPORT_GUI_WIDTH, Constants.VIEWPORT_GUI_HEIGHT));
+        upperLeftViewport = new FitViewport(Constants.VIEWPORT_GUI_WIDTH / 2.0f, Constants.VIEWPORT_GUI_HEIGHT / 2.0f);
+        upperRightViewport = new FitViewport(Constants.VIEWPORT_GUI_WIDTH / 2.0f, Constants.VIEWPORT_GUI_HEIGHT / 2.0f);
+        lowerLeftViewport = new FitViewport(Constants.VIEWPORT_GUI_WIDTH / 2.0f, Constants.VIEWPORT_GUI_HEIGHT / 2.0f);
+        lowerRightViewport = new FitViewport(Constants.VIEWPORT_GUI_WIDTH / 2.0f, Constants.VIEWPORT_GUI_HEIGHT / 2.0f);
+        fullViewport = new FitViewport(Constants.VIEWPORT_GUI_WIDTH, Constants.VIEWPORT_GUI_HEIGHT);
+
+        upperLeftStage = new Stage(upperLeftViewport);
+        upperRightStage = new Stage(upperRightViewport);
+        lowerLeftStage = new Stage(lowerLeftViewport);
+        lowerRightStage = new Stage(lowerRightViewport);
+        fullStage = new Stage(fullViewport);
         rebuildStage();
 
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -108,7 +138,6 @@ public class GameRenderer implements Disposable {
         fullCamera = new OrthographicCamera(Constants.VIEWPORT_WIDTH, Constants.VIEWPORT_HEIGHT);
         leftCamera = new OrthographicCamera(Constants.VIEWPORT_WIDTH, Constants.VIEWPORT_HEIGHT);
         rightCamera = new OrthographicCamera(Constants.VIEWPORT_WIDTH, Constants.VIEWPORT_HEIGHT);
-        cameraGUI = new OrthographicCamera(Constants.VIEWPORT_GUI_WIDTH, Constants.VIEWPORT_GUI_HEIGHT);
 
         leftViewport = new ScreenViewport(leftCamera);
         rightViewport = new ScreenViewport(rightCamera);
@@ -126,38 +155,52 @@ public class GameRenderer implements Disposable {
 
 //        Gdx.app.debug(TAG, "left camera center at " + leftCamera.unproject(new Vector3(0.0f, 0.0f, 0.0f)));
 //        Gdx.app.debug(TAG, "right camera center at " + rightCamera.unproject(new Vector3(0.0f, 0.0f, 0.0f)));
-
-        cameraGUI.position.set(0, 0, 0);
-        cameraGUI.setToOrtho(false); // flip y-axis
-        cameraGUI.update();
     }
 
     private void rebuildStage () {
         skin = Assets.getInstance().getAssetManager().get(Constants.SKIN_LIBGDX_UI);
+        prefs = GamePreferences.getInstance();
 
-        Table table = new Table();
-        table.setFillParent(true);
+        Table upperLeftTable = new Table();
+        upperLeftTable.setFillParent(true);
+        upperLeftTable.setDebug(prefs.debug);
+        Table upperRightTable = new Table();
+        upperRightTable.setFillParent(true);
+        upperRightTable.setDebug(prefs.debug);
 
-        table.add(rebuildAutomataNorth()).uniform().left();
-        table.add(rebuildLevelNorth()).uniform().right();
+        float upperRatio = Constants.UPPER_BORDER_RATIO * 2.0f;
+        Value upperWidthValue = Value.percentWidth(1.0f, upperLeftTable);
+        Value upperHeightValue = Value.percentHeight(upperRatio / (1.0f + upperRatio), upperLeftTable);
 
-        table.row();
-        Label tempLabel = new Label("", skin);
-        table.add(tempLabel).expand();
-        table.row();
+        upperLeftTable.add(rebuildAutomataNorth()).expand().top().size(upperWidthValue, upperHeightValue);
+        upperLeftStage.addActor(upperLeftTable);
+        upperRightTable.add(rebuildLevelNorth()).expand().top().size(upperWidthValue, upperHeightValue);
+        upperRightStage.addActor(upperRightTable);
 
-        table.add(rebuildAutomataSouth()).uniform().left();
-        table.add(rebuildLevelSouth()).uniform().right();
+        Table lowerLeftTable = new Table();
+        lowerLeftTable.setFillParent(true);
+        lowerLeftTable.setDebug(prefs.debug);
+        Table lowerRightTable = new Table();
+        lowerRightTable.setFillParent(true);
+        lowerRightTable.setDebug(prefs.debug);
 
-        stage.addActor(table);
+        float lowerRatio = Constants.UPPER_BORDER_RATIO * 2.0f;
+        Value lowerWidthValue = Value.percentWidth(1.0f, lowerLeftTable);
+        Value lowerHeightValue = Value.percentHeight(lowerRatio / (1.0f + lowerRatio), lowerLeftTable);
+
+        lowerLeftTable.add(rebuildAutomataSouth()).expand().bottom().size(lowerWidthValue, lowerHeightValue);
+        lowerLeftStage.addActor(lowerLeftTable);
+        lowerRightTable.add(rebuildLevelSouth()).expand().bottom().size(lowerWidthValue, lowerHeightValue);
+        lowerRightStage.addActor(lowerRightTable);
     }
 
-    private HorizontalGroup rebuildAutomataNorth() {
-        HorizontalGroup automataNorth = new HorizontalGroup();
+    private Table rebuildAutomataNorth() {
+        Table automataNorth = new Table();
+        automataNorth.setDebug(prefs.debug);
         scoreLabel = new Label("0", skin, Constants.DEFAULT_FONT_NAME, Color.WHITE);
-        automataNorth.addActor(scoreLabel);
+        automataNorth.add(scoreLabel).expandX();
 
-        actionSelectBox = new SelectBox<AutomatonAction>(skin);
+        actionSelectBox = new SelectBox<>(skin);
         actionSelectBox.setItems(AutomatonAction.MOVE_FORWARD, AutomatonAction.ROTATE_LEFT, AutomatonAction.ROTATE_RIGHT);
         actionSelectBox.addListener(new ChangeListener() {
             @Override
@@ -169,7 +212,7 @@ public class GameRenderer implements Disposable {
                 }
             }
         });
-        automataNorth.addActor(actionSelectBox);
+        automataNorth.add(actionSelectBox).expandX();
 
         transitionSelectBox = new SelectBox<String>(skin);
         transitionSelectBox.setItems(EmptyBlock.LABEL, WallBlock.LABEL, StartBlock.LABEL, GoalBlock.LABEL);
@@ -183,75 +226,123 @@ public class GameRenderer implements Disposable {
                 }
             }
         });
-        automataNorth.addActor(transitionSelectBox);
+        automataNorth.add(transitionSelectBox).expandX();
 
         saveAutomatonButton = new TextButton("save automaton", skin);
         saveAutomatonButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
-                gameController.setFileProcessor(gameController::saveAutomaton);
+                gameController.setFileProcessor(gameController.getAutomataController()::saveAutomaton);
                 fileChooser.setMode(FileChooser.Mode.SAVE);
+                fileChooser.setFileTypeFilter(serTypeFilter);
                 showFileChooser();
             }
         });
-        automataNorth.addActor(saveAutomatonButton);
+        automataNorth.add(saveAutomatonButton).expandX();
 
         loadAutomatonButton = new TextButton("load automaton", skin);
         loadAutomatonButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
-                gameController.setFileProcessor(gameController::loadAutomaton);
+                gameController.setFileProcessor(gameController.getAutomataController()::loadAutomaton);
                 fileChooser.setMode(FileChooser.Mode.OPEN);
+                fileChooser.setFileTypeFilter(serTypeFilter);
                 showFileChooser();
             }
         });
-        automataNorth.addActor(loadAutomatonButton);
+        automataNorth.add(loadAutomatonButton).expandX();
 
         return automataNorth;
     }
 
-    private HorizontalGroup rebuildLevelNorth() {
-        HorizontalGroup levelNorth = new HorizontalGroup();
+    private Table rebuildLevelNorth() {
+        Table levelNorth = new Table();
+        levelNorth.setDebug(prefs.debug);
+
+        blockTypeSelectBox = new SelectBox<>(skin);
+        Set<String> blockTypes = BlockFactory.getBlockTypes();
+        blockTypeSelectBox.setItems(blockTypes.toArray(new String[blockTypes.size()]));
+        blockTypeSelectBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                gameController.setIgnoreNextClick(true);
+            }
+        });
+        levelNorth.add(blockTypeSelectBox).expandX();
+
+        saveLevelButton = new TextButton("save level", skin);
+        saveLevelButton.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                gameController.setFileProcessor(gameController.getLevelController()::saveLevel);
+                fileChooser.setMode(FileChooser.Mode.SAVE);
+                fileChooser.setFileTypeFilter(pngTypeFilter);
+                showFileChooser();
+            }
+        });
+        levelNorth.add(saveLevelButton).expandX();
+
+        loadLevelButton = new TextButton("load level", skin);
+        loadLevelButton.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                gameController.setFileProcessor(gameController.getLevelController()::loadLevel);
+                fileChooser.setMode(FileChooser.Mode.OPEN);
+                fileChooser.setFileTypeFilter(pngTypeFilter);
+                showFileChooser();
+            }
+        });
+        levelNorth.add(loadLevelButton).expandX();
 
         fpsLabel = new Label("FPS: 60", skin);
-        levelNorth.addActor(fpsLabel);
+        levelNorth.add(fpsLabel).right();
 
         return levelNorth;
     }
 
-    private HorizontalGroup rebuildAutomataSouth() {
-        HorizontalGroup automataSouth = new HorizontalGroup();
+    private Table rebuildAutomataSouth() {
+        Table automataSouth = new Table();
+        automataSouth.setDebug(prefs.debug);
 
-        buttonGroup = new ButtonGroup();
-        selectionButton = new TextButton("select state", skin);
-        buttonGroup.add(selectionButton);
-        automataSouth.addActor(selectionButton);
+        automatonButtonGroup = new ButtonGroup();
+        selectionButton = new TextButton("select\nstate", skin, "toggle");
+        automatonButtonGroup.add(selectionButton);
+        automataSouth.add(selectionButton).expandX();
 
-        createStateButton = new TextButton("add state", skin);
-        buttonGroup.add(createStateButton);
-        automataSouth.addActor(createStateButton);
+        createStateButton = new TextButton("add\nstate", skin, "toggle");
+        automatonButtonGroup.add(createStateButton);
+        automataSouth.add(createStateButton).expandX();
 
-        deleteStateButton = new TextButton("delete state", skin);
-        buttonGroup.add(deleteStateButton);
-        automataSouth.addActor(deleteStateButton);
+        deleteStateButton = new TextButton("delete\nstate", skin, "toggle");
+        automatonButtonGroup.add(deleteStateButton);
+        automataSouth.add(deleteStateButton).expandX();
 
-        createTransitionButton = new TextButton("create transition", skin);
-        buttonGroup.add(createTransitionButton);
-        automataSouth.addActor(createTransitionButton);
+        createTransitionButton = new TextButton("create\ntransition", skin, "toggle");
+        automatonButtonGroup.add(createTransitionButton);
+        automataSouth.add(createTransitionButton).expandX();
 
-        deleteTransitionButton = new TextButton("delete transition", skin);
-        buttonGroup.add(deleteTransitionButton);
-        automataSouth.addActor(deleteTransitionButton);
+        deleteTransitionButton = new TextButton("delete\ntransition", skin, "toggle");
+        automatonButtonGroup.add(deleteTransitionButton);
+        automataSouth.add(deleteTransitionButton).expandX();
 
-        setStartStateButton = new TextButton("set start", skin);
-        buttonGroup.add(setStartStateButton);
-        automataSouth.addActor(setStartStateButton);
+        setStartStateButton = new TextButton("set\nstart", skin, "toggle");
+        automatonButtonGroup.add(setStartStateButton);
+        automataSouth.add(setStartStateButton).expandX();
+
+        setGoalStateButton = new TextButton("set\ngoal", skin, "toggle");
+        automatonButtonGroup.add(setGoalStateButton);
+        automataSouth.add(setGoalStateButton).expandX();
 
         return automataSouth;
     }
 
-    private HorizontalGroup rebuildLevelSouth() {
-        HorizontalGroup levelSouth = new HorizontalGroup();
+    private Table rebuildLevelSouth() {
+        Table levelSouth = new Table();
+        levelSouth.setDebug(prefs.debug);
+
+        Table simulationTable = new Table();
+        simulationTable.setDebug(prefs.debug);
+        levelSouth.add(simulationTable).uniformX();
 
         startSimulationButton = new TextButton(Constants.START_SIM_BTN_TEXT, skin);
         startSimulationButton.addListener(new ChangeListener() {
@@ -260,7 +351,7 @@ public class GameRenderer implements Disposable {
                 gameController.startSimulation();
             }
         });
-        levelSouth.addActor(startSimulationButton);
+        simulationTable.add(startSimulationButton).expandX();
 
         pauseSimulationButton = new TextButton(Constants.PAUSE_SIM_BTN_TEXT, skin);
         pauseSimulationButton.addListener(new ChangeListener() {
@@ -269,7 +360,7 @@ public class GameRenderer implements Disposable {
                 gameController.pauseSimulation();
             }
         });
-        levelSouth.addActor(pauseSimulationButton);
+        simulationTable.add(pauseSimulationButton).expandX();
 
         simulationSpeedSlider = new Slider(1.0f, 10.0f, 1.0f, false, skin);
         simulationSpeedSlider.addListener(new ChangeListener() {
@@ -278,7 +369,21 @@ public class GameRenderer implements Disposable {
                 gameController.setSimulationSpeed(((Slider)actor).getValue());
             }
         });
-        levelSouth.addActor(simulationSpeedSlider);
+        simulationTable.add(simulationSpeedSlider).expandX();
+
+        Table editTable = new Table();
+        editTable.setDebug(prefs.debug);
+        levelSouth.add(editTable).uniformX();
+
+        levelButtonGroup = new ButtonGroup();
+
+        selectBlockButton = new TextButton("select\nblock", skin, "toggle");
+        levelButtonGroup.add(selectBlockButton);
+        editTable.add(selectBlockButton).expandX();
+
+        paintBlockButton = new TextButton("paint\nblock", skin, "toggle");
+        levelButtonGroup.add(paintBlockButton);
+        editTable.add(paintBlockButton).expandX();
 
         return levelSouth;
     }
@@ -288,9 +393,13 @@ public class GameRenderer implements Disposable {
         FileChooser.setDefaultPrefsName("hr.fer.lukasuman.game.filechooser");
         fileChooser = new FileChooser(FileChooser.Mode.OPEN);
         fileChooser.setSelectionMode(FileChooser.SelectionMode.FILES_AND_DIRECTORIES);
-        FileTypeFilter typeFilter = new FileTypeFilter(false); //allow "All Types" mode where all files are shown
-        typeFilter.addRule("Java serializable files (*.ser)", "ser");
-        fileChooser.setFileTypeFilter(typeFilter);
+
+        serTypeFilter = new FileTypeFilter(false); //allow "All Types" mode where all files are shown
+        serTypeFilter.addRule("Java serializable files (*.ser)", "ser");
+
+        pngTypeFilter = new FileTypeFilter(false);
+        pngTypeFilter.addRule("PNG level files (*.png)", "png");
+
         fileChooser.setCenterOnAdd(true);
         fileChooser.setListener(new SingleFileChooserListener() {
             @Override
@@ -302,7 +411,7 @@ public class GameRenderer implements Disposable {
     }
 
     public void showFileChooser() {
-        stage.addActor(fileChooser.fadeIn());
+        fullStage.addActor(fileChooser.fadeIn());
     }
 
     public void render () {
@@ -390,17 +499,32 @@ public class GameRenderer implements Disposable {
     }
 
     private void renderGUI() {
-        stage.getViewport().apply();
+        upperLeftViewport.apply();
         updateScore();
+        upperLeftStage.act();
+        upperLeftStage.draw();
+
+        upperRightViewport.apply();
         if (GamePreferences.getInstance().showFpsCounter) {
             updateFpsCounter();
             fpsLabel.setVisible(true);
         } else {
             fpsLabel.setVisible(false);
         }
+        upperRightStage.act();
+        upperRightStage.draw();
 
-        stage.act();
-        stage.draw();
+        lowerLeftViewport.apply();
+        lowerLeftStage.act();
+        lowerLeftStage.draw();
+
+        lowerRightViewport.apply();
+        lowerRightStage.act();
+        lowerRightStage.draw();
+
+        fullViewport.apply();
+        fullStage.act();
+        fullStage.draw();
     }
 
     private void updateScore() {
@@ -420,24 +544,29 @@ public class GameRenderer implements Disposable {
     }
 
     public void resize (int width, int height) {
-        float viewportHeight = height / (1.0f + Constants.UPPER_BORDER_RATIO + Constants.LOWER_BORDER_RATIO);
-        int borderY = (int)(height - viewportHeight * (1.0f + Constants.UPPER_BORDER_RATIO));
+        int viewportHeight = (int)(height / (1.0f + Constants.UPPER_BORDER_RATIO + Constants.LOWER_BORDER_RATIO));
+        int upperHeight = (int)(height - viewportHeight * (1.0f + Constants.LOWER_BORDER_RATIO));
+        int lowerHeight = (int)(height - viewportHeight * (1.0f + Constants.UPPER_BORDER_RATIO));
         int measure = (int)Math.min(width / 2.0f, viewportHeight);
         int paddingX = ((int)(width / 2.0f) - measure) / 2;
-        int paddingY = ((int)viewportHeight - measure) / 2;
+        int paddingY = (viewportHeight - measure) / 2;
+
         leftViewport.update(measure, measure);
-        leftViewport.setScreenPosition(paddingX, borderY + paddingY);
+        leftViewport.setScreenPosition(paddingX, lowerHeight + paddingY);
         rightViewport.update(measure, measure);
-        rightViewport.setScreenPosition(width / 2 + paddingX, borderY + paddingY);
+        rightViewport.setScreenPosition(width / 2 + paddingX, lowerHeight + paddingY);
 
         leftCamera.zoom = Constants.VIEWPORT_WIDTH / measure;
 
-        stage.getViewport().update(width, height, true);
+        upperLeftViewport.update(width / 2, height / 2, true);
+        upperRightViewport.update(width / 2, height / 2, true);
+        lowerLeftViewport.update(width / 2, height / 2, true);
+        lowerRightViewport.update(width / 2, height / 2, true);
 
-//        viewportGUI.update((int)(width * (1.0f - 2 * Constants.GUI_BORDER_FACTOR)),
-//                (int)(height * (1.0f - 2 * Constants.GUI_BORDER_FACTOR)), true);
-//        viewportGUI.setScreenPosition((int)(width * Constants.GUI_BORDER_FACTOR),
-//                (int)(height * Constants.GUI_BORDER_FACTOR));
+        upperLeftViewport.setScreenPosition(0, height / 2);
+        upperRightViewport.setScreenPosition(width / 2, height / 2);
+        lowerLeftViewport.setScreenPosition(0, 0);
+        lowerRightViewport.setScreenPosition(width / 2, 0);
 
         gameController.getAutomataController().getCurrentAutomaton().recalculateTransitions();
 
@@ -450,8 +579,24 @@ public class GameRenderer implements Disposable {
         VisUI.dispose();
     }
 
-    public Stage getStage() {
-        return stage;
+    public Stage getUpperLeftStage() {
+        return upperLeftStage;
+    }
+
+    public Stage getUpperRightStage() {
+        return upperRightStage;
+    }
+
+    public Stage getLowerLeftStage() {
+        return lowerLeftStage;
+    }
+
+    public Stage getLowerRightStage() {
+        return lowerRightStage;
+    }
+
+    public Stage getFullStage() {
+        return fullStage;
     }
 
     public SelectBox<AutomatonAction> getActionSelectBox() {
@@ -462,8 +607,12 @@ public class GameRenderer implements Disposable {
         return transitionSelectBox;
     }
 
-    public ButtonGroup getButtonGroup() {
-        return buttonGroup;
+    public SelectBox<String> getBlockTypeSelectBox() {
+        return blockTypeSelectBox;
+    }
+
+    public ButtonGroup getAutomatonButtonGroup() {
+        return automatonButtonGroup;
     }
 
     public TextButton getSelectionButton() {
@@ -490,6 +639,18 @@ public class GameRenderer implements Disposable {
         return setStartStateButton;
     }
 
+    public ButtonGroup getLevelButtonGroup() {
+        return levelButtonGroup;
+    }
+
+    public TextButton getSelectBlockButton() {
+        return selectBlockButton;
+    }
+
+    public TextButton getPaintBlockButton() {
+        return paintBlockButton;
+    }
+
     public TextButton getStartSimulationButton() {
         return startSimulationButton;
     }
@@ -508,10 +669,6 @@ public class GameRenderer implements Disposable {
 
     public ScreenViewport getRightViewport() {
         return rightViewport;
-    }
-
-    public Viewport getViewportGUI() {
-        return stage.getViewport();
     }
 
     public FileChooser getFileChooser() {

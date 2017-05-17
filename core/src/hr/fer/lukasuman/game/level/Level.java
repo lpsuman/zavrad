@@ -1,9 +1,11 @@
 package hr.fer.lukasuman.game.level;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Disposable;
 import hr.fer.lukasuman.game.Assets;
@@ -12,23 +14,6 @@ import hr.fer.lukasuman.game.level.blocks.*;
 
 public class Level implements Disposable {
     public static final String TAG = Level.class.getName();
-
-    public enum BLOCK_TYPE {
-        START(255, 255, 0), // yellow
-        EMPTY(255, 255, 255), // white
-        WALL(255, 0, 0), // red
-        GOAL(0, 0, 255); // blue
-
-        private int color;
-
-        BLOCK_TYPE(int r, int g, int b) {
-            color = r << 24 | g << 16 | b << 8 | 0xff;
-        }
-
-        public boolean sameColor (int color) {
-            return this.color == color;
-        }
-    }
 
     private int width;
     private int height;
@@ -39,18 +24,23 @@ public class Level implements Disposable {
     private float effectiveWidth;
     private float effectiveHeight;
 
-    private Position start;
-    private Position goal;
+    private GridPoint2 start;
+    private GridPoint2 goal;
 
-    private Position currentPosition;
+    private GridPoint2 currentPosition;
     private Direction currentDirection;
 
-    public Level (String filename) {
-        init(filename);
+    public Level (String fileName) {
+        levelPixmap = new Pixmap(Gdx.files.internal(fileName));
+        init(fileName);
     }
 
-    private void init (String filename) {
-        levelPixmap = new Pixmap(Gdx.files.internal(filename));
+    public Level (FileHandle file) {
+        levelPixmap = new Pixmap(file);
+        init(file.nameWithoutExtension());
+    }
+
+    private void init (String fileName) {
         width = levelPixmap.getWidth();
         height = levelPixmap.getHeight();
         blocks = new AbstractBlock[width][height];
@@ -59,31 +49,28 @@ public class Level implements Disposable {
             for (int pixelX = 0; pixelX < width; pixelX++) {
 
                 int posY = height - 1 - pixelY;
-                AbstractBlock block;
                 int currentPixel = levelPixmap.getPixel(pixelX, pixelY);
+                AbstractBlock newBlock = BlockFactory.getBlocByColor(currentPixel);
 
-                if (BLOCK_TYPE.EMPTY.sameColor(currentPixel)) {
-                    block = new EmptyBlock();
-                } else if (BLOCK_TYPE.WALL.sameColor(currentPixel)) {
-                    block = new WallBlock();
-                } else if (BLOCK_TYPE.START.sameColor(currentPixel)) {
-                    start = new Position(pixelX, posY);
-                    block = new StartBlock();
-                } else if (BLOCK_TYPE.GOAL.sameColor(currentPixel)) {
-                    goal = new Position(pixelX, posY);
-                    block = new GoalBlock();
-                } else {
-                    Gdx.app.error(TAG, "Invalid block type in level " + filename
+                if (newBlock == null) {
+                    Gdx.app.error(TAG, "Invalid block type in level " + fileName
                             + " replaced with an empty block instead");
-                    block = new EmptyBlock();
+                    newBlock = new EmptyBlock();
                 }
-                blocks[pixelX][posY] = block;
+
+                if (newBlock.getClass().equals(StartBlock.class)) {
+                    start = new GridPoint2(pixelX, posY);
+                } else if (newBlock.getClass().equals(GoalBlock.class)) {
+                    goal = new GridPoint2(pixelX, posY);
+                }
+
+                blocks[pixelX][posY] = newBlock;
             }
         }
 
         resetLevel();
 
-        Gdx.app.debug(TAG, "level '" + filename + "' loaded: " + width + "x" + height
+        Gdx.app.debug(TAG, "level '" + fileName + "' loaded: " + width + "x" + height
                 + " start(" + start.x + ", " + start.y + ") end(" + goal.x + ", " + goal.y + ")");
     }
 
@@ -116,13 +103,33 @@ public class Level implements Disposable {
         return blocks[x][y];
     }
 
-    public AbstractBlock getBlockAt(Position pos) {
+    public AbstractBlock getBlockAt(GridPoint2 pos) {
         return getBlockAt(pos.x, pos.y);
+    }
+
+    public AbstractBlock getBlockAt(Vector2 pos) {
+        return getBlockAt(getBlockPosition(pos));
+    }
+
+    public void setBlockAt(AbstractBlock newBlock, GridPoint2 pos) {
+        blocks[pos.x][pos.y] = newBlock;
+        levelPixmap.drawPixel(pos.x, height - 1 - pos.y, newBlock.getColorInLevel());
+    }
+
+    public GridPoint2 getBlockPosition(Vector2 pos) {
+        GridPoint2 result = new GridPoint2();
+        result.x = (int)((pos.x + effectiveWidth / 2.0f) / blockSize);
+        result.y = (int)((pos.y + effectiveHeight / 2.0f) / blockSize);
+        return result;
     }
 
     @Override
     public void dispose() {
         levelPixmap.dispose();
+    }
+
+    public Pixmap getLevelPixmap() {
+        return levelPixmap;
     }
 
     public int getWidth() {
@@ -137,11 +144,11 @@ public class Level implements Disposable {
         return blocks;
     }
 
-    public Position getStart() {
+    public GridPoint2 getStart() {
         return start;
     }
 
-    public Position getGoal() {
+    public GridPoint2 getGoal() {
         return goal;
     }
 
@@ -149,11 +156,11 @@ public class Level implements Disposable {
         return blockSize;
     }
 
-    public Position getCurrentPosition() {
+    public GridPoint2 getCurrentPosition() {
         return currentPosition;
     }
 
-    public void setCurrentPosition(Position currentPosition) {
+    public void setCurrentPosition(GridPoint2 currentPosition) {
         this.currentPosition = currentPosition;
     }
 

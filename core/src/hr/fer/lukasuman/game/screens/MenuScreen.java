@@ -27,6 +27,7 @@ public class MenuScreen extends AbstractGameScreen {
     private Window winOptions;
     private TextButton btnWinOptSave;
     private TextButton btnWinOptCancel;
+    private CheckBox chkDebug;
     private CheckBox chkShowFpsCounter;
 
     private Skin skin;
@@ -119,6 +120,10 @@ public class MenuScreen extends AbstractGameScreen {
         tbl.add(new Label("Show FPS Counter", skin));
         tbl.add(chkShowFpsCounter);
         tbl.row();
+        chkDebug = new CheckBox("", skin);
+        tbl.add(new Label("Show debug features", skin));
+        tbl.add(chkDebug);
+        tbl.row();
         return tbl;
     }
 
@@ -172,11 +177,13 @@ public class MenuScreen extends AbstractGameScreen {
     private void loadSettings() {
         GamePreferences prefs = GamePreferences.getInstance();
         prefs.load();
+        chkDebug.setChecked(prefs.debug);
         chkShowFpsCounter.setChecked(prefs.showFpsCounter);
     }
 
     private void saveSettings() {
         GamePreferences prefs = GamePreferences.getInstance();
+        prefs.debug = chkDebug.isChecked();
         prefs.showFpsCounter = chkShowFpsCounter.isChecked();
         prefs.save();
     }

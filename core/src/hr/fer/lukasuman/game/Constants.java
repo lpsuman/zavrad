@@ -33,23 +33,26 @@ public class Constants {
 
     public static final String PREFERENCES_FILE = "preferences";
 
-//    public static final String SKIN_NAME = "glassy-ui";
+//    private static final String SKIN_NAME = "glassy-ui/glassy-ui";
 //    public static final String DEFAULT_FONT_NAME = "font";
-    public static final String SKIN_NAME = "uiskin";
+    private static final String SKIN_NAME = "default/uiskin";
     public static final String DEFAULT_FONT_NAME = "default-font";
+//    private static final String SKIN_NAME = "shade-ui/uiskin";
+//    public static final String DEFAULT_FONT_NAME = "font-button";
 
-    public static final String TEXTURE_ATLAS_LIBGDX_UI = "images/" + SKIN_NAME + ".atlas";
-    public static final String SKIN_LIBGDX_UI = "images/" + SKIN_NAME + ".json";
+    private static final String SKIN_FOLDER = "skins";
+    public static final String TEXTURE_ATLAS_LIBGDX_UI = SKIN_FOLDER + "/" + SKIN_NAME + ".atlas";
+    public static final String SKIN_LIBGDX_UI = SKIN_FOLDER + "/" + SKIN_NAME + ".json";
 
-    public static final String AUTOMATA_STATE_TEXTURE = "state.png";
-    public static final String AUTOMATA_SELECTED_STATE_TEXTURE = "state_selected.png";
-    public static final String AUTOMATA_RUNNING_STATE_TEXTURE = "state_running.png";
+    public static final String IMAGE_FOLDER = "images";
+    public static final String AUTOMATA_STATE_TEXTURE = IMAGE_FOLDER + "/state.png";
+    public static final String AUTOMATA_SELECTED_STATE_TEXTURE = IMAGE_FOLDER + "/state_selected.png";
+    public static final String AUTOMATA_RUNNING_STATE_TEXTURE = IMAGE_FOLDER + "/state_running.png";
+    public static final String PLAYER_TEXTURE = IMAGE_FOLDER + "/box_arrow.png";
+    public static final String MENU_BACKGROUND_TEXTURE = IMAGE_FOLDER + "/gear_background.jpg";
 
-    public static final String TEXTURE_ATLAS_OBJECTS = "images/automata.pack";
-    public static final String MENU_BACKGROUND_TEXTURE = "gear_background.jpg";
-    public static final String LEVEL_PATH = "levels/level_02.png";
-
-    public static final String PLAYER_TEXTURE = "box_arrow.png";
+    private static final String LEVEL_FOLDER = "levels";
+    public static final String LEVEL_PATH = LEVEL_FOLDER + "/level_02.png";
 
     public static final float SIMULATION_SPEED_FACTOR = 1.0f;
 

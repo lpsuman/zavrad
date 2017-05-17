@@ -2,15 +2,19 @@ package hr.fer.lukasuman.game.control;
 
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.automata.AutomatonState;
 import hr.fer.lukasuman.game.automata.AutomatonTransition;
 import hr.fer.lukasuman.game.automata.DrawableAutomaton;
+import hr.fer.lukasuman.game.level.Level;
+import hr.fer.lukasuman.game.level.blocks.AbstractBlock;
+import hr.fer.lukasuman.game.level.blocks.BlockFactory;
 import hr.fer.lukasuman.game.render.GameRenderer;
 import hr.fer.lukasuman.game.screens.MenuScreen;
 import hr.fer.lukasuman.game.screens.ScreenTransition;
@@ -47,13 +51,7 @@ public class InputController extends InputAdapter {
                 levelTouchDown(posInGame, button);
             }
         }
-        posInGame = getPosInGame(screenX, screenY, gameRenderer.getViewportGUI());
-        touchDownGUI(posInGame, button);
         return false;
-    }
-
-    private void touchDownGUI(Vector2 posInGame, int button) {
-//        Gdx.app.debug(TAG, "click on GUI");
     }
 
     private void automataTouchDown(Vector2 posInGame, int button) {
@@ -63,7 +61,7 @@ public class InputController extends InputAdapter {
             AutomatonState closestState = automaton.getClosestState(posInGame.x, posInGame.y);
             float distance = DrawableAutomaton.pointDistance(closestState, posInGame.x, posInGame.y);
 
-            Button checkedButton = gameRenderer.getButtonGroup().getChecked();
+            Button checkedButton = gameRenderer.getAutomatonButtonGroup().getChecked();
             if (checkedButton.equals(gameRenderer.getSelectionButton())) {
                 if (closestState != null) {
                     if (distance <= Constants.STATE_SIZE / 2) {
@@ -113,8 +111,11 @@ public class InputController extends InputAdapter {
     }
 
     private void levelTouchDown(Vector2 posInGame, int button) {
-//        Gdx.app.debug(TAG, "click on level screen");
-        //TODO click on level
+        if (button == Input.Buttons.LEFT) {
+            levelTouch(posInGame);
+        } else {
+            //TODO right click on level
+        }
     }
 
     @Override
@@ -136,7 +137,7 @@ public class InputController extends InputAdapter {
 
     private void automataTouchDragged(Vector2 posInGame) {
         AutomatonState selectedState = gameController.getSelectedState();
-        Button checkedButton = gameRenderer.getButtonGroup().getChecked();
+        Button checkedButton = gameRenderer.getAutomatonButtonGroup().getChecked();
         if (checkedButton.equals(gameRenderer.getSelectionButton())) {
             if (selectedState != null) {
                 wasStateMoved = true;
@@ -152,7 +153,20 @@ public class InputController extends InputAdapter {
     }
 
     private void levelTouchDragged(Vector2 posInGame) {
-        //TODO drag on level
+        levelTouch(posInGame);
+    }
+
+    private void levelTouch(Vector2 posInGame) {
+        Button checkedButton = gameRenderer.getLevelButtonGroup().getChecked();
+        SelectBox<String> blockTypeSelectBox = gameRenderer.getBlockTypeSelectBox();
+        Level currentLevel = gameController.getLevelController().getCurrentLevel();
+        GridPoint2 levelPos = currentLevel.getBlockPosition(posInGame);
+        if (checkedButton.equals(gameRenderer.getSelectBlockButton())) {
+            blockTypeSelectBox.setSelected(currentLevel.getBlockAt(levelPos).getLabel());
+        } else if (checkedButton.equals(gameRenderer.getPaintBlockButton())) {
+            AbstractBlock newBlock = BlockFactory.getBlockByName(blockTypeSelectBox.getSelected());
+            currentLevel.setBlockAt(newBlock, levelPos);
+        }
     }
 
     @Override
@@ -160,7 +174,7 @@ public class InputController extends InputAdapter {
         touchedDown = false;
         Vector2 posInGame = getPosInGame(screenX, screenY, gameRenderer.getLeftViewport());
         if (gameController.checkInside(posInGame)) {
-            Button checkedButton = gameRenderer.getButtonGroup().getChecked();
+            Button checkedButton = gameRenderer.getAutomatonButtonGroup().getChecked();
             if (checkedButton.equals(gameRenderer.getSelectionButton())) {
                 if (wasStateMoved) {
                     wasStateMoved = false;
@@ -206,20 +220,4 @@ public class InputController extends InputAdapter {
     public Vector2 getPosInGame(int x, int y, Viewport viewPort) {
         return viewPort.unproject(new Vector2(x, y));
     }
-
-//    public Vector3 getPosInGame(int x, int y, Camera camera) {
-////        Gdx.app.debug(TAG, "input pos (" + x + " " + y + ")");
-//        if (camera.equals(gameController.getAutomataCamera())) {
-//            x *= 2;
-//        } else if (camera.equals(gameController.getLevelCamera())) {
-//            x -= Gdx.graphics.getWidth() / 2;
-//            x *= 2;
-//        }
-//        float innerHeight = Gdx.graphics.getHeight() / (1.0f + Constants.UPPER_BORDER_RATIO + Constants.UPPER_BORDER_RATIO);
-//        y -= innerHeight * Constants.UPPER_BORDER_RATIO;
-//        y *= Gdx.graphics.getHeight() / innerHeight;
-//        Vector3 result = camera.unproject(new Vector3(x, y, 0));
-////        Gdx.app.debug(TAG, "output pos (" + result.x + " " + result.y + ") with " + x);
-//        return result;
-//    }
 }

@@ -10,22 +10,24 @@ public abstract class AbstractBlock {
     protected Sprite sprite;
     protected boolean isTraversable;
     protected String label;
+    protected int colorInLevel;
 
-    protected AbstractBlock(String label, boolean isTraversable) {
+    protected AbstractBlock(String label, boolean isTraversable, int colorInLevel) {
         this.label = label;
         this.isTraversable = isTraversable;
+        this.colorInLevel = colorInLevel;
     }
 
-    protected AbstractBlock(String label, boolean isTraversable, Texture texture) {
-        this(label, isTraversable);
+    protected AbstractBlock(String label, boolean isTraversable, int colorInLevel, Texture texture) {
+        this(label, isTraversable, colorInLevel);
         if (texture != null) {
             sprite = new Sprite(texture);
             sprite.setOriginCenter();
         }
     }
 
-    protected AbstractBlock(String label, boolean isTraversable, Texture texture, Vector2 spritePos, float spriteSize) {
-        this(label, isTraversable, texture);
+    protected AbstractBlock(String label, boolean isTraversable, int colorInLevel, Texture texture, Vector2 spritePos, float spriteSize) {
+        this(label, isTraversable, colorInLevel, texture);
         setSpriteSize(spriteSize);
         setSpritePos(spritePos);
     }
@@ -66,5 +68,9 @@ public abstract class AbstractBlock {
 
     public String getLabel() {
         return label;
+    }
+
+    public int getColorInLevel() {
+        return colorInLevel;
     }
 }

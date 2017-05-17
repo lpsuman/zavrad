@@ -132,15 +132,12 @@ public class AutomatonState implements Serializable {
 
         AutomatonState that = (AutomatonState) o;
 
-        if (!label.equals(that.label)) return false;
-        return parent.equals(that.parent);
+        return label.equals(that.label);
     }
 
     @Override
     public int hashCode() {
-        int result = label.hashCode();
-        result = 31 * result + parent.hashCode();
-        return result;
+        return label.hashCode();
     }
 
     @Override

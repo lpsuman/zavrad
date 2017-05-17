@@ -1,5 +1,7 @@
 package hr.fer.lukasuman.game.level;
 
+import com.badlogic.gdx.math.GridPoint2;
+
 public enum Direction {
     NORTH(0, 1, 0),
     EAST(1, 0, 1),
@@ -16,8 +18,8 @@ public enum Direction {
         this.degrees = degrees;
     }
 
-    public Position incrementPosition(Position oldPos) {
-        return new Position(oldPos.x + xIncrement, oldPos.y + yIncrement);
+    public GridPoint2 incrementPosition(GridPoint2 oldPos) {
+        return new GridPoint2(oldPos.x + xIncrement, oldPos.y + yIncrement);
     }
 
     public Direction changeDirection(int rotateClockwise) {

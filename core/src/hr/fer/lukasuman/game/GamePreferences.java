@@ -8,6 +8,7 @@ public class GamePreferences {
 
     private static final GamePreferences instance = new GamePreferences();
 
+    public boolean debug;
     public boolean showFpsCounter;
     private Preferences prefs;
 
@@ -16,10 +17,12 @@ public class GamePreferences {
     }
 
     public void load () {
+        debug = prefs.getBoolean("debug", false);
         showFpsCounter = prefs.getBoolean("showFpsCounter", false);
     }
 
     public void save () {
+        prefs.putBoolean("debug", debug);
         prefs.putBoolean("showFpsCounter", showFpsCounter);
         prefs.flush();
     }
