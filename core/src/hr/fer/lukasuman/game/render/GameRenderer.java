@@ -12,6 +12,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
@@ -28,6 +30,7 @@ import hr.fer.lukasuman.game.automata.*;
 import hr.fer.lukasuman.game.control.GameController;
 import hr.fer.lukasuman.game.level.Level;
 import hr.fer.lukasuman.game.level.blocks.*;
+import hr.fer.lukasuman.game.screens.GameScreen;
 
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +40,7 @@ public class GameRenderer implements Disposable {
     private static final String TAG = GameRenderer.class.getName();
 
     private GameController gameController;
+    private GameScreen gameScreen;
 
     private OrthographicCamera fullCamera;
     private OrthographicCamera leftCamera;
@@ -70,10 +74,12 @@ public class GameRenderer implements Disposable {
     private Label scoreLabel;
     private SelectBox<AutomatonAction> actionSelectBox;
     private SelectBox<String> transitionSelectBox;
+    private TextButton newAutomatonButton;
     private TextButton saveAutomatonButton;
     private TextButton loadAutomatonButton;
 
     private SelectBox<String> blockTypeSelectBox;
+    private TextButton newLevelButton;
     private TextButton saveLevelButton;
     private TextButton loadLevelButton;
     private Label fpsLabel;
@@ -98,10 +104,14 @@ public class GameRenderer implements Disposable {
     private FileTypeFilter serTypeFilter;
     private FileTypeFilter pngTypeFilter;
 
+    private Dialog automatonDialog;
+    private Dialog levelDialog;
+
     private GamePreferences prefs;
 
-    public GameRenderer (GameController gameController) {
+    public GameRenderer (GameController gameController, GameScreen gameScreen) {
         this.gameController = gameController;
+        this.gameScreen = gameScreen;
         init();
     }
 
@@ -130,6 +140,9 @@ public class GameRenderer implements Disposable {
         lowerRightStage = new Stage(lowerRightViewport);
         fullStage = new Stage(fullViewport);
         rebuildStage();
+
+        initAutomatonDialog();
+        initLevelDialog();
 
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
@@ -228,7 +241,16 @@ public class GameRenderer implements Disposable {
         });
         automataNorth.add(transitionSelectBox).expandX();
 
-        saveAutomatonButton = new TextButton("save automaton", skin);
+        newAutomatonButton = new TextButton("new\nautomaton", skin);
+        newAutomatonButton.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+
+            }
+        });
+        automataNorth.add(newAutomatonButton).expandX();
+
+        saveAutomatonButton = new TextButton("save\nautomaton", skin);
         saveAutomatonButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
@@ -240,7 +262,7 @@ public class GameRenderer implements Disposable {
         });
         automataNorth.add(saveAutomatonButton).expandX();
 
-        loadAutomatonButton = new TextButton("load automaton", skin);
+        loadAutomatonButton = new TextButton("load\nautomaton", skin);
         loadAutomatonButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
@@ -406,12 +428,70 @@ public class GameRenderer implements Disposable {
             protected void selected(FileHandle file) {
                 gameController.getFileProcessor().processFile(file);
                 gameController.setFileProcessor(null);
+                Gdx.input.setInputProcessor(gameScreen.getInputProcessor());
             }
         });
     }
 
     public void showFileChooser() {
         fullStage.addActor(fileChooser.fadeIn());
+        Gdx.input.setInputProcessor(fullStage);
+    }
+
+    private void saveAutomaton() {
+        gameController.setFileProcessor(gameController.getAutomataController()::saveAutomaton);
+        fileChooser.setMode(FileChooser.Mode.SAVE);
+        fileChooser.setFileTypeFilter(serTypeFilter);
+        showFileChooser();
+    }
+
+    private void initAutomatonDialog() {
+        automatonDialog = new Dialog("Automaton not saved!", skin) {
+            @Override
+            public float getPrefWidth() {
+                return Gdx.graphics.getWidth() * Constants.DIALOG_WIDTH_FACTOR;
+            }
+
+            @Override
+            public float getPrefHeight() {
+                 return Gdx.graphics.getWidth() * Constants.DIALOG_HEIGHT_FACTOR;
+            }
+        };
+
+        automatonDialog.setModal(true);
+        automatonDialog.setMovable(false);
+        automatonDialog.setResizable(false);
+
+        Label label = new Label("Would you like to save the current automaton?", skin);
+        automatonDialog.getContentTable().add(label);
+
+        Table buttonTable = new Table();
+
+        TextButton yesButton = new TextButton("Yes", skin);
+        yesButton.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                automatonDialog.remove();
+                saveAutomaton();
+            }
+        });
+        buttonTable.add(yesButton).expandX();
+
+        TextButton noButton = new TextButton("No", skin);
+        noButton.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                automatonDialog.remove();
+            }
+        });
+        buttonTable.add(noButton).expandX();
+
+        TextButton cancelButton = new TextButton("Cancel", skin);
+        //TODO automaton dialog
+    }
+
+    private void initLevelDialog() {
+        //TODO level dialog
     }
 
     public void render () {

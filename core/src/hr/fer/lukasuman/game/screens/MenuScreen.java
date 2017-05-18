@@ -36,6 +36,8 @@ public class MenuScreen extends AbstractGameScreen {
     private boolean debugEnabled = false;
     private float debugRebuildStage;
 
+    private GameScreen gameScreen;
+
     public MenuScreen (DirectedGame game) {
         super(game);
     }
@@ -164,7 +166,10 @@ public class MenuScreen extends AbstractGameScreen {
 
     private void onPlayClicked () {
         ScreenTransition transition = ScreenTransitionFade.init(0.75f);
-        game.setScreen(new GameScreen(game), transition);
+        if (gameScreen == null) {
+            gameScreen = new GameScreen(game, this);
+        }
+        game.setScreen(gameScreen, transition);
     }
 
     private void onOptionsClicked () {

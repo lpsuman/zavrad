@@ -18,8 +18,12 @@ public class GameScreen extends AbstractGameScreen {
     private boolean paused;
     private InputMultiplexer inputMultiplexer;
 
-    public GameScreen (DirectedGame game) {
+    private MenuScreen menuScreen;
+    private boolean isGameLoaded;
+
+    public GameScreen (DirectedGame game, MenuScreen menuScreen) {
         super(game);
+        this.menuScreen = menuScreen;
     }
 
     @Override
@@ -41,19 +45,24 @@ public class GameScreen extends AbstractGameScreen {
     @Override
     public void show () {
         GamePreferences.getInstance().load();
-        gameController = new GameController(game);
-        gameRenderer = new GameRenderer(gameController);
-        gameController.setGameRenderer(gameRenderer);
 
-        inputController = new InputController(gameController, gameRenderer);
+        if (!isGameLoaded) {
+            gameController = new GameController(game);
+        }
+        gameRenderer = new GameRenderer(gameController, this);
 
-        inputMultiplexer = new InputMultiplexer();
-        inputMultiplexer.addProcessor(gameRenderer.getUpperLeftStage());
-        inputMultiplexer.addProcessor(gameRenderer.getUpperRightStage());
-        inputMultiplexer.addProcessor(gameRenderer.getLowerLeftStage());
-        inputMultiplexer.addProcessor(gameRenderer.getLowerRightStage());
-        inputMultiplexer.addProcessor(gameRenderer.getFullStage());
-        inputMultiplexer.addProcessor(inputController);
+        if (!isGameLoaded) {
+            isGameLoaded = true;
+            gameController.setGameRenderer(gameRenderer);
+            inputController = new InputController(gameController, gameRenderer, menuScreen);
+
+            inputMultiplexer = new InputMultiplexer();
+            inputMultiplexer.addProcessor(gameRenderer.getUpperLeftStage());
+            inputMultiplexer.addProcessor(gameRenderer.getUpperRightStage());
+            inputMultiplexer.addProcessor(gameRenderer.getLowerLeftStage());
+            inputMultiplexer.addProcessor(gameRenderer.getLowerRightStage());
+            inputMultiplexer.addProcessor(inputController);
+        }
 
         Gdx.input.setInputProcessor(inputMultiplexer);
         Gdx.input.setCatchBackKey(true);

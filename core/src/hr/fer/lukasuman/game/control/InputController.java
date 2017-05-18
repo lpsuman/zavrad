@@ -30,9 +30,12 @@ public class InputController extends InputAdapter {
     private boolean wasStateMoved;
     private boolean touchedDown;
 
-    public InputController(GameController gameController, GameRenderer gameRenderer) {
+    private MenuScreen menuScreen;
+
+    public InputController(GameController gameController, GameRenderer gameRenderer, MenuScreen menuScreen) {
         this.gameController = gameController;
         this.gameRenderer = gameRenderer;
+        this.menuScreen = menuScreen;
     }
 
     @Override
@@ -161,6 +164,7 @@ public class InputController extends InputAdapter {
         SelectBox<String> blockTypeSelectBox = gameRenderer.getBlockTypeSelectBox();
         Level currentLevel = gameController.getLevelController().getCurrentLevel();
         GridPoint2 levelPos = currentLevel.getBlockPosition(posInGame);
+
         if (checkedButton.equals(gameRenderer.getSelectBlockButton())) {
             blockTypeSelectBox.setSelected(currentLevel.getBlockAt(levelPos).getLabel());
         } else if (checkedButton.equals(gameRenderer.getPaintBlockButton())) {
@@ -214,7 +218,7 @@ public class InputController extends InputAdapter {
     public void backToMenu() {
         ScreenTransition transition = ScreenTransitionSlide.init(0.75f,
                 ScreenTransitionSlide.DOWN, false, Interpolation.bounceOut);
-        gameController.getGame().setScreen(new MenuScreen(gameController.getGame()), transition);
+        gameController.getGame().setScreen(menuScreen, transition);
     }
 
     public Vector2 getPosInGame(int x, int y, Viewport viewPort) {

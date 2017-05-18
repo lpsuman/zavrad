@@ -147,10 +147,9 @@ public class AutomatonTransition {
     }
 
     public void setLabel(String label) {
-        AutomatonState tempState = startState.getTransitions().get(this.label);
-        startState.getTransitions().remove(this.label);
+        startState.removeTransition(this.label, endState);
         this.label = label;
-        startState.getTransitions().put(this.label, tempState);
+        startState.addTransition(this.label, endState);
     }
 
     public AutomatonState getStartState() {

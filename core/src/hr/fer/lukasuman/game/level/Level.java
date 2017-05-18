@@ -40,6 +40,12 @@ public class Level implements Disposable {
         init(file.nameWithoutExtension());
     }
 
+    public Level (int levelWidth, int levelHeight) {
+        levelPixmap = new Pixmap(levelWidth, levelHeight, Pixmap.Format.RGBA8888);
+        levelPixmap.setColor(EmptyBlock.COLOR_IN_LEVEL);
+        init("new level");
+    }
+
     private void init (String fileName) {
         width = levelPixmap.getWidth();
         height = levelPixmap.getHeight();

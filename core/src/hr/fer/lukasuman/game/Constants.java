@@ -22,6 +22,9 @@ public class Constants {
     public static final float VIEWPORT_GUI_HEIGHT = UPPER_BORDER + VIEWPORT_GUI_WIDTH / 2.0f + LOWER_BORDER;
     public static final float GUI_BORDER_FACTOR = 0.01f;
 
+    public static final float DIALOG_WIDTH_FACTOR = 0.33f;
+    public static final float DIALOG_HEIGHT_FACTOR = 0.33f;
+
     public static final float STATE_SIZE = VIEWPORT_WIDTH / 10;
     public static final String DEFAULT_STATE_LABEL = "state";
 

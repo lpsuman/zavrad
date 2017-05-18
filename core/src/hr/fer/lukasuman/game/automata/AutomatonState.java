@@ -3,10 +3,7 @@ package hr.fer.lukasuman.game.automata;
 import hr.fer.lukasuman.game.Constants;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class AutomatonState implements Serializable {
 
@@ -70,8 +67,22 @@ public class AutomatonState implements Serializable {
         incomingStates.add(state);
     }
 
+    public void removeTransition(String trigger, AutomatonState state) {
+        for(Iterator<Map.Entry<String, AutomatonState>> it = transitions.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry<String, AutomatonState> entry = it.next();
+            if(entry.getKey().equals(trigger) && entry.getValue().equals(state)) {
+                it.remove();
+            }
+        }
+    }
+
     public void removeTransition(AutomatonState state) {
-        while (transitions.values().remove(state));
+        for(Iterator<Map.Entry<String, AutomatonState>> it = transitions.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry<String, AutomatonState> entry = it.next();
+            if(entry.getValue().equals(state)) {
+                it.remove();
+            }
+        }
     }
 
     public void removeIncomingTransitions() {
@@ -132,12 +143,14 @@ public class AutomatonState implements Serializable {
 
         AutomatonState that = (AutomatonState) o;
 
-        return label.equals(that.label);
+        if (label != null ? !label.equals(that.label) : that.label != null) return false;
+
+        return true;
     }
 
     @Override
     public int hashCode() {
-        return label.hashCode();
+        return label != null ? label.hashCode() : 0;
     }
 
     @Override

@@ -17,6 +17,8 @@ public class DrawableAutomaton extends Automaton {
     private int stateID = 1;
     private Set<AutomatonTransition> transitionSet;
 
+    private boolean changesPending;
+
     public DrawableAutomaton(Texture stateTexture, String name) {
         super(name);
         this.stateTexture = stateTexture;
@@ -46,15 +48,21 @@ public class DrawableAutomaton extends Automaton {
         if (startState.equals(endState)) {
             return null;
         }
-        startState.addTransition(trigger, endState);
         AutomatonTransition newTransition = new AutomatonTransition(trigger, startState, endState);
+        if (transitionSet.contains(newTransition)) {
+            return null;
+        }
+        startState.addTransition(trigger, endState);
         transitionSet.add(newTransition);
+        changesPending = true;
         return newTransition;
     }
 
     public void removeTransition(AutomatonTransition transition) {
         transition.getStartState().getTransitions().remove(transition.getLabel());
-        transitionSet.remove(transition);
+        if (transitionSet.remove(transition)) {
+            changesPending = true;
+        }
     }
 
     public AutomatonTransition getClosestTransition(Vector2 position, float maxDistance) {
@@ -107,10 +115,14 @@ public class DrawableAutomaton extends Automaton {
     public void addState(AutomatonState state) {
         super.addState(state);
         addSpriteForState(state);
+        changesPending = true;
     }
 
     @Override
     public void removeState(AutomatonState state) {
+        if (state == null || !getStates().contains(state)) {
+            return;
+        }
         Iterator<AutomatonTransition> iterator = transitionSet.iterator();
         while (iterator.hasNext()) {
             AutomatonTransition transition = iterator.next();
@@ -123,6 +135,7 @@ public class DrawableAutomaton extends Automaton {
         }
         super.removeState(state);
         stateSprites.remove(state);
+        changesPending = true;
     }
 
     public Automaton getSerializable() {
@@ -185,5 +198,13 @@ public class DrawableAutomaton extends Automaton {
 
     public Set<AutomatonTransition> getTransitionSet() {
         return transitionSet;
+    }
+
+    public boolean isChangesPending() {
+        return changesPending;
+    }
+
+    public void setChangesPending(boolean changesPending) {
+        this.changesPending = changesPending;
     }
 }
