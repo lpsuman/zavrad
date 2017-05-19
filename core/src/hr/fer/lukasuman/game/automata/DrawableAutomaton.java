@@ -19,6 +19,10 @@ public class DrawableAutomaton extends Automaton {
 
     private boolean changesPending;
 
+    public DrawableAutomaton(String name) {
+        this(Assets.getInstance().getAssetManager().get(Constants.AUTOMATA_STATE_TEXTURE), name);
+    }
+
     public DrawableAutomaton(Texture stateTexture, String name) {
         super(name);
         this.stateTexture = stateTexture;
@@ -59,8 +63,10 @@ public class DrawableAutomaton extends Automaton {
     }
 
     public void removeTransition(AutomatonTransition transition) {
-        transition.getStartState().getTransitions().remove(transition.getLabel());
         if (transitionSet.remove(transition)) {
+            for (String label : transition.getTransitionLabels()) {
+                transition.getStartState().getTransitions().remove(label);
+            }
             changesPending = true;
         }
     }
@@ -83,6 +89,15 @@ public class DrawableAutomaton extends Automaton {
         }
     }
 
+    public AutomatonTransition getTransition(AutomatonState startState, AutomatonState endState) {
+        for (AutomatonTransition transition : transitionSet) {
+            if (transition.getStartState().equals(startState) && transition.getEndState().equals(endState)) {
+                return transition;
+            }
+        }
+        return null;
+    }
+
     public void recalculateTransitions() {
         for (AutomatonTransition transition : transitionSet) {
             transition.recalculate();
@@ -91,7 +106,7 @@ public class DrawableAutomaton extends Automaton {
 
     public void drawTransitions(ShapeRenderer transitionRenderer) {
         for (AutomatonTransition transition : transitionSet) {
-            transition.draw(transitionRenderer);
+            transition.drawLines(transitionRenderer);
         }
     }
 

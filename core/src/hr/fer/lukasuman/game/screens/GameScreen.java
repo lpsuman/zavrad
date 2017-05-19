@@ -66,7 +66,7 @@ public class GameScreen extends AbstractGameScreen {
 
         Gdx.input.setInputProcessor(inputMultiplexer);
         Gdx.input.setCatchBackKey(true);
-    }
+}
 
     @Override
     public void hide () {

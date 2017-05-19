@@ -129,6 +129,14 @@ public class Level implements Disposable {
         return result;
     }
 
+    public boolean isPositionWithinLevel(GridPoint2 pos) {
+        if (pos.x < 0 || pos.y < 0 || pos.x >= width || pos.y >= height) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     @Override
     public void dispose() {
         levelPixmap.dispose();

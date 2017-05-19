@@ -8,14 +8,18 @@ import com.badlogic.gdx.math.Bezier;
 import com.badlogic.gdx.math.Vector2;
 import hr.fer.lukasuman.game.Constants;
 
+import java.util.*;
+
 public class AutomatonTransition {
 
     private static final float CURVE_DEPTH = 0.25f;
-    private static final float CURVE_STEEPNES = 0.25f;
+    private static final float CURVE_STEEPNESS = 0.25f;
     private static final float ARROW_ANGLE = 30.0f;
     private static final float ARROW_LENGTH = Constants.STATE_SIZE / 4.0f;
 
-    private String label;
+    private static final GlyphLayout glyphLayout = new GlyphLayout();
+
+    private Set<String> transitionLabels;
     private AutomatonState startState;
     private AutomatonState endState;
 
@@ -33,8 +37,8 @@ public class AutomatonTransition {
     private Vector2 leftArrowPoint;
     private Vector2 rightArrowPoint;
 
-    public AutomatonTransition(String label, AutomatonState startState, AutomatonState endState) {
-        this.label = label;
+    public AutomatonTransition(Set<String> transitionLabels, AutomatonState startState, AutomatonState endState) {
+        this.transitionLabels = transitionLabels;
         this.startState = startState;
         this.endState = endState;
 
@@ -56,6 +60,10 @@ public class AutomatonTransition {
         recalculate();
     }
 
+    public AutomatonTransition(String label, AutomatonState startState, AutomatonState endState) {
+        this(new HashSet<>(Arrays.asList(label)), startState, endState);
+    }
+
     public void recalculate() {
         calculateControlPoints();
         calculateBezierPoints();
@@ -74,7 +82,7 @@ public class AutomatonTransition {
         norm.rotate90(1);
         float len = Math.min(temp.len() / 2.0f, 2.0f * Constants.STATE_SIZE);
         norm.setLength(len * CURVE_DEPTH);
-        temp.setLength(len * CURVE_STEEPNES);
+        temp.setLength(len * CURVE_STEEPNESS);
         middlePoint.add(norm);
 
         dataSet[1].set(middlePoint);
@@ -98,7 +106,7 @@ public class AutomatonTransition {
     }
 
     private void calculateBezierPoints() {
-        bezier = new Bezier<Vector2>(dataSet);
+        bezier = new Bezier<>(dataSet);
         int numOfPoints = (int)(endPoint.sub(startPoint).len() * Constants.BEZIER_FIDELITY);
         points = new Vector2[numOfPoints];
 
@@ -122,7 +130,7 @@ public class AutomatonTransition {
         leftArrowPoint.set(temp);
     }
 
-    public void draw(ShapeRenderer transitionRenderer) {
+    public void drawLines(ShapeRenderer transitionRenderer) {
 //        drawControlPolygon(shapeRenderer);
         for(int i = 0; i < points.length - 1; i++) {
             transitionRenderer.line(points[i], points[i+1]);
@@ -132,24 +140,38 @@ public class AutomatonTransition {
         transitionRenderer.line(rightArrowPoint, dataSet[3]);
     }
 
+    public void drawLabels(SpriteBatch batch, BitmapFont font) {
+        float posY = 0.0f;
+        for (String label : transitionLabels) {
+            glyphLayout.setText(font, label);
+            if (posY == 0.0f) {
+                posY = middlePoint.y + (transitionLabels.size() / 2.0f) * glyphLayout.height;
+            }
+            font.draw(batch, label, middlePoint.x - glyphLayout.width / 2.0f, posY);
+            posY -= glyphLayout.height;
+        }
+    }
+
     private void drawControlPolygon(ShapeRenderer transitionRenderer) {
         for(int i = 0; i < dataSet.length - 1; i++) {
             transitionRenderer.line(dataSet[i], dataSet[i+1]);
         }
     }
 
+    public void addLabel(String newLabel) {
+        if (transitionLabels.contains(newLabel)) {
+            return;
+        }
+        transitionLabels.add(newLabel);
+        startState.getTransitions().put(newLabel, endState);
+    }
+
     public Vector2 getMiddlePoint() {
         return middlePoint;
     }
 
-    public String getLabel() {
-        return label;
-    }
-
-    public void setLabel(String label) {
-        startState.removeTransition(this.label, endState);
-        this.label = label;
-        startState.addTransition(this.label, endState);
+    public Set<String> getTransitionLabels() {
+        return transitionLabels;
     }
 
     public AutomatonState getStartState() {
@@ -167,16 +189,14 @@ public class AutomatonTransition {
 
         AutomatonTransition that = (AutomatonTransition) o;
 
-        if (!label.equals(that.label)) return false;
         if (!startState.equals(that.startState)) return false;
-        return endState.equals(that.endState);
+        return endState != null ? endState.equals(that.endState) : that.endState == null;
     }
 
     @Override
     public int hashCode() {
-        int result = label.hashCode();
-        result = 31 * result + startState.hashCode();
-        result = 31 * result + endState.hashCode();
+        int result = startState.hashCode();
+        result = 31 * result + (endState != null ? endState.hashCode() : 0);
         return result;
     }
 }

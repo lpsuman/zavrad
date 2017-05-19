@@ -9,6 +9,7 @@ import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.automata.*;
 import hr.fer.lukasuman.game.level.Level;
 import hr.fer.lukasuman.game.level.blocks.AbstractBlock;
+import hr.fer.lukasuman.game.level.blocks.WallBlock;
 import hr.fer.lukasuman.game.screens.DirectedGame;
 import hr.fer.lukasuman.game.render.GameRenderer;
 import hr.fer.lukasuman.game.level.LevelController;
@@ -19,9 +20,6 @@ public class GameController {
     private static final String TAG = GameController.class.getName();
 
     private GameRenderer gameRenderer;
-    private OrthographicCamera fullCamera;
-    private OrthographicCamera automataCamera;
-    private OrthographicCamera levelCamera;
 
     private DirectedGame game;
     private AutomataController automataController;
@@ -55,7 +53,7 @@ public class GameController {
         resetTimeUntilNextMove();
     }
 
-    public void startSimulation() {
+    public void toggleSimulationStarted() {
         automataController.getCurrentAutomaton().reset();
         levelController.getCurrentLevel().resetLevel();
         resetTimeUntilNextMove();
@@ -74,7 +72,7 @@ public class GameController {
         }
     }
 
-    public void pauseSimulation() {
+    public void toggleSimulationPaused() {
         if (isSimulationStarted) {
             if (isSimulationRunning == true) {
                 isSimulationRunning = false;
@@ -111,16 +109,31 @@ public class GameController {
         Level level = levelController.getCurrentLevel();
         GridPoint2 currentPosition = level.getCurrentPosition();
         GridPoint2 newPosition = level.getCurrentDirection().incrementPosition(currentPosition);
-        AbstractBlock blockInFront = level.getBlockAt(newPosition);
+
+        AbstractBlock blockInFront = null;
+        boolean isBorderInFront = false;
+        if (!level.isPositionWithinLevel(newPosition)) {
+            isBorderInFront = true;
+        } else {
+            blockInFront = level.getBlockAt(newPosition);
+        }
 
         DrawableAutomaton automaton = automataController.getCurrentAutomaton();
-        automaton.setCurrentState(automaton.getCurrentState().transition(blockInFront.getLabel()));
+        if (automaton == null || automaton.getCurrentState() == null) {
+            toggleSimulationStarted();
+            return;
+        }
+
+        if (blockInFront != null) {
+            automaton.setCurrentState(automaton.getCurrentState().transition(blockInFront.getLabel()));
+        } else {
+            automaton.setCurrentState(automaton.getCurrentState().transition(WallBlock.LABEL));
+        }
         AutomatonAction action = automaton.getCurrentState().getAction();
 
         switch (action) {
             case MOVE_FORWARD:
-
-                if (level.getBlockAt(newPosition).isTraversable()) {
+                if (!isBorderInFront && blockInFront.isTraversable()) {
                     level.setCurrentPosition(newPosition);
                 } else {
                     //TODO illegal move forward
@@ -135,8 +148,6 @@ public class GameController {
             default:
                 Gdx.app.error(TAG, "unsupported action");
         }
-
-
     }
 
     private void updateStateObjects() {
@@ -157,18 +168,6 @@ public class GameController {
         automataController.getCurrentAutomaton().removeState(automataController.getCurrentAutomaton().getCurrentState());
     }
 
-    public OrthographicCamera getFullCamera() {
-        return fullCamera;
-    }
-
-    public OrthographicCamera getAutomataCamera() {
-        return automataCamera;
-    }
-
-    public OrthographicCamera getLevelCamera() {
-        return levelCamera;
-    }
-
     public AutomatonState getSelectedState() {
         return selectedState;
     }
@@ -186,25 +185,10 @@ public class GameController {
 
     public void setSelectedTransition(AutomatonTransition selectedTransition) {
         this.selectedTransition = selectedTransition;
-        if (this.selectedTransition != null) {
-            gameRenderer.getTransitionSelectBox().setSelected(this.selectedTransition.getLabel());
-        }
     }
 
     public void setSimulationSpeed(float simulationSpeed) {
         this.simulationSpeed = simulationSpeed;
-    }
-
-    public void setFullCamera(OrthographicCamera fullCamera) {
-        this.fullCamera = fullCamera;
-    }
-
-    public void setAutomataCamera(OrthographicCamera automataCamera) {
-        this.automataCamera = automataCamera;
-    }
-
-    public void setLevelCamera(OrthographicCamera levelCamera) {
-        this.levelCamera = levelCamera;
     }
 
     public DirectedGame getGame() {

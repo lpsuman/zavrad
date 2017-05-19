@@ -12,17 +12,16 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.*;
 import com.kotcrab.vis.ui.VisUI;
 import com.kotcrab.vis.ui.widget.file.FileChooser;
+import com.kotcrab.vis.ui.widget.file.FileChooserAdapter;
 import com.kotcrab.vis.ui.widget.file.FileTypeFilter;
-import com.kotcrab.vis.ui.widget.file.SingleFileChooserListener;
 import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.GamePreferences;
@@ -104,8 +103,9 @@ public class GameRenderer implements Disposable {
     private FileTypeFilter serTypeFilter;
     private FileTypeFilter pngTypeFilter;
 
-    private Dialog automatonDialog;
-    private Dialog levelDialog;
+    private Dialog confirmationDialog;
+    private CallbackFunction yesCallback;
+    private CallbackFunction noCallback;
 
     private GamePreferences prefs;
 
@@ -125,7 +125,6 @@ public class GameRenderer implements Disposable {
         playerSprite = new Sprite((Texture) Assets.getInstance().getAssetManager().get(Constants.PLAYER_TEXTURE));
         transitionRenderer = new ShapeRenderer();
         glyphLayout = new GlyphLayout();
-
         initFileChooser();
 
         upperLeftViewport = new FitViewport(Constants.VIEWPORT_GUI_WIDTH / 2.0f, Constants.VIEWPORT_GUI_HEIGHT / 2.0f);
@@ -141,8 +140,7 @@ public class GameRenderer implements Disposable {
         fullStage = new Stage(fullViewport);
         rebuildStage();
 
-        initAutomatonDialog();
-        initLevelDialog();
+        initConfirmationDialog();
 
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
@@ -154,10 +152,6 @@ public class GameRenderer implements Disposable {
 
         leftViewport = new ScreenViewport(leftCamera);
         rightViewport = new ScreenViewport(rightCamera);
-
-        gameController.setFullCamera(fullCamera);
-        gameController.setAutomataCamera(leftCamera);
-        gameController.setLevelCamera(rightCamera);
 
         fullCamera.position.set(0, 0, 0);
         fullCamera.update();
@@ -227,16 +221,12 @@ public class GameRenderer implements Disposable {
         });
         automataNorth.add(actionSelectBox).expandX();
 
-        transitionSelectBox = new SelectBox<String>(skin);
+        transitionSelectBox = new SelectBox<>(skin);
         transitionSelectBox.setItems(EmptyBlock.LABEL, WallBlock.LABEL, StartBlock.LABEL, GoalBlock.LABEL);
         transitionSelectBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 gameController.setIgnoreNextClick(true);
-                AutomatonTransition selectedTransition = gameController.getSelectedTransition();
-                if (selectedTransition != null) {
-                    selectedTransition.setLabel(transitionSelectBox.getSelected());
-                }
             }
         });
         automataNorth.add(transitionSelectBox).expandX();
@@ -245,7 +235,9 @@ public class GameRenderer implements Disposable {
         newAutomatonButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
-
+                if (gameController.getAutomataController().getCurrentAutomaton().isChangesPending()) {
+                    showConfirmationDialog(GameRenderer.this::saveAutomatonClicked, GameRenderer.this::newAutomatonClicked);
+                }
             }
         });
         automataNorth.add(newAutomatonButton).expandX();
@@ -254,10 +246,7 @@ public class GameRenderer implements Disposable {
         saveAutomatonButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
-                gameController.setFileProcessor(gameController.getAutomataController()::saveAutomaton);
-                fileChooser.setMode(FileChooser.Mode.SAVE);
-                fileChooser.setFileTypeFilter(serTypeFilter);
-                showFileChooser();
+                saveAutomatonClicked();
             }
         });
         automataNorth.add(saveAutomatonButton).expandX();
@@ -266,15 +255,35 @@ public class GameRenderer implements Disposable {
         loadAutomatonButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
-                gameController.setFileProcessor(gameController.getAutomataController()::loadAutomaton);
-                fileChooser.setMode(FileChooser.Mode.OPEN);
-                fileChooser.setFileTypeFilter(serTypeFilter);
-                showFileChooser();
+                if (gameController.getAutomataController().getCurrentAutomaton().isChangesPending()) {
+                    showConfirmationDialog(GameRenderer.this::saveAutomatonClicked, GameRenderer.this::loadAutomatonClicked);
+                }
             }
         });
         automataNorth.add(loadAutomatonButton).expandX();
 
         return automataNorth;
+    }
+
+    private void newAutomatonClicked() {
+        gameController.getAutomataController().addNewAutomaton();
+    }
+
+    private void saveAutomatonClicked() {
+        if (gameController.getAutomataController().getCurrentAutomaton().getNumberOfState() == 0) {
+            return;
+        }
+        gameController.setFileProcessor(gameController.getAutomataController()::saveAutomaton);
+        fileChooser.setMode(FileChooser.Mode.SAVE);
+        fileChooser.setFileTypeFilter(serTypeFilter);
+        showFileChooser();
+    }
+
+    private void loadAutomatonClicked() {
+        gameController.setFileProcessor(gameController.getAutomataController()::loadAutomaton);
+        fileChooser.setMode(FileChooser.Mode.OPEN);
+        fileChooser.setFileTypeFilter(serTypeFilter);
+        showFileChooser();
     }
 
     private Table rebuildLevelNorth() {
@@ -370,7 +379,7 @@ public class GameRenderer implements Disposable {
         startSimulationButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
-                gameController.startSimulation();
+                gameController.toggleSimulationStarted();
             }
         });
         simulationTable.add(startSimulationButton).expandX();
@@ -379,7 +388,7 @@ public class GameRenderer implements Disposable {
         pauseSimulationButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
-                gameController.pauseSimulation();
+                gameController.toggleSimulationPaused();
             }
         });
         simulationTable.add(pauseSimulationButton).expandX();
@@ -423,10 +432,16 @@ public class GameRenderer implements Disposable {
         pngTypeFilter.addRule("PNG level files (*.png)", "png");
 
         fileChooser.setCenterOnAdd(true);
-        fileChooser.setListener(new SingleFileChooserListener() {
+        fileChooser.setListener(new FileChooserAdapter() {
             @Override
-            protected void selected(FileHandle file) {
-                gameController.getFileProcessor().processFile(file);
+            public void canceled() {
+                gameController.setFileProcessor(null);
+                Gdx.input.setInputProcessor(gameScreen.getInputProcessor());
+            }
+
+            @Override
+            public void selected (Array<FileHandle> file) {
+                gameController.getFileProcessor().processFile(file.first());
                 gameController.setFileProcessor(null);
                 Gdx.input.setInputProcessor(gameScreen.getInputProcessor());
             }
@@ -438,15 +453,8 @@ public class GameRenderer implements Disposable {
         Gdx.input.setInputProcessor(fullStage);
     }
 
-    private void saveAutomaton() {
-        gameController.setFileProcessor(gameController.getAutomataController()::saveAutomaton);
-        fileChooser.setMode(FileChooser.Mode.SAVE);
-        fileChooser.setFileTypeFilter(serTypeFilter);
-        showFileChooser();
-    }
-
-    private void initAutomatonDialog() {
-        automatonDialog = new Dialog("Automaton not saved!", skin) {
+    private void initConfirmationDialog() {
+        confirmationDialog = new Dialog("Confirm", skin) {
             @Override
             public float getPrefWidth() {
                 return Gdx.graphics.getWidth() * Constants.DIALOG_WIDTH_FACTOR;
@@ -458,12 +466,12 @@ public class GameRenderer implements Disposable {
             }
         };
 
-        automatonDialog.setModal(true);
-        automatonDialog.setMovable(false);
-        automatonDialog.setResizable(false);
+        confirmationDialog.setModal(true);
+        confirmationDialog.setMovable(false);
+        confirmationDialog.setResizable(false);
 
-        Label label = new Label("Would you like to save the current automaton?", skin);
-        automatonDialog.getContentTable().add(label);
+        Label label = new Label("There are unsaved changes! Would you like to save them first?", skin);
+        confirmationDialog.getContentTable().add(label);
 
         Table buttonTable = new Table();
 
@@ -471,8 +479,7 @@ public class GameRenderer implements Disposable {
         yesButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
-                automatonDialog.remove();
-                saveAutomaton();
+                confirmationDialogClick(yesCallback);
             }
         });
         buttonTable.add(yesButton).expandX();
@@ -481,17 +488,36 @@ public class GameRenderer implements Disposable {
         noButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
-                automatonDialog.remove();
+                confirmationDialogClick(noCallback);
             }
         });
         buttonTable.add(noButton).expandX();
 
         TextButton cancelButton = new TextButton("Cancel", skin);
-        //TODO automaton dialog
+        cancelButton.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                confirmationDialogClick(null);
+            }
+        });
+        buttonTable.add(cancelButton).expandX();
+
+        confirmationDialog.getButtonTable().add(buttonTable);
     }
 
-    private void initLevelDialog() {
-        //TODO level dialog
+    private void confirmationDialogClick(CallbackFunction callback) {
+        confirmationDialog.remove();
+        Gdx.input.setInputProcessor(gameScreen.getInputProcessor());
+        if (callback != null) {
+            callback.executeCallback();
+        }
+    }
+
+    private void showConfirmationDialog(CallbackFunction yesCallback, CallbackFunction noCallback) {
+        this.yesCallback = yesCallback;
+        this.noCallback = noCallback;
+        confirmationDialog.show(fullStage);
+        Gdx.input.setInputProcessor(fullStage);
     }
 
     public void render () {
@@ -558,10 +584,10 @@ public class GameRenderer implements Disposable {
         for (AutomatonTransition transition : gameController.getAutomataController().getCurrentAutomaton().getTransitionSet()) {
             if (transition.equals(gameController.getSelectedTransition())) {
                 transitionRenderer.setColor(Constants.SELECTED_TRANSITION_COLOR);
-                transition.draw(transitionRenderer);
+                transition.drawLines(transitionRenderer);
                 transitionRenderer.setColor(Constants.TRANSITION_COLOR);
             }
-            transition.draw(transitionRenderer);
+            transition.drawLines(transitionRenderer);
         }
 
         transitionRenderer.end();
@@ -570,10 +596,7 @@ public class GameRenderer implements Disposable {
         BitmapFont font = Assets.getInstance().getFonts().defaultSmall;
         batch.begin();
         for (AutomatonTransition transition : gameController.getAutomataController().getCurrentAutomaton().getTransitionSet()) {
-            String text = transition.getLabel();
-            glyphLayout.setText(font, text);
-            font.draw(batch, text, transition.getMiddlePoint().x - glyphLayout.width / 2.0f,
-                    transition.getMiddlePoint().y + glyphLayout.height / 2.0f);
+            transition.drawLabels(batch, font);
         }
         batch.end();
     }

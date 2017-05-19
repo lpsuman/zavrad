@@ -11,9 +11,12 @@ import java.util.List;
 
 public class AutomataController implements Disposable {
 
+    private static final String DEFAULT_AUTOMATON_LABEL = "automaton";
+
     private List<DrawableAutomaton> automata;
     private DrawableAutomaton currentAutomaton;
     private Texture stateTexture;
+    private int automatonID;
 
     public AutomataController() {
         init();
@@ -22,7 +25,8 @@ public class AutomataController implements Disposable {
     public void init() {
         automata = new ArrayList<>();
         stateTexture = new Texture(Constants.AUTOMATA_STATE_TEXTURE);
-        currentAutomaton = new DrawableAutomaton(stateTexture, "automaton");
+        currentAutomaton = new DrawableAutomaton(stateTexture, DEFAULT_AUTOMATON_LABEL);
+        automatonID = 0;
     }
 
     public boolean saveAutomaton(FileHandle file) {
@@ -46,7 +50,6 @@ public class AutomataController implements Disposable {
             Automaton automaton = (Automaton)objOut.readObject();
             DrawableAutomaton newAutomaton = new DrawableAutomaton(automaton);
             addAutomaton(newAutomaton);
-            setCurrentAutomaton(newAutomaton);
         } catch (FileNotFoundException exc) {
             exc.printStackTrace();
             return false;
@@ -71,8 +74,13 @@ public class AutomataController implements Disposable {
         this.currentAutomaton = currentAutomaton;
     }
 
+    public void addNewAutomaton() {
+        this.addAutomaton(new DrawableAutomaton(DEFAULT_AUTOMATON_LABEL + ++automatonID));
+    }
+
     public void addAutomaton(DrawableAutomaton automaton) {
         automata.add(automaton);
+        setCurrentAutomaton(automaton);
     }
 
     @Override

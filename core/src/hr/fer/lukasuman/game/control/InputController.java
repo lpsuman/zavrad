@@ -178,23 +178,28 @@ public class InputController extends InputAdapter {
         touchedDown = false;
         Vector2 posInGame = getPosInGame(screenX, screenY, gameRenderer.getLeftViewport());
         if (gameController.checkInside(posInGame)) {
+            DrawableAutomaton automaton = gameController.getAutomataController().getCurrentAutomaton();
             Button checkedButton = gameRenderer.getAutomatonButtonGroup().getChecked();
             if (checkedButton.equals(gameRenderer.getSelectionButton())) {
                 if (wasStateMoved) {
                     wasStateMoved = false;
-                    gameController.getAutomataController().getCurrentAutomaton().recalculateTransitions();
+                    automaton.recalculateTransitions();
                 }
             } else {
                 AutomatonState startState = gameController.getSelectedState();
                 if (checkedButton.equals(gameRenderer.getCreateTransitionButton()) && (startState != null)) {
-                    AutomatonState endState = gameController.getAutomataController()
-                            .getCurrentAutomaton().getClosestState(posInGame.x, posInGame.y);
+                    AutomatonState endState = automaton.getClosestState(posInGame.x, posInGame.y);
                     float distance = DrawableAutomaton.pointDistance(endState, posInGame.x, posInGame.y);
 
                     if (distance <= Constants.STATE_SIZE / 2) {
-                        AutomatonTransition newTransition = gameController.getAutomataController().getCurrentAutomaton().addTransition(
-                                gameRenderer.getTransitionSelectBox().getSelected(), startState, endState);
-                        gameController.setSelectedTransition(newTransition);
+                        String newLabel = gameRenderer.getTransitionSelectBox().getSelected();
+                        AutomatonTransition existingTransition = automaton.getTransition(startState, endState);
+                        if (existingTransition == null) {
+                            AutomatonTransition newTransition = automaton.addTransition(newLabel, startState, endState);
+                            gameController.setSelectedTransition(newTransition);
+                        } else {
+                            existingTransition.addLabel(newLabel);
+                        }
                     }
                 }
             }

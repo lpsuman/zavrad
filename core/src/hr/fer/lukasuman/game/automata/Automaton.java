@@ -83,6 +83,10 @@ public class Automaton implements Serializable {
         this.name = name;
     }
 
+    public int getNumberOfState() {
+        return states.size();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
