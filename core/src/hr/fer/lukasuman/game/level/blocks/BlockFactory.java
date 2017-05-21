@@ -51,4 +51,12 @@ public class BlockFactory {
     public static Set<String> getBlockTypes() {
         return nameToBlockMap.keySet();
     }
+
+    public static boolean isStart(AbstractBlock block) {
+        return StartBlock.LABEL.equals(block.getLabel());
+    }
+
+    public static boolean isGoal(AbstractBlock block) {
+        return GoalBlock.LABEL.equals(block.getLabel());
+    }
 }

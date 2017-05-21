@@ -1,7 +1,6 @@
 package hr.fer.lukasuman.game.control;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Vector2;
@@ -9,6 +8,7 @@ import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.automata.*;
 import hr.fer.lukasuman.game.level.Level;
 import hr.fer.lukasuman.game.level.blocks.AbstractBlock;
+import hr.fer.lukasuman.game.level.blocks.BlockFactory;
 import hr.fer.lukasuman.game.level.blocks.WallBlock;
 import hr.fer.lukasuman.game.screens.DirectedGame;
 import hr.fer.lukasuman.game.render.GameRenderer;
@@ -24,7 +24,7 @@ public class GameController {
     private DirectedGame game;
     private AutomataController automataController;
     private LevelController levelController;
-    private int score;
+    private int numberOfStates;
 
     private AutomatonState selectedState;
     private AutomatonTransition selectedTransition;
@@ -46,25 +46,39 @@ public class GameController {
     private void init() {
         automataController = new AutomataController();
         levelController = new LevelController();
-        score = 0;
+        numberOfStates = 0;
         isSimulationStarted = false;
         isSimulationRunning = false;
         simulationSpeed = 1.0f;
         resetTimeUntilNextMove();
     }
 
-    public void toggleSimulationStarted() {
+    private void fullReset() {
         automataController.getCurrentAutomaton().reset();
         levelController.getCurrentLevel().resetLevel();
         resetTimeUntilNextMove();
-        if (isSimulationStarted == false) {
-            if (!automataController.getCurrentAutomaton().getStates().isEmpty()) {
-                isSimulationStarted = true;
-                isSimulationRunning = true;
-                gameRenderer.getStartSimulationButton().setText(Constants.STOP_SIM_BTN_TEXT);
-            }
+    }
 
+    public void toggleSimulationStarted() {
+        if (isSimulationStarted == false) {
+            startSimulation();
         } else {
+            stopSimulation();
+        }
+    }
+
+    private void startSimulation() {
+        if (!automataController.getCurrentAutomaton().getStates().isEmpty() && isSimulationStarted == false) {
+            fullReset();
+            isSimulationStarted = true;
+            isSimulationRunning = true;
+            gameRenderer.getStartSimulationButton().setText(Constants.STOP_SIM_BTN_TEXT);
+        }
+    }
+
+    public void stopSimulation() {
+        if (isSimulationStarted == true) {
+            fullReset();
             isSimulationStarted = false;
             isSimulationRunning = false;
             automataController.getCurrentAutomaton().setCurrentState(null);
@@ -75,12 +89,24 @@ public class GameController {
     public void toggleSimulationPaused() {
         if (isSimulationStarted) {
             if (isSimulationRunning == true) {
-                isSimulationRunning = false;
-                gameRenderer.getPauseSimulationButton().setText(Constants.RESUME_SIM_BTN_TEXT);
+                pauseSimulation();
             } else {
-                isSimulationRunning = true;
-                gameRenderer.getPauseSimulationButton().setText(Constants.PAUSE_SIM_BTN_TEXT);
+                resumeSimulation();
             }
+        }
+    }
+
+    private void pauseSimulation() {
+        if (isSimulationStarted) {
+            isSimulationRunning = false;
+            gameRenderer.getPauseSimulationButton().setText(Constants.RESUME_SIM_BTN_TEXT);
+        }
+    }
+
+    private void resumeSimulation() {
+        if (isSimulationStarted) {
+            isSimulationRunning = true;
+            gameRenderer.getPauseSimulationButton().setText(Constants.PAUSE_SIM_BTN_TEXT);
         }
     }
 
@@ -108,7 +134,18 @@ public class GameController {
     private void makeMove() {
         Level level = levelController.getCurrentLevel();
         GridPoint2 currentPosition = level.getCurrentPosition();
+        if (currentPosition == null) {
+            stopSimulation();
+            return;
+        }
         GridPoint2 newPosition = level.getCurrentDirection().incrementPosition(currentPosition);
+
+        AbstractBlock currentBlock = level.getBlockAt(currentPosition);
+        if (currentBlock != null && BlockFactory.isGoal(currentBlock)) {
+            pauseSimulation();
+            gameRenderer.showConfirmationDialog(levelController::loadNextLevel, GameController.this::resumeSimulation,
+                    String.format(Constants.LEVEL_PASSED_FORMAT_MESSAGE, numberOfStates));
+        }
 
         AbstractBlock blockInFront = null;
         boolean isBorderInFront = false;
@@ -203,8 +240,8 @@ public class GameController {
         return levelController;
     }
 
-    public int getScore() {
-        return score;
+    public int getNumberOfStates() {
+        return numberOfStates;
     }
 
     public void setGameRenderer(GameRenderer gameRenderer) {

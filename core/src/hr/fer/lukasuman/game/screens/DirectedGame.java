@@ -8,7 +8,7 @@ import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import hr.fer.lukasuman.game.screens.AbstractGameScreen;
 import hr.fer.lukasuman.game.screens.ScreenTransition;
 
-public class DirectedGame implements ApplicationListener {
+public abstract class DirectedGame implements ApplicationListener {
     private boolean init;
     private AbstractGameScreen currScreen;
     private AbstractGameScreen nextScreen;
@@ -44,11 +44,6 @@ public class DirectedGame implements ApplicationListener {
     }
 
     @Override
-    public void create() {
-
-    }
-
-    @Override
     public void resize(int width, int height) {
         if (currScreen != null) {
             currScreen.resize(width, height);
@@ -61,21 +56,25 @@ public class DirectedGame implements ApplicationListener {
     @Override
     public void render() {
         // get delta time and ensure an upper limit of one 60th second
-        float deltaTime = Math.min(Gdx.graphics.getDeltaTime(),
-                1.0f / 60.0f);
+        float deltaTime = Math.min(Gdx.graphics.getDeltaTime(), 1.0f / 60.0f);
         if (nextScreen == null) {
             // no ongoing transition
-            if (currScreen != null) currScreen.render(deltaTime);
+            if (currScreen != null) {
+                currScreen.render(deltaTime);
+            }
         } else {
             // ongoing transition
             float duration = 0;
-            if (screenTransition != null)
+            if (screenTransition != null) {
                 duration = screenTransition.getDuration();
+            }
             // update progress of ongoing transition
             t = Math.min(t + deltaTime, duration);
             if (screenTransition == null || t >= duration) {
                 //no transition effect set or transition has just finished
-                if (currScreen != null) currScreen.hide();
+                if (currScreen != null) {
+                    currScreen.hide();
+                }
                 nextScreen.resume();
                 // enable input for next screen
                 Gdx.input.setInputProcessor(nextScreen.getInputProcessor());
@@ -86,32 +85,37 @@ public class DirectedGame implements ApplicationListener {
             } else {
                 // render screens to FBOs
                 currFbo.begin();
-                if (currScreen != null) currScreen.render(deltaTime);
+                if (currScreen != null) {
+                    currScreen.render(deltaTime);
+                }
                 currFbo.end();
                 nextFbo.begin();
                 nextScreen.render(deltaTime);
                 nextFbo.end();
                 // render transition effect to screen
                 float alpha = t / duration;
-                screenTransition.render(batch,
-                        currFbo.getColorBufferTexture(), nextFbo.getColorBufferTexture(),
-                        alpha);
+                screenTransition.render(batch, currFbo.getColorBufferTexture(), nextFbo.getColorBufferTexture(), alpha);
             }
         }
     }
 
     @Override
     public void pause() {
-
     }
 
     @Override
     public void resume() {
-
     }
 
     @Override
     public void dispose() {
-
+        if (currScreen != null) {
+            currScreen.dispose();
+        }
+        if (nextScreen != null) {
+            nextScreen.dispose();
+        }
+        currFbo.dispose();
+        nextFbo.dispose();
     }
 }

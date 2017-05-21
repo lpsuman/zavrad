@@ -4,17 +4,20 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.*;
@@ -53,8 +56,10 @@ public class GameRenderer implements Disposable {
     private Texture runningStateTexture;
     private SpriteBatch batch;
     private Sprite playerSprite;
+    private Sprite stateCirclesSprite;
     private ShapeRenderer transitionRenderer;
     private GlyphLayout glyphLayout;
+    private BitmapFont stateFont;
 
     private Stage upperLeftStage;
     private Stage upperRightStage;
@@ -104,6 +109,10 @@ public class GameRenderer implements Disposable {
     private FileTypeFilter pngTypeFilter;
 
     private Dialog confirmationDialog;
+    private Label confirmationDialogLabel;
+    private Table levelDimensionTable;
+    private TextField levelWidthTextField;
+    private TextField levelHeightTextField;
     private CallbackFunction yesCallback;
     private CallbackFunction noCallback;
 
@@ -125,6 +134,25 @@ public class GameRenderer implements Disposable {
         playerSprite = new Sprite((Texture) Assets.getInstance().getAssetManager().get(Constants.PLAYER_TEXTURE));
         transitionRenderer = new ShapeRenderer();
         glyphLayout = new GlyphLayout();
+
+        stateFont = new BitmapFont();
+        stateFont.getData().setScale(Constants.STATE_FONT_SCALE);
+        stateFont.setColor(0.0f, 0.0f, 0.0f, 1.0f);
+        stateFont.getRegion().getTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+
+        Pixmap stateCircles = new Pixmap(Constants.STATE_CIRCLES_PIXMAP_SIZE, Constants.STATE_CIRCLES_PIXMAP_SIZE, Pixmap.Format.RGBA8888);
+        stateCircles.setColor(0.0f, 0.0f, 0.0f, 1.0f);
+        stateCircles.setBlending(Pixmap.Blending.None);
+        stateCircles.setFilter(Pixmap.Filter.BiLinear);
+
+        int halfWidth = stateCircles.getWidth() / 2;
+        stateCircles.fillCircle(halfWidth, halfWidth, halfWidth);
+        stateCircles.setColor(1.0f, 1.0f, 1.0f, 0.0f);
+        stateCircles.fillCircle(halfWidth, halfWidth, (int)(halfWidth * (1 - Constants.STATE_CIRCLES_LINE_WIDTH_RATIO)));
+
+        stateCirclesSprite = new Sprite(new Texture(stateCircles));
+        stateCirclesSprite.setSize(Constants.STATE_CIRCLES_SIZE, Constants.STATE_CIRCLES_SIZE);
+
         initFileChooser();
 
         upperLeftViewport = new FitViewport(Constants.VIEWPORT_GUI_WIDTH / 2.0f, Constants.VIEWPORT_GUI_HEIGHT / 2.0f);
@@ -236,7 +264,10 @@ public class GameRenderer implements Disposable {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
                 if (gameController.getAutomataController().getCurrentAutomaton().isChangesPending()) {
-                    showConfirmationDialog(GameRenderer.this::saveAutomatonClicked, GameRenderer.this::newAutomatonClicked);
+                    showConfirmationDialog(GameRenderer.this::saveAutomatonClicked,
+                            GameRenderer.this::newAutomatonClicked, Constants.AUTOMATON_CONFIRM_MESSAGE);
+                } else {
+                    newAutomatonClicked();
                 }
             }
         });
@@ -256,7 +287,10 @@ public class GameRenderer implements Disposable {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
                 if (gameController.getAutomataController().getCurrentAutomaton().isChangesPending()) {
-                    showConfirmationDialog(GameRenderer.this::saveAutomatonClicked, GameRenderer.this::loadAutomatonClicked);
+                    showConfirmationDialog(GameRenderer.this::saveAutomatonClicked,
+                            GameRenderer.this::loadAutomatonClicked, Constants.AUTOMATON_CONFIRM_MESSAGE);
+                } else {
+                    loadAutomatonClicked();
                 }
             }
         });
@@ -301,14 +335,25 @@ public class GameRenderer implements Disposable {
         });
         levelNorth.add(blockTypeSelectBox).expandX();
 
+        newLevelButton = new TextButton("new level", skin);
+        newLevelButton.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                if (gameController.getLevelController().getCurrentLevel().isChangesPending()) {
+                    showConfirmationDialog(GameRenderer.this::saveLevelClicked,
+                            GameRenderer.this::newLevelClicked, Constants.LEVEL_CONFIRM_MESSAGE);
+                } else {
+                    newLevelClicked();
+                }
+            }
+        });
+        levelNorth.add(newLevelButton).expandX();
+
         saveLevelButton = new TextButton("save level", skin);
         saveLevelButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
-                gameController.setFileProcessor(gameController.getLevelController()::saveLevel);
-                fileChooser.setMode(FileChooser.Mode.SAVE);
-                fileChooser.setFileTypeFilter(pngTypeFilter);
-                showFileChooser();
+                saveLevelClicked();
             }
         });
         levelNorth.add(saveLevelButton).expandX();
@@ -317,10 +362,12 @@ public class GameRenderer implements Disposable {
         loadLevelButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
-                gameController.setFileProcessor(gameController.getLevelController()::loadLevel);
-                fileChooser.setMode(FileChooser.Mode.OPEN);
-                fileChooser.setFileTypeFilter(pngTypeFilter);
-                showFileChooser();
+                if (gameController.getLevelController().getCurrentLevel().isChangesPending()) {
+                    showConfirmationDialog(GameRenderer.this::saveLevelClicked,
+                            GameRenderer.this::loadLevelClicked, Constants.LEVEL_CONFIRM_MESSAGE);
+                } else {
+                    loadLevelClicked();
+                }
             }
         });
         levelNorth.add(loadLevelButton).expandX();
@@ -329,6 +376,38 @@ public class GameRenderer implements Disposable {
         levelNorth.add(fpsLabel).right();
 
         return levelNorth;
+    }
+
+    private void newLevelClicked() {
+        levelDimensionTable.setVisible(true);
+        showConfirmationDialog(GameRenderer.this::createNewLevel, null, Constants.NEW_LEVEL_CONFIRM_MESSAGE);
+        levelDimensionTable.setVisible(false);
+    }
+
+    private void createNewLevel() {
+        try {
+            int width = Integer.parseInt(levelWidthTextField.getText().trim());
+            int height = Integer.parseInt(levelHeightTextField.getText().trim());
+            gameController.getLevelController().createNewLevel(width, height);
+        } catch (NumberFormatException exc) {
+            Gdx.app.debug(TAG, "invalid dimensions "
+                    + levelWidthTextField.getText() + " " + levelHeightTextField.getText());
+            return;
+        }
+    }
+
+    private void saveLevelClicked() {
+        gameController.setFileProcessor(gameController.getLevelController()::saveLevel);
+        fileChooser.setMode(FileChooser.Mode.SAVE);
+        fileChooser.setFileTypeFilter(pngTypeFilter);
+        showFileChooser();
+    }
+
+    private void loadLevelClicked() {
+        gameController.setFileProcessor(gameController.getLevelController()::loadLevel);
+        fileChooser.setMode(FileChooser.Mode.OPEN);
+        fileChooser.setFileTypeFilter(pngTypeFilter);
+        showFileChooser();
     }
 
     private Table rebuildAutomataSouth() {
@@ -465,13 +544,31 @@ public class GameRenderer implements Disposable {
                  return Gdx.graphics.getWidth() * Constants.DIALOG_HEIGHT_FACTOR;
             }
         };
-
         confirmationDialog.setModal(true);
         confirmationDialog.setMovable(false);
         confirmationDialog.setResizable(false);
 
-        Label label = new Label("There are unsaved changes! Would you like to save them first?", skin);
-        confirmationDialog.getContentTable().add(label);
+        Table contentTable = confirmationDialog.getContentTable();
+        Value fullWidthValue = Value.percentWidth(1.0f, confirmationDialog);
+
+        confirmationDialogLabel = new Label("", skin);
+        confirmationDialogLabel.setWrap(true);
+        confirmationDialogLabel.setAlignment(Align.center);
+        contentTable.add(confirmationDialogLabel).width(fullWidthValue);
+        contentTable.row();
+        levelDimensionTable = new Table();
+        levelDimensionTable.setVisible(false);
+        contentTable.add(levelDimensionTable).width(fullWidthValue);
+
+        levelDimensionTable.add(new Label("level width: ", skin));
+        levelWidthTextField = new TextField("", skin);
+        levelWidthTextField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
+        levelDimensionTable.add(levelWidthTextField);
+        levelDimensionTable.row();
+        levelDimensionTable.add(new Label("level height: ", skin));
+        levelHeightTextField = new TextField("", skin);
+        levelHeightTextField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
+        levelDimensionTable.add(levelHeightTextField);
 
         Table buttonTable = new Table();
 
@@ -513,9 +610,11 @@ public class GameRenderer implements Disposable {
         }
     }
 
-    private void showConfirmationDialog(CallbackFunction yesCallback, CallbackFunction noCallback) {
+    public void showConfirmationDialog(CallbackFunction yesCallback, CallbackFunction noCallback, String message) {
         this.yesCallback = yesCallback;
         this.noCallback = noCallback;
+        message = message == null ? "" : message;
+        confirmationDialogLabel.setText(message);
         confirmationDialog.show(fullStage);
         Gdx.input.setInputProcessor(fullStage);
     }
@@ -531,6 +630,7 @@ public class GameRenderer implements Disposable {
         batch.setProjectionMatrix(leftCamera.combined);
         renderTransitionLines();
         DrawableAutomaton automaton = gameController.getAutomataController().getCurrentAutomaton();
+
         batch.begin();
         for (Map.Entry<AutomatonState, Sprite> entry : automaton.getStateSprites().entrySet()) {
             AutomatonState state = entry.getKey();
@@ -543,10 +643,16 @@ public class GameRenderer implements Disposable {
             sprite.draw(batch);
             sprite.setTexture(stateTexture);
 
-            BitmapFont font = Assets.getInstance().getFonts().defaultSmall;
             String text = state.getAction().toString();
-            glyphLayout.setText(font, text);
-            font.draw(batch, text, state.getX() - glyphLayout.width / 2.0f, state.getY() + glyphLayout.height / 2.0f);
+            glyphLayout.setText(stateFont, text);
+            stateFont.draw(batch, text, state.getX() - glyphLayout.width / 2.0f, state.getY() + glyphLayout.height / 2.0f);
+        }
+
+        AutomatonState startState = automaton.getStartState();
+        if (startState != null) {
+            stateCirclesSprite.setPosition(startState.getX() - Constants.STATE_CIRCLES_SIZE / 2.0f,
+                    startState.getY() - Constants.STATE_CIRCLES_SIZE / 2.0f);
+            stateCirclesSprite.draw(batch);
         }
         batch.end();
     }
@@ -567,10 +673,13 @@ public class GameRenderer implements Disposable {
         float halfWidth = playerSprite.getWidth() / 2.0f;
         float halfHeight = playerSprite.getHeight() / 2.0f;
         playerSprite.setOrigin(halfWidth, halfHeight);
-        Vector2 playerPos = level.calcPos(level.getCurrentPosition().x, level.getCurrentPosition().y);
-        playerSprite.setPosition(playerPos.x - halfWidth, playerPos.y - halfHeight);
-        playerSprite.setRotation(-90.0f * level.getCurrentDirection().getDegrees());
-        playerSprite.draw(batch);
+        GridPoint2 currentPlayerPositon = level.getCurrentPosition();
+        if (currentPlayerPositon != null && level.isPositionWithinLevel(currentPlayerPositon)) {
+            Vector2 playerPos = level.calcPos(currentPlayerPositon.x, currentPlayerPositon.y);
+            playerSprite.setPosition(playerPos.x - halfWidth, playerPos.y - halfHeight);
+            playerSprite.setRotation(-90.0f * level.getCurrentDirection().getDegrees());
+            playerSprite.draw(batch);
+        }
         batch.end();
     }
 
@@ -673,7 +782,17 @@ public class GameRenderer implements Disposable {
 
         gameController.getAutomataController().getCurrentAutomaton().recalculateTransitions();
 
-//        Gdx.app.debug(TAG, "right camera (" + rightCamera.viewportWidth + ", " + rightCamera.viewportHeight + ")");
+//        if (Gdx.input.getInputProcessor() != null) {
+//            if (Gdx.input.getInputProcessor().equals(gameScreen.getInputProcessor())) {
+//                Gdx.app.debug(TAG, "lol");
+//            } else if (Gdx.input.getInputProcessor().equals(fullStage)) {
+//                Gdx.app.debug(TAG, "lol");
+//            } else if (Gdx.input.getInputProcessor().equals(gameScreen.getMenuScreen().getStage())) {
+//                Gdx.app.debug(TAG, "lol");
+//            }
+//        } else {
+//            Gdx.app.debug(TAG, "lol");
+//        }
     }
 
     @Override

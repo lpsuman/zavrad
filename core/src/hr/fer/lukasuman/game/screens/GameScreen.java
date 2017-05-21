@@ -54,19 +54,11 @@ public class GameScreen extends AbstractGameScreen {
         if (!isGameLoaded) {
             isGameLoaded = true;
             gameController.setGameRenderer(gameRenderer);
-            inputController = new InputController(gameController, gameRenderer, menuScreen);
-
-            inputMultiplexer = new InputMultiplexer();
-            inputMultiplexer.addProcessor(gameRenderer.getUpperLeftStage());
-            inputMultiplexer.addProcessor(gameRenderer.getUpperRightStage());
-            inputMultiplexer.addProcessor(gameRenderer.getLowerLeftStage());
-            inputMultiplexer.addProcessor(gameRenderer.getLowerRightStage());
-            inputMultiplexer.addProcessor(inputController);
         }
 
-        Gdx.input.setInputProcessor(inputMultiplexer);
+        Gdx.input.setInputProcessor(getInputProcessor());
         Gdx.input.setCatchBackKey(true);
-}
+    }
 
     @Override
     public void hide () {
@@ -77,16 +69,29 @@ public class GameScreen extends AbstractGameScreen {
     @Override
     public void pause () {
         paused = true;
+        Gdx.app.debug(TAG, "game screen paused");
     }
 
     @Override
     public void resume () {
         super.resume();
         paused = false;
+        Gdx.app.debug(TAG, "game screen resumed");
     }
 
     @Override
     public InputProcessor getInputProcessor() {
+        inputMultiplexer = new InputMultiplexer();
+        inputMultiplexer.addProcessor(gameRenderer.getUpperLeftStage());
+        inputMultiplexer.addProcessor(gameRenderer.getUpperRightStage());
+        inputMultiplexer.addProcessor(gameRenderer.getLowerLeftStage());
+        inputMultiplexer.addProcessor(gameRenderer.getLowerRightStage());
+        inputController = new InputController(gameController, gameRenderer, menuScreen);
+        inputMultiplexer.addProcessor(inputController);
         return inputMultiplexer;
+    }
+
+    public MenuScreen getMenuScreen() {
+        return menuScreen;
     }
 }

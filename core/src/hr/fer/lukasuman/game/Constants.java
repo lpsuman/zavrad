@@ -25,8 +25,12 @@ public class Constants {
     public static final float DIALOG_WIDTH_FACTOR = 0.33f;
     public static final float DIALOG_HEIGHT_FACTOR = 0.33f;
 
-    public static final float STATE_SIZE = VIEWPORT_WIDTH / 10;
+    public static final float STATE_SIZE = VIEWPORT_WIDTH / 15;
     public static final String DEFAULT_STATE_LABEL = "state";
+    public static final float STATE_FONT_SCALE = STATE_SIZE * 15 / VIEWPORT_WIDTH;
+    public static final int STATE_CIRCLES_PIXMAP_SIZE = 127;
+    public static final float STATE_CIRCLES_LINE_WIDTH_RATIO = 0.1f;
+    public static final float STATE_CIRCLES_SIZE = 1.2f * STATE_SIZE;
 
     public static final float TRANSITIONS_LINE_WIDTH = 3.0f;
     public static final Color TRANSITION_COLOR = new Color(0x000000ff);
@@ -56,6 +60,10 @@ public class Constants {
 
     private static final String LEVEL_FOLDER = "levels";
     public static final String LEVEL_PATH = LEVEL_FOLDER + "/level_02.png";
+    public static final int MIN_LEVEL_WIDTH = 2;
+    public static final int MIN_LEVEL_HEIGHT = 2;
+    public static final int MAX_LEVEL_WIDTH = 100;
+    public static final int MAX_LEVEL_HEIGHT = 100;
 
     public static final float SIMULATION_SPEED_FACTOR = 1.0f;
 
@@ -66,4 +74,10 @@ public class Constants {
 
     public static final AutomatonAction DEFAULT_ACTION = AutomatonAction.MOVE_FORWARD;
     public static final String DEFAULT_TRANSITION_TRIGGER = EmptyBlock.LABEL;
+
+    public static final String AUTOMATON_CONFIRM_MESSAGE = "Current automaton is unsaved. Would you like to save it?";
+    public static final String LEVEL_CONFIRM_MESSAGE = "Current level is unsaved. Would you like to save it?";
+    public static final String LEVEL_PASSED_FORMAT_MESSAGE = "Congratulations! You have passed the current level" +
+            " with %d states. Would you like to load the next level?";
+    public static final String NEW_LEVEL_CONFIRM_MESSAGE = "Create new level with the specified dimensions?";
 }

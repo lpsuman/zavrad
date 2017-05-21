@@ -30,23 +30,34 @@ public class Level implements Disposable {
     private GridPoint2 currentPosition;
     private Direction currentDirection;
 
+    private FileHandle file;
+    private String levelName;
+    private boolean isChangesPending;
+
     public Level (String fileName) {
-        levelPixmap = new Pixmap(Gdx.files.internal(fileName));
-        init(fileName);
+        file = Gdx.files.internal(fileName);
+        levelPixmap = new Pixmap(file);
+        init();
     }
 
     public Level (FileHandle file) {
+        this.file = file;
         levelPixmap = new Pixmap(file);
-        init(file.nameWithoutExtension());
+        init();
     }
 
     public Level (int levelWidth, int levelHeight) {
         levelPixmap = new Pixmap(levelWidth, levelHeight, Pixmap.Format.RGBA8888);
         levelPixmap.setColor(EmptyBlock.COLOR_IN_LEVEL);
-        init("new level");
+        init();
     }
 
-    private void init (String fileName) {
+    private void init () {
+        if (file != null) {
+            levelName = file.nameWithoutExtension();
+        } else {
+            levelName = "new level";
+        }
         width = levelPixmap.getWidth();
         height = levelPixmap.getHeight();
         blocks = new AbstractBlock[width][height];
@@ -59,7 +70,7 @@ public class Level implements Disposable {
                 AbstractBlock newBlock = BlockFactory.getBlocByColor(currentPixel);
 
                 if (newBlock == null) {
-                    Gdx.app.error(TAG, "Invalid block type in level " + fileName
+                    Gdx.app.error(TAG, "Invalid block type in level " + levelName
                             + " replaced with an empty block instead");
                     newBlock = new EmptyBlock();
                 }
@@ -76,7 +87,7 @@ public class Level implements Disposable {
 
         resetLevel();
 
-        Gdx.app.debug(TAG, "level '" + fileName + "' loaded: " + width + "x" + height
+        Gdx.app.debug(TAG, "level '" + levelName + "' loaded: " + width + "x" + height
                 + " start(" + start.x + ", " + start.y + ") end(" + goal.x + ", " + goal.y + ")");
     }
 
@@ -118,8 +129,38 @@ public class Level implements Disposable {
     }
 
     public void setBlockAt(AbstractBlock newBlock, GridPoint2 pos) {
+        if (newBlock == null || blocks[pos.x][pos.y].equals(newBlock)) {
+            return;
+        }
+
+        AbstractBlock blockAtPos = blocks[pos.x][pos.y];
+        if (BlockFactory.isStart(blockAtPos)) {
+            if (start.equals(currentPosition)) {
+                currentPosition = null;
+            }
+            start = null;
+        } else if (BlockFactory.isGoal(blockAtPos)){
+            if (goal.equals(currentPosition)) {
+                currentPosition = null;
+            }
+            goal = null;
+        }
+
+        if (BlockFactory.isStart(newBlock)) {
+            if (start != null) {
+                blocks[start.x][start.y] = BlockFactory.getBlockByName(EmptyBlock.LABEL);
+            }
+            start = new GridPoint2(pos);
+        } else if (BlockFactory.isGoal(newBlock)) {
+            if (goal != null) {
+                blocks[goal.x][goal.y] = BlockFactory.getBlockByName(EmptyBlock.LABEL);
+            }
+            goal = new GridPoint2(pos);
+        }
+
         blocks[pos.x][pos.y] = newBlock;
         levelPixmap.drawPixel(pos.x, height - 1 - pos.y, newBlock.getColorInLevel());
+        isChangesPending = true;
     }
 
     public GridPoint2 getBlockPosition(Vector2 pos) {
@@ -184,5 +225,21 @@ public class Level implements Disposable {
 
     public void setCurrentDirection(Direction currentDirection) {
         this.currentDirection = currentDirection;
+    }
+
+    public FileHandle getFile() {
+        return file;
+    }
+
+    public String getLevelName() {
+        return levelName;
+    }
+
+    public boolean isChangesPending() {
+        return isChangesPending;
+    }
+
+    public void setChangesPending(boolean changesPending) {
+        isChangesPending = changesPending;
     }
 }

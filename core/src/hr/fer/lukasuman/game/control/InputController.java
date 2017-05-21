@@ -221,6 +221,7 @@ public class InputController extends InputAdapter {
     }
 
     public void backToMenu() {
+        gameController.stopSimulation();
         ScreenTransition transition = ScreenTransitionSlide.init(0.75f,
                 ScreenTransitionSlide.DOWN, false, Interpolation.bounceOut);
         gameController.getGame().setScreen(menuScreen, transition);
