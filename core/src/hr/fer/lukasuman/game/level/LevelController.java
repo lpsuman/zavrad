@@ -57,6 +57,7 @@ public class LevelController {
             return false;
         } else {
             PixmapIO.writePNG(file, currentLevel.getLevelPixmap());
+            currentLevel.setFile(file);
             currentLevel.setChangesPending(false);
             return true;
         }
@@ -85,7 +86,8 @@ public class LevelController {
                 showMessage("There are no more levels in the same directory: " + currentPath);
             }
         } catch (Exception exc) {
-            Gdx.app.debug(TAG, "Couldn't load next level: " + newFile == null ? "null" : newFile.path());
+            Gdx.app.debug(TAG, "Couldn't load next level");
+            exc.printStackTrace();
         }
     }
 
@@ -112,8 +114,15 @@ public class LevelController {
         }
         String newFileName = null;
         try {
-            int levelNumber = Integer.parseInt(fileName.substring(numberStart, numberEnd + 1));
-            newFileName = fileName.substring(0, numberStart) + (levelNumber + 1);
+            String strNumber = fileName.substring(numberStart, numberEnd + 1);
+            int levelNumber = Integer.parseInt(strNumber);
+            String strLevelNumber = Integer.toString(levelNumber);
+            String leadingZeros = strNumber.substring(0, strNumber.length() - strLevelNumber.length());
+            int incrementedLevelNumber = levelNumber + 1;
+            String strIncrementedNumber = Integer.toString(incrementedLevelNumber);
+            leadingZeros = leadingZeros.substring(0,
+                    leadingZeros.length() - (strIncrementedNumber.length() - strLevelNumber.length()));
+            newFileName = fileName.substring(0, numberStart) + leadingZeros + incrementedLevelNumber;
         } catch (Exception exc) {
         }
         return newFileName;

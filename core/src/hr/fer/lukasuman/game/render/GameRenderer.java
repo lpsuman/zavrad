@@ -62,6 +62,7 @@ public class GameRenderer implements Disposable {
     private ShapeRenderer transitionRenderer;
     private GlyphLayout glyphLayout;
     private BitmapFont stateFont;
+    private AutomatonTransition tempTransition;
 
     private Stage upperLeftStage;
     private Stage upperRightStage;
@@ -640,6 +641,9 @@ public class GameRenderer implements Disposable {
         if (callback != null) {
             callback.executeCallback();
         }
+        if (finalCallback != null) {
+            finalCallback.executeCallback();
+        }
     }
 
     public void showConfirmationDialog(CallbackFunction yesCallback, CallbackFunction noCallback, String message) {
@@ -734,7 +738,6 @@ public class GameRenderer implements Disposable {
 
     private void renderTransitionLines() {
         Gdx.gl.glLineWidth(Constants.TRANSITIONS_LINE_WIDTH);
-
         transitionRenderer.setProjectionMatrix(leftCamera.combined);
         transitionRenderer.begin(ShapeRenderer.ShapeType.Line);
         transitionRenderer.setColor(Constants.TRANSITION_COLOR);
@@ -747,6 +750,9 @@ public class GameRenderer implements Disposable {
             }
             transition.drawLines(transitionRenderer);
         }
+        if (tempTransition != null) {
+            tempTransition.drawLines(transitionRenderer);
+        }
 
         transitionRenderer.end();
         Gdx.gl.glLineWidth(1);
@@ -755,6 +761,9 @@ public class GameRenderer implements Disposable {
         batch.begin();
         for (AutomatonTransition transition : gameController.getAutomataController().getCurrentAutomaton().getTransitionSet()) {
             transition.drawLabels(batch, font);
+        }
+        if (tempTransition != null) {
+            tempTransition.drawLabels(batch, font);
         }
         batch.end();
     }
@@ -884,6 +893,14 @@ public class GameRenderer implements Disposable {
 
     public Stage getFullStage() {
         return fullStage;
+    }
+
+    public AutomatonTransition getTempTransition() {
+        return tempTransition;
+    }
+
+    public void setTempTransition(AutomatonTransition tempTransition) {
+        this.tempTransition = tempTransition;
     }
 
     public SelectBox<AutomatonAction> getActionSelectBox() {

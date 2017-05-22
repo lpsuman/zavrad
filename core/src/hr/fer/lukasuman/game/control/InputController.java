@@ -31,6 +31,8 @@ public class InputController extends InputAdapter {
     private boolean wasStateMoved;
     private boolean touchedDown;
 
+    private AutomatonState transitionStartState;
+
     private MenuScreen menuScreen;
 
     public InputController(GameController gameController, GameRenderer gameRenderer, MenuScreen menuScreen) {
@@ -93,7 +95,9 @@ public class InputController extends InputAdapter {
             } else if (checkedButton.equals(gameRenderer.getCreateTransitionButton())) {
                 if (closestState != null) {
                     if (distance <= Constants.STATE_SIZE / 2) {
-                        gameController.setSelectedState(closestState);
+                        transitionStartState = closestState;
+                        gameRenderer.setTempTransition(new AutomatonTransition(
+                                gameRenderer.getTransitionSelectBox().getSelected(), closestState, posInGame));
                     }
                 }
             } else if (checkedButton.equals(gameRenderer.getDeleteTransitionButton())) {
@@ -152,7 +156,8 @@ public class InputController extends InputAdapter {
                 gameController.getAutomataController().getCurrentAutomaton().recalculateTransitions();
             }
         } else if (checkedButton.equals(gameRenderer.getCreateTransitionButton())) {
-
+            gameRenderer.getTempTransition().setEndPoint(posInGame);
+            gameRenderer.getTempTransition().recalculate();
         }
     }
 
@@ -187,32 +192,32 @@ public class InputController extends InputAdapter {
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         touchedDown = false;
         Vector2 posInGame = getPosInGame(screenX, screenY, gameRenderer.getLeftViewport());
-        if (gameController.checkInside(posInGame)) {
-            DrawableAutomaton automaton = gameController.getAutomataController().getCurrentAutomaton();
-            Button checkedButton = gameRenderer.getAutomatonButtonGroup().getChecked();
-            if (checkedButton.equals(gameRenderer.getSelectionButton())) {
-                if (wasStateMoved) {
-                    wasStateMoved = false;
-                    automaton.recalculateTransitions();
-                }
-            } else {
-                AutomatonState startState = gameController.getSelectedState();
-                if (checkedButton.equals(gameRenderer.getCreateTransitionButton()) && (startState != null)) {
-                    AutomatonState endState = automaton.getClosestState(posInGame.x, posInGame.y);
-                    float distance = DrawableAutomaton.pointDistance(endState, posInGame.x, posInGame.y);
+        if (!gameController.checkInside(posInGame)) {
+            return false;
+        }
+        DrawableAutomaton automaton = gameController.getAutomataController().getCurrentAutomaton();
+        Button checkedButton = gameRenderer.getAutomatonButtonGroup().getChecked();
+        if (checkedButton.equals(gameRenderer.getSelectionButton())) {
+            if (wasStateMoved) {
+                wasStateMoved = false;
+                automaton.recalculateTransitions();
+            }
+        } else if (checkedButton.equals(gameRenderer.getCreateTransitionButton()) && (transitionStartState != null)) {
+            AutomatonState endState = automaton.getClosestState(posInGame.x, posInGame.y);
+            float distance = DrawableAutomaton.pointDistance(endState, posInGame.x, posInGame.y);
 
-                    if (distance <= Constants.STATE_SIZE / 2) {
-                        String newLabel = gameRenderer.getTransitionSelectBox().getSelected();
-                        AutomatonTransition existingTransition = automaton.getTransition(startState, endState);
-                        if (existingTransition == null) {
-                            AutomatonTransition newTransition = automaton.addTransition(newLabel, startState, endState);
-                            gameController.setSelectedTransition(newTransition);
-                        } else {
-                            existingTransition.addLabel(newLabel);
-                        }
-                    }
+            if (distance <= Constants.STATE_SIZE / 2) {
+                String newLabel = gameRenderer.getTransitionSelectBox().getSelected();
+                AutomatonTransition existingTransition = automaton.getTransition(transitionStartState, endState);
+                if (existingTransition == null) {
+                    AutomatonTransition newTransition = automaton.addTransition(newLabel, transitionStartState, endState);
+                    gameController.setSelectedTransition(newTransition);
+                } else {
+                    existingTransition.addLabel(newLabel);
                 }
             }
+
+            gameRenderer.setTempTransition(null);
         }
         return false;
     }

@@ -4,12 +4,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Disposable;
-import hr.fer.lukasuman.game.Assets;
-import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.level.blocks.*;
 
 public class Level implements Disposable {
@@ -116,7 +113,6 @@ public class Level implements Disposable {
         for (int j = 0; j < height; j++) {
             for (int i = 0; i < width; i++) {
                 Vector2 gamePos = calcPos(i, j);
-
                 blocks[i][j].setSpriteSize(blockSize);
                 blocks[i][j].setSpritePos(gamePos);
             }
@@ -124,6 +120,12 @@ public class Level implements Disposable {
     }
 
     public Vector2 calcPos(int x, int y) {
+        int difference = Math.abs(width - height) / 2;
+        if (width < height) {
+            x += difference;
+        } else {
+            y += difference;
+        }
         return new Vector2((x + 0.5f) * blockSize - effectiveWidth / 2.0f,
                 (y + 0.5f) * blockSize - effectiveHeight / 2.0f);
     }
@@ -185,6 +187,12 @@ public class Level implements Disposable {
         GridPoint2 result = new GridPoint2();
         result.x = (int)((pos.x + effectiveWidth / 2.0f) / blockSize);
         result.y = (int)((pos.y + effectiveHeight / 2.0f) / blockSize);
+        int difference = Math.abs(width - height) / 2;
+        if (width < height) {
+            result.x -= difference;
+        } else {
+            result.y -= difference;
+        }
         return result;
     }
 
@@ -247,6 +255,10 @@ public class Level implements Disposable {
 
     public FileHandle getFile() {
         return file;
+    }
+
+    public void setFile(FileHandle file) {
+        this.file = file;
     }
 
     public String getLevelName() {

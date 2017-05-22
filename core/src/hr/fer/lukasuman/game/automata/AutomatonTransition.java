@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Bezier;
 import com.badlogic.gdx.math.Vector2;
 import hr.fer.lukasuman.game.Constants;
+import hr.fer.lukasuman.game.GamePreferences;
 
 import java.util.*;
 
@@ -64,6 +65,11 @@ public class AutomatonTransition {
         this(new HashSet<>(Arrays.asList(label)), startState, endState);
     }
 
+    public AutomatonTransition(String label, AutomatonState startState, Vector2 endPoint) {
+        this(label, startState, (AutomatonState) null);
+        this.endPoint.set(endPoint);
+    }
+
     public void recalculate() {
         calculateControlPoints();
         calculateBezierPoints();
@@ -72,7 +78,9 @@ public class AutomatonTransition {
 
     private void calculateControlPoints() {
         startPoint.set(startState.getX(), startState.getY());
-        endPoint.set(endState.getX(), endState.getY());
+        if (endState != null) {
+            endPoint.set(endState.getX(), endState.getY());
+        }
         middlePoint.x = (startPoint.x + endPoint.x) / 2.0f;
         middlePoint.y = (startPoint.y + endPoint.y) / 2.0f;
 
@@ -131,7 +139,9 @@ public class AutomatonTransition {
     }
 
     public void drawLines(ShapeRenderer transitionRenderer) {
-//        drawControlPolygon(shapeRenderer);
+        if (GamePreferences.getInstance().debug) {
+            drawControlPolygon(transitionRenderer);
+        }
         for(int i = 0; i < points.length - 1; i++) {
             transitionRenderer.line(points[i], points[i+1]);
         }
@@ -164,6 +174,14 @@ public class AutomatonTransition {
         }
         transitionLabels.add(newLabel);
         startState.getTransitions().put(newLabel, endState);
+    }
+
+    public Vector2 getEndPoint() {
+        return endPoint;
+    }
+
+    public void setEndPoint(Vector2 endPoint) {
+        this.endPoint = endPoint;
     }
 
     public Vector2 getMiddlePoint() {

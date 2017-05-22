@@ -24,7 +24,6 @@ public class GameController {
     private DirectedGame game;
     private AutomataController automataController;
     private LevelController levelController;
-    private int numberOfStates;
 
     private AutomatonState selectedState;
     private AutomatonTransition selectedTransition;
@@ -46,7 +45,6 @@ public class GameController {
     private void init() {
         automataController = new AutomataController();
         levelController = new LevelController(this);
-        numberOfStates = 0;
         isSimulationStarted = false;
         isSimulationRunning = false;
         simulationSpeed = 1.0f;
@@ -143,8 +141,9 @@ public class GameController {
         AbstractBlock currentBlock = level.getBlockAt(currentPosition);
         if (currentBlock != null && BlockFactory.isGoal(currentBlock)) {
             pauseSimulation();
-            gameRenderer.showConfirmationDialog(levelController::loadNextLevel, GameController.this::resumeSimulation,
-                    String.format(Constants.LEVEL_PASSED_FORMAT_MESSAGE, numberOfStates));
+            gameRenderer.showConfirmationDialog(levelController::loadNextLevel, null,
+                    String.format(Constants.LEVEL_PASSED_FORMAT_MESSAGE,
+                            getNumberOfStates(), getNumberOfStates() == 1 ? "" : "s"));
             return;
         }
 
@@ -242,7 +241,7 @@ public class GameController {
     }
 
     public int getNumberOfStates() {
-        return numberOfStates;
+        return automataController.getCurrentAutomaton().getNumberOfState();
     }
 
     public GameRenderer getGameRenderer() {

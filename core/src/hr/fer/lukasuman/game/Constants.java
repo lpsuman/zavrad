@@ -78,6 +78,6 @@ public class Constants {
     public static final String AUTOMATON_CONFIRM_MESSAGE = "Current automaton is unsaved. Would you like to save it?";
     public static final String LEVEL_CONFIRM_MESSAGE = "Current level is unsaved. Would you like to save it?";
     public static final String LEVEL_PASSED_FORMAT_MESSAGE = "Congratulations! You have passed the current level" +
-            " with %d states. Would you like to load the next level?";
+            " with %d state%s.\nWould you like to load the next level?";
     public static final String NEW_LEVEL_CONFIRM_MESSAGE = "Create new level with the specified dimensions?";
 }
