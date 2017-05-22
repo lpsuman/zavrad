@@ -208,6 +208,8 @@ public class GameRenderer implements Disposable {
         upperRightTable.setFillParent(true);
         upperRightTable.setDebug(prefs.debug);
 
+        //TODO fix widget sizes within stages
+
         float upperRatio = Constants.UPPER_BORDER_RATIO * 2.0f;
         Value upperWidthValue = Value.percentWidth(1.0f, upperLeftTable);
         Value upperHeightValue = Value.percentHeight(upperRatio / (1.0f + upperRatio), upperLeftTable);
@@ -301,6 +303,8 @@ public class GameRenderer implements Disposable {
         });
         automataNorth.add(loadAutomatonButton).expandX();
 
+        //TODO add buttons for next/previous automaton
+
         return automataNorth;
     }
 
@@ -386,6 +390,8 @@ public class GameRenderer implements Disposable {
             }
         });
         levelNorth.add(loadLevelButton).expandX();
+
+        //TODO add buttons for next/previous levels
 
         fpsLabel = new Label("", skin);
         levelNorth.add(fpsLabel).right();
@@ -548,6 +554,7 @@ public class GameRenderer implements Disposable {
     }
 
     private void initConfirmationDialog() {
+        //TODO fix dialog size/position when resizing the screen
         confirmationDialog = new Dialog("Confirm", skin) {
             @Override
             public float getPrefWidth() {

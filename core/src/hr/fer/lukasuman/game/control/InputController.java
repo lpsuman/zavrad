@@ -210,6 +210,7 @@ public class InputController extends InputAdapter {
                 String newLabel = gameRenderer.getTransitionSelectBox().getSelected();
                 AutomatonTransition existingTransition = automaton.getTransition(transitionStartState, endState);
                 if (existingTransition == null) {
+                    //TODO maybe reuse temp transition
                     AutomatonTransition newTransition = automaton.addTransition(newLabel, transitionStartState, endState);
                     gameController.setSelectedTransition(newTransition);
                 } else {

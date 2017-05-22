@@ -10,6 +10,8 @@ public class GamePreferences {
 
     public boolean debug;
     public boolean showFpsCounter;
+    //TODO add more options (state size, various colors, choose skin, allow level editing)
+
     private Preferences prefs;
 
     private GamePreferences () {

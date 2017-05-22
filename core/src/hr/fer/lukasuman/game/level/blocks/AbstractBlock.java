@@ -14,6 +14,9 @@ public abstract class AbstractBlock {
     protected String label;
     protected int colorInLevel;
     protected Direction direction;
+    //TODO add isDangerous flag
+
+    //TODO add a few more block types
 
     protected AbstractBlock(String label, boolean isTraversable, boolean isDirectional, int colorInLevel,
                             Direction direction, Texture texture) {

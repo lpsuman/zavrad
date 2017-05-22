@@ -5,6 +5,9 @@ import hr.fer.lukasuman.game.automata.AutomatonAction;
 import hr.fer.lukasuman.game.level.blocks.EmptyBlock;
 
 public class Constants {
+
+    //TODO find other options for this class, too big and too diverse
+
     public static final String TITLE = "Automata Game";
 
     private static final int BASE_SIZE = 500;

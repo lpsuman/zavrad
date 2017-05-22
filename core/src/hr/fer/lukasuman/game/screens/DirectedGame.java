@@ -5,8 +5,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
-import hr.fer.lukasuman.game.screens.AbstractGameScreen;
-import hr.fer.lukasuman.game.screens.ScreenTransition;
 
 public abstract class DirectedGame implements ApplicationListener {
     private boolean init;

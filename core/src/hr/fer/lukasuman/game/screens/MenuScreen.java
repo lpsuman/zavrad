@@ -11,7 +11,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.FillViewport;
-import com.badlogic.gdx.utils.viewport.FitViewport;
 import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.GamePreferences;
@@ -85,6 +84,7 @@ public class MenuScreen extends AbstractGameScreen {
                 onOptionsClicked();
             }
         });
+        //TODO exit game button
         if (debugEnabled) layer.debug();
         return layer;
     }
@@ -106,6 +106,7 @@ public class MenuScreen extends AbstractGameScreen {
         winOptions.setPosition
                 (Constants.VIEWPORT_GUI_WIDTH - winOptions.getWidth() - 50,
                         50);
+        //TODO fix options window position
         return winOptions;
     }
 

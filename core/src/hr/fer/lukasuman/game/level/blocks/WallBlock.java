@@ -11,6 +11,8 @@ public class WallBlock extends AbstractBlock {
     private static final boolean IS_DIRECTIONAL = false;
     public static final int COLOR_IN_LEVEL = 0 << 24 | 0 << 16 | 0 << 8 | 0xff; //BLACK
 
+    //TODO easter egg - walls disappear after hitting into it a few times
+
     public WallBlock(Direction direction) {
         super(LABEL, IS_TRAVERSABLE, IS_DIRECTIONAL, COLOR_IN_LEVEL, direction, loadTexture(TEXTURE));
     }

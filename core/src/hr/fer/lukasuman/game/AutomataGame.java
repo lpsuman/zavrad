@@ -7,8 +7,6 @@ import hr.fer.lukasuman.game.screens.DirectedGame;
 import hr.fer.lukasuman.game.screens.MenuScreen;
 
 public class AutomataGame extends DirectedGame {
-
-	private static final String TAG = AutomataGame.class.getName();
 	
 	@Override
 	public void create () {

@@ -17,6 +17,8 @@ import hr.fer.lukasuman.game.level.blocks.WallBlock;
 
 public class Assets implements Disposable, AssetErrorListener {
 
+    //TODO add textures to atlas
+
     public static final String TAG = Assets.class.getName();
     private static final Assets instance = new Assets();
 

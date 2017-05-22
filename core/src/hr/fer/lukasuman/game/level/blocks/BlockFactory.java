@@ -43,6 +43,7 @@ public class BlockFactory {
     private static Map<Integer, ClassDirectionPair> colorToBlockMap;
 
     static {
+        //TODO add more general block mapping
         blockTypes = new HashSet<>(Arrays.asList(StartBlock.LABEL, GoalBlock.LABEL, EmptyBlock.LABEL, WallBlock.LABEL));
         nameToBlockMap = new HashMap<>();
         nameToBlockMap.put(EmptyBlock.LABEL, new ClassDirectionPair(EmptyBlock.class, DEFAULT_DIRECTION));
