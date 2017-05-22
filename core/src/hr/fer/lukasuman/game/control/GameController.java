@@ -45,7 +45,7 @@ public class GameController {
 
     private void init() {
         automataController = new AutomataController();
-        levelController = new LevelController();
+        levelController = new LevelController(this);
         numberOfStates = 0;
         isSimulationStarted = false;
         isSimulationRunning = false;
@@ -145,6 +145,7 @@ public class GameController {
             pauseSimulation();
             gameRenderer.showConfirmationDialog(levelController::loadNextLevel, GameController.this::resumeSimulation,
                     String.format(Constants.LEVEL_PASSED_FORMAT_MESSAGE, numberOfStates));
+            return;
         }
 
         AbstractBlock blockInFront = null;
@@ -242,6 +243,10 @@ public class GameController {
 
     public int getNumberOfStates() {
         return numberOfStates;
+    }
+
+    public GameRenderer getGameRenderer() {
+        return gameRenderer;
     }
 
     public void setGameRenderer(GameRenderer gameRenderer) {

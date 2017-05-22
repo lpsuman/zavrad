@@ -5,31 +5,26 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import hr.fer.lukasuman.game.Assets;
+import hr.fer.lukasuman.game.level.Direction;
 
 public abstract class AbstractBlock {
     protected Sprite sprite;
     protected boolean isTraversable;
+    protected boolean isDirectional;
     protected String label;
     protected int colorInLevel;
+    protected Direction direction;
 
-    protected AbstractBlock(String label, boolean isTraversable, int colorInLevel) {
+    protected AbstractBlock(String label, boolean isTraversable, boolean isDirectional, int colorInLevel,
+                            Direction direction, Texture texture) {
         this.label = label;
         this.isTraversable = isTraversable;
         this.colorInLevel = colorInLevel;
-    }
-
-    protected AbstractBlock(String label, boolean isTraversable, int colorInLevel, Texture texture) {
-        this(label, isTraversable, colorInLevel);
+        this.direction = direction;
         if (texture != null) {
             sprite = new Sprite(texture);
             sprite.setOriginCenter();
         }
-    }
-
-    protected AbstractBlock(String label, boolean isTraversable, int colorInLevel, Texture texture, Vector2 spritePos, float spriteSize) {
-        this(label, isTraversable, colorInLevel, texture);
-        setSpriteSize(spriteSize);
-        setSpritePos(spritePos);
     }
 
     public void render(SpriteBatch batch) {
@@ -72,5 +67,17 @@ public abstract class AbstractBlock {
 
     public int getColorInLevel() {
         return colorInLevel;
+    }
+
+    public Direction getDirection() {
+        return direction;
+    }
+
+    public void setDirection(Direction direction) {
+        this.direction = direction;
+    }
+
+    public boolean isDirectional() {
+        return isDirectional;
     }
 }

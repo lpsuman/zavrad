@@ -30,6 +30,7 @@ import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.GamePreferences;
 import hr.fer.lukasuman.game.automata.*;
 import hr.fer.lukasuman.game.control.GameController;
+import hr.fer.lukasuman.game.level.Direction;
 import hr.fer.lukasuman.game.level.Level;
 import hr.fer.lukasuman.game.level.blocks.*;
 import hr.fer.lukasuman.game.screens.GameScreen;
@@ -48,6 +49,7 @@ public class GameRenderer implements Disposable {
     private OrthographicCamera leftCamera;
     private OrthographicCamera rightCamera;
 
+    private ScreenViewport fullCameraViewport;
     private ScreenViewport leftViewport;
     private ScreenViewport rightViewport;
 
@@ -83,6 +85,7 @@ public class GameRenderer implements Disposable {
     private TextButton loadAutomatonButton;
 
     private SelectBox<String> blockTypeSelectBox;
+    private SelectBox<Direction> blockDirectionSelectBox;
     private TextButton newLevelButton;
     private TextButton saveLevelButton;
     private TextButton loadLevelButton;
@@ -111,10 +114,13 @@ public class GameRenderer implements Disposable {
     private Dialog confirmationDialog;
     private Label confirmationDialogLabel;
     private Table levelDimensionTable;
+    private Table buttonTableYesNoCancel;
+    private Table buttonTableOK;
     private TextField levelWidthTextField;
     private TextField levelHeightTextField;
     private CallbackFunction yesCallback;
     private CallbackFunction noCallback;
+    private CallbackFunction finalCallback;
 
     private GamePreferences prefs;
 
@@ -178,6 +184,7 @@ public class GameRenderer implements Disposable {
         leftCamera = new OrthographicCamera(Constants.VIEWPORT_WIDTH, Constants.VIEWPORT_HEIGHT);
         rightCamera = new OrthographicCamera(Constants.VIEWPORT_WIDTH, Constants.VIEWPORT_HEIGHT);
 
+        fullCameraViewport = new ScreenViewport(fullCamera);
         leftViewport = new ScreenViewport(leftCamera);
         rightViewport = new ScreenViewport(rightCamera);
 
@@ -187,9 +194,6 @@ public class GameRenderer implements Disposable {
         leftCamera.update();
         rightCamera.position.set(0, 0, 0);
         rightCamera.update();
-
-//        Gdx.app.debug(TAG, "left camera center at " + leftCamera.unproject(new Vector3(0.0f, 0.0f, 0.0f)));
-//        Gdx.app.debug(TAG, "right camera center at " + rightCamera.unproject(new Vector3(0.0f, 0.0f, 0.0f)));
     }
 
     private void rebuildStage () {
@@ -219,7 +223,7 @@ public class GameRenderer implements Disposable {
         lowerRightTable.setFillParent(true);
         lowerRightTable.setDebug(prefs.debug);
 
-        float lowerRatio = Constants.UPPER_BORDER_RATIO * 2.0f;
+        float lowerRatio = Constants.LOWER_BORDER_RATIO * 2.0f;
         Value lowerWidthValue = Value.percentWidth(1.0f, lowerLeftTable);
         Value lowerHeightValue = Value.percentHeight(lowerRatio / (1.0f + lowerRatio), lowerLeftTable);
 
@@ -335,6 +339,16 @@ public class GameRenderer implements Disposable {
         });
         levelNorth.add(blockTypeSelectBox).expandX();
 
+        blockDirectionSelectBox = new SelectBox<>(skin);
+        blockDirectionSelectBox.setItems(Direction.values());
+        blockDirectionSelectBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                gameController.setIgnoreNextClick(true);
+            }
+        });
+        levelNorth.add(blockDirectionSelectBox).expandX();
+
         newLevelButton = new TextButton("new level", skin);
         newLevelButton.addListener(new ChangeListener() {
             @Override
@@ -372,7 +386,7 @@ public class GameRenderer implements Disposable {
         });
         levelNorth.add(loadLevelButton).expandX();
 
-        fpsLabel = new Label("FPS: 60", skin);
+        fpsLabel = new Label("", skin);
         levelNorth.add(fpsLabel).right();
 
         return levelNorth;
@@ -380,8 +394,8 @@ public class GameRenderer implements Disposable {
 
     private void newLevelClicked() {
         levelDimensionTable.setVisible(true);
-        showConfirmationDialog(GameRenderer.this::createNewLevel, null, Constants.NEW_LEVEL_CONFIRM_MESSAGE);
-        levelDimensionTable.setVisible(false);
+        showConfirmationDialog(GameRenderer.this::createNewLevel, null, Constants.NEW_LEVEL_CONFIRM_MESSAGE,
+                () -> levelDimensionTable.setVisible(false));
     }
 
     private void createNewLevel() {
@@ -570,7 +584,11 @@ public class GameRenderer implements Disposable {
         levelHeightTextField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
         levelDimensionTable.add(levelHeightTextField);
 
-        Table buttonTable = new Table();
+        Stack buttonStack = new Stack();
+        confirmationDialog.getButtonTable().add(buttonStack);
+
+        buttonTableYesNoCancel = new Table();
+        buttonStack.add(buttonTableYesNoCancel);
 
         TextButton yesButton = new TextButton("Yes", skin);
         yesButton.addListener(new ChangeListener() {
@@ -579,7 +597,7 @@ public class GameRenderer implements Disposable {
                 confirmationDialogClick(yesCallback);
             }
         });
-        buttonTable.add(yesButton).expandX();
+        buttonTableYesNoCancel.add(yesButton).expandX();
 
         TextButton noButton = new TextButton("No", skin);
         noButton.addListener(new ChangeListener() {
@@ -588,7 +606,7 @@ public class GameRenderer implements Disposable {
                 confirmationDialogClick(noCallback);
             }
         });
-        buttonTable.add(noButton).expandX();
+        buttonTableYesNoCancel.add(noButton).expandX();
 
         TextButton cancelButton = new TextButton("Cancel", skin);
         cancelButton.addListener(new ChangeListener() {
@@ -597,9 +615,23 @@ public class GameRenderer implements Disposable {
                 confirmationDialogClick(null);
             }
         });
-        buttonTable.add(cancelButton).expandX();
+        buttonTableYesNoCancel.add(cancelButton).expandX();
 
-        confirmationDialog.getButtonTable().add(buttonTable);
+        buttonTableOK = new Table();
+        buttonTableOK.setVisible(false);
+        buttonStack.add(buttonTableOK);
+
+        TextButton okButton = new TextButton("OK", skin);
+        okButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                confirmationDialog.remove();
+                buttonTableOK.setVisible(false);
+                buttonTableYesNoCancel.setVisible(true);
+                Gdx.input.setInputProcessor(gameScreen.getInputProcessor());
+            }
+        });
+        buttonTableOK.add(okButton).center();
     }
 
     private void confirmationDialogClick(CallbackFunction callback) {
@@ -611,10 +643,27 @@ public class GameRenderer implements Disposable {
     }
 
     public void showConfirmationDialog(CallbackFunction yesCallback, CallbackFunction noCallback, String message) {
+        showConfirmationDialog(yesCallback, noCallback, message, null);
+    }
+
+    public void showConfirmationDialog(CallbackFunction yesCallback, CallbackFunction noCallback,
+                                       String message, CallbackFunction finalCallback) {
         this.yesCallback = yesCallback;
         this.noCallback = noCallback;
+        this.finalCallback = finalCallback;
         message = message == null ? "" : message;
         confirmationDialogLabel.setText(message);
+        confirmationDialog.show(fullStage);
+        Gdx.input.setInputProcessor(fullStage);
+    }
+
+    public void showInformation(String message) {
+        if (message == null || message.trim().isEmpty()) {
+            return;
+        }
+        confirmationDialogLabel.setText(message);
+        buttonTableYesNoCancel.setVisible(false);
+        buttonTableOK.setVisible(true);
         confirmationDialog.show(fullStage);
         Gdx.input.setInputProcessor(fullStage);
     }
@@ -737,6 +786,20 @@ public class GameRenderer implements Disposable {
         fullViewport.apply();
         fullStage.act();
         fullStage.draw();
+
+        if (GamePreferences.getInstance().debug) {
+            fullCameraViewport.apply();
+            Gdx.gl.glLineWidth(3);
+            transitionRenderer.setProjectionMatrix(fullCamera.combined);
+            transitionRenderer.begin(ShapeRenderer.ShapeType.Line);
+            transitionRenderer.setColor(0.0f, 0.0f, 0.0f, 1.0f);
+            transitionRenderer.line(0.0f, fullCameraViewport.getScreenHeight() / 2.0f,
+                    fullCameraViewport.getWorldWidth(), fullCameraViewport.getScreenHeight() / 2.0f);
+            transitionRenderer.line(0.0f, Gdx.graphics.getHeight() / 2.0f, Gdx.graphics.getWidth(),
+                    Gdx.graphics.getHeight() / 2.0f);
+            transitionRenderer.end();
+            Gdx.gl.glLineWidth(1);
+        }
     }
 
     private void updateScore() {
@@ -763,40 +826,42 @@ public class GameRenderer implements Disposable {
         int paddingX = ((int)(width / 2.0f) - measure) / 2;
         int paddingY = (viewportHeight - measure) / 2;
 
+//        Gdx.app.debug(TAG, String.format("\nwidth: %d\nheight: %d\nviewportHeight: %d\nupperHeight: %d\nlowerHeight:" +
+//                " %d\nmeasure: %d\npaddingX: %d\npaddingY: %d", width, height, viewportHeight, upperHeight,
+//                lowerHeight, measure, paddingX, paddingY));
+
         leftViewport.update(measure, measure);
         leftViewport.setScreenPosition(paddingX, lowerHeight + paddingY);
         rightViewport.update(measure, measure);
         rightViewport.setScreenPosition(width / 2 + paddingX, lowerHeight + paddingY);
+        fullCameraViewport.update(width, height, true);
+        fullCameraViewport.setScreenPosition(0, 0);
 
         leftCamera.zoom = Constants.VIEWPORT_WIDTH / measure;
 
-        upperLeftViewport.update(width / 2, height / 2, true);
-        upperRightViewport.update(width / 2, height / 2, true);
-        lowerLeftViewport.update(width / 2, height / 2, true);
-        lowerRightViewport.update(width / 2, height / 2, true);
+        fullViewport.update(width, height, true);
+        upperLeftViewport.update(width / 2, (int)(measure / 2.0f + upperHeight), true);
+        upperRightViewport.update(width / 2, (int)(measure / 2.0f + upperHeight), true);
+        lowerLeftViewport.update(width / 2, (int)(measure / 2.0f + lowerHeight), true);
+        lowerRightViewport.update(width / 2, (int)(measure / 2.0f + lowerHeight), true);
 
-        upperLeftViewport.setScreenPosition(0, height / 2);
-        upperRightViewport.setScreenPosition(width / 2, height / 2);
-        lowerLeftViewport.setScreenPosition(0, 0);
-        lowerRightViewport.setScreenPosition(width / 2, 0);
+        fullViewport.setScreenPosition(0, 0);
+        upperLeftViewport.setScreenPosition(paddingX, height / 2);
+        upperRightViewport.setScreenPosition(width / 2 + paddingX, height / 2);
+        lowerLeftViewport.setScreenPosition(paddingX, paddingY);
+        lowerRightViewport.setScreenPosition(width / 2 + paddingX, paddingY);
 
         gameController.getAutomataController().getCurrentAutomaton().recalculateTransitions();
-
-//        if (Gdx.input.getInputProcessor() != null) {
-//            if (Gdx.input.getInputProcessor().equals(gameScreen.getInputProcessor())) {
-//                Gdx.app.debug(TAG, "lol");
-//            } else if (Gdx.input.getInputProcessor().equals(fullStage)) {
-//                Gdx.app.debug(TAG, "lol");
-//            } else if (Gdx.input.getInputProcessor().equals(gameScreen.getMenuScreen().getStage())) {
-//                Gdx.app.debug(TAG, "lol");
-//            }
-//        } else {
-//            Gdx.app.debug(TAG, "lol");
-//        }
     }
 
     @Override
     public void dispose () {
+        upperLeftStage.dispose();
+        upperRightStage.dispose();
+        lowerLeftStage.dispose();
+        lowerRightStage.dispose();
+        fullStage.dispose();
+        transitionRenderer.dispose();
         batch.dispose();
         VisUI.dispose();
     }
@@ -831,6 +896,10 @@ public class GameRenderer implements Disposable {
 
     public SelectBox<String> getBlockTypeSelectBox() {
         return blockTypeSelectBox;
+    }
+
+    public SelectBox<Direction> getBlockDirectionSelectBox() {
+        return blockDirectionSelectBox;
     }
 
     public ButtonGroup getAutomatonButtonGroup() {

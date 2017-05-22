@@ -3,19 +3,21 @@ package hr.fer.lukasuman.game.level;
 import com.badlogic.gdx.math.GridPoint2;
 
 public enum Direction {
-    NORTH(0, 1, 0),
-    EAST(1, 0, 1),
-    SOUTH(0, -1, 2),
-    WEST(-1, 0, 3);
+    NORTH(0, 1, 0, "north"),
+    EAST(1, 0, 1, "east"),
+    SOUTH(0, -1, 2, "south"),
+    WEST(-1, 0, 3, "west");
 
     private int xIncrement;
     private int yIncrement;
     private int degrees;
+    private String name;
 
-    Direction(int xIncrement, int yIncrement, int degrees) {
+    Direction(int xIncrement, int yIncrement, int degrees, String name) {
         this.xIncrement = xIncrement;
         this.yIncrement = yIncrement;
         this.degrees = degrees;
+        this.name = name;
     }
 
     public GridPoint2 incrementPosition(GridPoint2 oldPos) {
@@ -30,5 +32,25 @@ public enum Direction {
 
     public int getDegrees() {
         return degrees;
+    }
+
+    public static Direction getByIndex(int index) {
+        switch (index) {
+            case 0:
+                return NORTH;
+            case 1:
+                return EAST;
+            case 2:
+                return SOUTH;
+            case 3:
+                return WEST;
+            default:
+                return null;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }

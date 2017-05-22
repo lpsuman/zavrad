@@ -22,8 +22,8 @@ public class Constants {
     public static final float VIEWPORT_GUI_HEIGHT = UPPER_BORDER + VIEWPORT_GUI_WIDTH / 2.0f + LOWER_BORDER;
     public static final float GUI_BORDER_FACTOR = 0.01f;
 
-    public static final float DIALOG_WIDTH_FACTOR = 0.33f;
-    public static final float DIALOG_HEIGHT_FACTOR = 0.33f;
+    public static final float DIALOG_WIDTH_FACTOR = 0.4f;
+    public static final float DIALOG_HEIGHT_FACTOR = 0.4f;
 
     public static final float STATE_SIZE = VIEWPORT_WIDTH / 15;
     public static final String DEFAULT_STATE_LABEL = "state";
@@ -59,7 +59,7 @@ public class Constants {
     public static final String MENU_BACKGROUND_TEXTURE = IMAGE_FOLDER + "/gear_background.jpg";
 
     private static final String LEVEL_FOLDER = "levels";
-    public static final String LEVEL_PATH = LEVEL_FOLDER + "/level_02.png";
+    public static final String LEVEL_PATH = LEVEL_FOLDER + "/level_01.png";
     public static final int MIN_LEVEL_WIDTH = 2;
     public static final int MIN_LEVEL_HEIGHT = 2;
     public static final int MAX_LEVEL_WIDTH = 100;

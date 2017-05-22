@@ -24,6 +24,7 @@ public class Level implements Disposable {
     private float effectiveWidth;
     private float effectiveHeight;
 
+    private Direction startDirection;
     private GridPoint2 start;
     private GridPoint2 goal;
 
@@ -42,14 +43,30 @@ public class Level implements Disposable {
 
     public Level (FileHandle file) {
         this.file = file;
-        levelPixmap = new Pixmap(file);
+        try {
+            levelPixmap = new Pixmap(file);
+        } catch (Exception exc) {
+            Gdx.app.debug(TAG, "couldn't load pixmap from file: " + file.path());
+        }
         init();
     }
 
     public Level (int levelWidth, int levelHeight) {
         levelPixmap = new Pixmap(levelWidth, levelHeight, Pixmap.Format.RGBA8888);
         levelPixmap.setColor(EmptyBlock.COLOR_IN_LEVEL);
+        levelPixmap.fill();
+        width = levelPixmap.getWidth();
+        height = levelPixmap.getHeight();
+        drawLevelBorders();
         init();
+    }
+
+    private void drawLevelBorders() {
+        levelPixmap.setColor(WallBlock.COLOR_IN_LEVEL);
+        levelPixmap.drawLine(0, 0, width - 1, 0);
+        levelPixmap.drawLine(width - 1, 0, width - 1, height - 1);
+        levelPixmap.drawLine(width - 1, height - 1, 0, height - 1);
+        levelPixmap.drawLine(0, height - 1, 0, 0);
     }
 
     private void init () {
@@ -72,10 +89,11 @@ public class Level implements Disposable {
                 if (newBlock == null) {
                     Gdx.app.error(TAG, "Invalid block type in level " + levelName
                             + " replaced with an empty block instead");
-                    newBlock = new EmptyBlock();
+                    newBlock = BlockFactory.getBlockByName(EmptyBlock.LABEL);
                 }
 
                 if (newBlock.getClass().equals(StartBlock.class)) {
+                    startDirection = newBlock.getDirection();
                     start = new GridPoint2(pixelX, posY);
                 } else if (newBlock.getClass().equals(GoalBlock.class)) {
                     goal = new GridPoint2(pixelX, posY);
@@ -87,8 +105,7 @@ public class Level implements Disposable {
 
         resetLevel();
 
-        Gdx.app.debug(TAG, "level '" + levelName + "' loaded: " + width + "x" + height
-                + " start(" + start.x + ", " + start.y + ") end(" + goal.x + ", " + goal.y + ")");
+        Gdx.app.debug(TAG, "level '" + levelName + "' loaded: " + width + "x" + height);
     }
 
     public void updateSprites(Camera camera) {
@@ -113,7 +130,7 @@ public class Level implements Disposable {
 
     public void resetLevel() {
         currentPosition = start;
-        currentDirection = Direction.NORTH;
+        currentDirection = startDirection;
     }
 
     public AbstractBlock getBlockAt(int x, int y) {
@@ -150,6 +167,7 @@ public class Level implements Disposable {
             if (start != null) {
                 blocks[start.x][start.y] = BlockFactory.getBlockByName(EmptyBlock.LABEL);
             }
+            startDirection = newBlock.getDirection();
             start = new GridPoint2(pos);
         } else if (BlockFactory.isGoal(newBlock)) {
             if (goal != null) {

@@ -12,6 +12,7 @@ import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.automata.AutomatonState;
 import hr.fer.lukasuman.game.automata.AutomatonTransition;
 import hr.fer.lukasuman.game.automata.DrawableAutomaton;
+import hr.fer.lukasuman.game.level.Direction;
 import hr.fer.lukasuman.game.level.Level;
 import hr.fer.lukasuman.game.level.blocks.AbstractBlock;
 import hr.fer.lukasuman.game.level.blocks.BlockFactory;
@@ -162,13 +163,22 @@ public class InputController extends InputAdapter {
     private void levelTouch(Vector2 posInGame) {
         Button checkedButton = gameRenderer.getLevelButtonGroup().getChecked();
         SelectBox<String> blockTypeSelectBox = gameRenderer.getBlockTypeSelectBox();
+        SelectBox<Direction> blockDirectionSelectBox = gameRenderer.getBlockDirectionSelectBox();
         Level currentLevel = gameController.getLevelController().getCurrentLevel();
         GridPoint2 levelPos = currentLevel.getBlockPosition(posInGame);
 
         if (checkedButton.equals(gameRenderer.getSelectBlockButton())) {
-            blockTypeSelectBox.setSelected(currentLevel.getBlockAt(levelPos).getLabel());
+            AbstractBlock selectedBlock = currentLevel.getBlockAt(levelPos);
+            blockTypeSelectBox.setSelected(selectedBlock.getLabel());
+            if (selectedBlock.isDirectional()) {
+                blockDirectionSelectBox.setSelected(selectedBlock.getDirection());
+            }
         } else if (checkedButton.equals(gameRenderer.getPaintBlockButton())) {
             AbstractBlock newBlock = BlockFactory.getBlockByName(blockTypeSelectBox.getSelected());
+            if (newBlock == null) {
+                newBlock = BlockFactory.getBlockByName(blockTypeSelectBox.getSelected()
+                        + " " + blockDirectionSelectBox.getSelected().toString());
+            }
             currentLevel.setBlockAt(newBlock, levelPos);
         }
     }

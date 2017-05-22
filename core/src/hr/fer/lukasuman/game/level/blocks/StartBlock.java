@@ -1,29 +1,38 @@
 package hr.fer.lukasuman.game.level.blocks;
 
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.math.Vector2;
 import hr.fer.lukasuman.game.Constants;
+import hr.fer.lukasuman.game.level.Direction;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class StartBlock extends AbstractBlock {
 
     public static final String TEXTURE = Constants.IMAGE_FOLDER + "/door_open.png";
     public static final String LABEL = "start";
     private static final boolean IS_TRAVERSABLE = true;
-    public static final int COLOR_IN_LEVEL = 255 << 24 | 255 << 16 | 0 << 8 | 0xff; //YELLOW
+    private static final boolean IS_DIRECTIONAL = true;
 
-    public StartBlock() {
-        this(loadTexture(TEXTURE));
+    private static final int COLOR_IN_LEVEL_NORTH = 255 << 24 | 0 << 16 | 0 << 8 | 0xff; //RED
+    private static final int COLOR_IN_LEVEL_EAST = 255 << 24 | 128 << 16 | 0 << 8 | 0xff; //ORANGE
+    private static final int COLOR_IN_LEVEL_SOUTH = 0 << 24 | 255 << 16 | 0 << 8 | 0xff; //GREEN
+    private static final int COLOR_IN_LEVEL_WEST = 255 << 24 | 255 << 16 | 0 << 8 | 0xff; //YELLOW
+
+    public static List<Integer> COLORS_IN_LEVEL;
+    static {
+        COLORS_IN_LEVEL = new ArrayList<>();
+        COLORS_IN_LEVEL.add(COLOR_IN_LEVEL_NORTH);
+        COLORS_IN_LEVEL.add(COLOR_IN_LEVEL_EAST);
+        COLORS_IN_LEVEL.add(COLOR_IN_LEVEL_SOUTH);
+        COLORS_IN_LEVEL.add(COLOR_IN_LEVEL_WEST);
     }
 
-    public StartBlock(Texture texture) {
-        super(LABEL, IS_TRAVERSABLE, COLOR_IN_LEVEL, texture);
+    public StartBlock(Direction direction) {
+        super(LABEL, IS_TRAVERSABLE, IS_DIRECTIONAL, COLORS_IN_LEVEL.get(direction.getDegrees()), direction, loadTexture(TEXTURE));
     }
 
-    public StartBlock(Vector2 spritePos, float spriteSize) {
-        this(loadTexture(TEXTURE), spritePos, spriteSize);
-    }
-
-    public StartBlock(Texture texture, Vector2 spritePos, float spriteSize) {
-        super(LABEL, IS_TRAVERSABLE, COLOR_IN_LEVEL, texture, spritePos, spriteSize);
+    @Override
+    public int getColorInLevel() {
+        return COLORS_IN_LEVEL.get(direction.getDegrees());
     }
 }

@@ -1,26 +1,67 @@
 package hr.fer.lukasuman.game.level.blocks;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import hr.fer.lukasuman.game.level.Direction;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 
 public class BlockFactory {
 
-    private static Map<String, Class<? extends AbstractBlock>> nameToBlockMap;
-    private static Map<Integer, Class<? extends AbstractBlock>> colorToBlockMap;
+    private static class ClassDirectionPair {
+        private Class<? extends AbstractBlock> blockClass;
+        private Direction direction;
+
+        public ClassDirectionPair(Class<? extends AbstractBlock> blockClass, Direction direction) {
+            this.blockClass = blockClass;
+            this.direction = direction;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            ClassDirectionPair that = (ClassDirectionPair) o;
+
+            if (!blockClass.equals(that.blockClass)) return false;
+            return direction == that.direction;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = blockClass.hashCode();
+            result = 31 * result + direction.hashCode();
+            return result;
+        }
+    }
+
+    private static final Direction DEFAULT_DIRECTION = Direction.NORTH;
+
+    private static Set<String> blockTypes;
+    private static Map<String, ClassDirectionPair> nameToBlockMap;
+    private static Map<Integer, ClassDirectionPair> colorToBlockMap;
 
     static {
+        blockTypes = new HashSet<>(Arrays.asList(StartBlock.LABEL, GoalBlock.LABEL, EmptyBlock.LABEL, WallBlock.LABEL));
         nameToBlockMap = new HashMap<>();
-        nameToBlockMap.put(EmptyBlock.LABEL, EmptyBlock.class);
-        nameToBlockMap.put(WallBlock.LABEL, WallBlock.class);
-        nameToBlockMap.put(StartBlock.LABEL, StartBlock.class);
-        nameToBlockMap.put(GoalBlock.LABEL, GoalBlock.class);
+        nameToBlockMap.put(EmptyBlock.LABEL, new ClassDirectionPair(EmptyBlock.class, DEFAULT_DIRECTION));
+        nameToBlockMap.put(WallBlock.LABEL, new ClassDirectionPair(WallBlock.class, DEFAULT_DIRECTION));
+        nameToBlockMap.put(GoalBlock.LABEL, new ClassDirectionPair(GoalBlock.class, DEFAULT_DIRECTION));
+
+        for (int i = 0; i < Direction.values().length; i++) {
+            nameToBlockMap.put(StartBlock.LABEL + " " + Direction.getByIndex(i).toString(),
+                    new ClassDirectionPair(StartBlock.class, Direction.getByIndex(i)));
+        }
 
         colorToBlockMap = new HashMap<>();
-        colorToBlockMap.put(EmptyBlock.COLOR_IN_LEVEL, EmptyBlock.class);
-        colorToBlockMap.put(WallBlock.COLOR_IN_LEVEL, WallBlock.class);
-        colorToBlockMap.put(StartBlock.COLOR_IN_LEVEL, StartBlock.class);
-        colorToBlockMap.put(GoalBlock.COLOR_IN_LEVEL, GoalBlock.class);
+        colorToBlockMap.put(EmptyBlock.COLOR_IN_LEVEL, new ClassDirectionPair(EmptyBlock.class, DEFAULT_DIRECTION));
+        colorToBlockMap.put(WallBlock.COLOR_IN_LEVEL, new ClassDirectionPair(WallBlock.class, DEFAULT_DIRECTION));
+        colorToBlockMap.put(GoalBlock.COLOR_IN_LEVEL, new ClassDirectionPair(GoalBlock.class, DEFAULT_DIRECTION));
+
+        for (int i = 0; i < StartBlock.COLORS_IN_LEVEL.size(); i++) {
+            colorToBlockMap.put(StartBlock.COLORS_IN_LEVEL.get(i), new ClassDirectionPair(StartBlock.class, Direction.getByIndex(i)));
+        }
     }
 
     private BlockFactory() {
@@ -34,22 +75,33 @@ public class BlockFactory {
         return getBlockByClass(colorToBlockMap.get(color));
     }
 
-    private static AbstractBlock getBlockByClass(Class<? extends AbstractBlock> blockClass) {
-        if (blockClass == null) {
+    private static AbstractBlock getBlockByClass(ClassDirectionPair classDirectionPair) {
+        if (classDirectionPair == null) {
+            return null;
+        }
+        Class<? extends AbstractBlock> blockClass = classDirectionPair.blockClass;
+        Direction direction = classDirectionPair.direction;
+        if (blockClass == null || direction == null) {
             return null;
         }
         try {
-            return blockClass.newInstance();
+            Constructor<? extends AbstractBlock> ctor = blockClass.getConstructor(Direction.class);
+            AbstractBlock newBlock = ctor.newInstance(new Object[] { direction });
+            return newBlock;
         } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
             e.printStackTrace();
         }
         return null;
     }
 
     public static Set<String> getBlockTypes() {
-        return nameToBlockMap.keySet();
+        return blockTypes;
     }
 
     public static boolean isStart(AbstractBlock block) {

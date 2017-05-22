@@ -48,15 +48,20 @@ public class GameScreen extends AbstractGameScreen {
 
         if (!isGameLoaded) {
             gameController = new GameController(game);
+            isGameLoaded = true;
         }
         gameRenderer = new GameRenderer(gameController, this);
+        gameController.setGameRenderer(gameRenderer);
 
-        if (!isGameLoaded) {
-            isGameLoaded = true;
-            gameController.setGameRenderer(gameRenderer);
-        }
+        inputMultiplexer = new InputMultiplexer();
+        inputMultiplexer.addProcessor(gameRenderer.getUpperLeftStage());
+        inputMultiplexer.addProcessor(gameRenderer.getUpperRightStage());
+        inputMultiplexer.addProcessor(gameRenderer.getLowerLeftStage());
+        inputMultiplexer.addProcessor(gameRenderer.getLowerRightStage());
+        inputController = new InputController(gameController, gameRenderer, menuScreen);
+        inputMultiplexer.addProcessor(inputController);
 
-        Gdx.input.setInputProcessor(getInputProcessor());
+        Gdx.input.setInputProcessor(inputMultiplexer);
         Gdx.input.setCatchBackKey(true);
     }
 
@@ -81,13 +86,6 @@ public class GameScreen extends AbstractGameScreen {
 
     @Override
     public InputProcessor getInputProcessor() {
-        inputMultiplexer = new InputMultiplexer();
-        inputMultiplexer.addProcessor(gameRenderer.getUpperLeftStage());
-        inputMultiplexer.addProcessor(gameRenderer.getUpperRightStage());
-        inputMultiplexer.addProcessor(gameRenderer.getLowerLeftStage());
-        inputMultiplexer.addProcessor(gameRenderer.getLowerRightStage());
-        inputController = new InputController(gameController, gameRenderer, menuScreen);
-        inputMultiplexer.addProcessor(inputController);
         return inputMultiplexer;
     }
 
