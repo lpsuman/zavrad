@@ -585,11 +585,13 @@ public class GameRenderer implements Disposable {
         levelDimensionTable.add(new Label("level width: ", skin));
         levelWidthTextField = new TextField("", skin);
         levelWidthTextField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
+        levelWidthTextField.setMaxLength(3);
         levelDimensionTable.add(levelWidthTextField);
         levelDimensionTable.row();
         levelDimensionTable.add(new Label("level height: ", skin));
         levelHeightTextField = new TextField("", skin);
         levelHeightTextField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
+        levelHeightTextField.setMaxLength(3);
         levelDimensionTable.add(levelHeightTextField);
 
         Stack buttonStack = new Stack();
@@ -645,11 +647,12 @@ public class GameRenderer implements Disposable {
     private void confirmationDialogClick(CallbackFunction callback) {
         confirmationDialog.remove();
         Gdx.input.setInputProcessor(gameScreen.getInputProcessor());
-        if (callback != null) {
-            callback.executeCallback();
-        }
         if (finalCallback != null) {
             finalCallback.executeCallback();
+            finalCallback = null;
+        }
+        if (callback != null) {
+            callback.executeCallback();
         }
     }
 
@@ -661,6 +664,9 @@ public class GameRenderer implements Disposable {
                                        String message, CallbackFunction finalCallback) {
         this.yesCallback = yesCallback;
         this.noCallback = noCallback;
+        if (this.finalCallback != null) {
+            finalCallback.executeCallback();
+        }
         this.finalCallback = finalCallback;
         message = message == null ? "" : message;
         confirmationDialogLabel.setText(message);

@@ -45,6 +45,7 @@ public class LevelController {
             Level newLevel = new Level(file);
             levels.add(newLevel);
             currentLevel = newLevel;
+            levelChanged();
             return true;
         } catch (Exception exc) {
             exc.printStackTrace();
@@ -148,19 +149,27 @@ public class LevelController {
     }
 
     public boolean createNewLevel(int width, int height) {
-        if (width < Constants.MIN_LEVEL_WIDTH && width > Constants.MAX_LEVEL_WIDTH
-                && height < Constants.MIN_LEVEL_HEIGHT && height > Constants.MAX_LEVEL_HEIGHT) {
+        if (width < Constants.MIN_LEVEL_WIDTH || width > Constants.MAX_LEVEL_WIDTH
+                || height < Constants.MIN_LEVEL_HEIGHT || height > Constants.MAX_LEVEL_HEIGHT) {
+            gameController.getGameRenderer().showInformation("Invalid level dimensions! Width must be ["
+                + Constants.MIN_LEVEL_WIDTH + "-" + Constants.MAX_LEVEL_WIDTH + "] and height must be ["
+                + Constants.MIN_LEVEL_HEIGHT + "-" + Constants.MAX_LEVEL_HEIGHT + "].");
             return false;
         }
         try {
             Level newLevel = new Level(width, height);
             levels.add(newLevel);
             currentLevel = newLevel;
+            levelChanged();
             return true;
         } catch (Exception exc) {
             exc.printStackTrace();
             return false;
         }
+    }
+
+    private void levelChanged() {
+        gameController.stopSimulation();
     }
 
     public Level getCurrentLevel() {

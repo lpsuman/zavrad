@@ -38,7 +38,8 @@ public class AutomatonTransition {
     private Vector2 leftArrowPoint;
     private Vector2 rightArrowPoint;
 
-    public AutomatonTransition(Set<String> transitionLabels, AutomatonState startState, AutomatonState endState) {
+    public AutomatonTransition(Set<String> transitionLabels, AutomatonState startState,
+                               AutomatonState endState, Vector2 endPoint) {
         this.transitionLabels = transitionLabels;
         this.startState = startState;
         this.endState = endState;
@@ -52,7 +53,10 @@ public class AutomatonTransition {
         norm = new Vector2();
 
         startPoint = new Vector2();
-        endPoint = new Vector2();
+        this.endPoint = new Vector2();
+        if (endPoint != null) {
+            this.endPoint.set(endPoint);
+        }
         middlePoint = new Vector2();
         shiftedMiddlePoint = new Vector2();
 
@@ -62,12 +66,11 @@ public class AutomatonTransition {
     }
 
     public AutomatonTransition(String label, AutomatonState startState, AutomatonState endState) {
-        this(new HashSet<>(Arrays.asList(label)), startState, endState);
+        this(new HashSet<>(Arrays.asList(label)), startState, endState, null);
     }
 
     public AutomatonTransition(String label, AutomatonState startState, Vector2 endPoint) {
-        this(label, startState, (AutomatonState) null);
-        this.endPoint.set(endPoint);
+        this(new HashSet<>(Arrays.asList(label)), startState, null, endPoint);
     }
 
     public void recalculate() {

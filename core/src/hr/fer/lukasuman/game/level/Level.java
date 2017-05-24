@@ -76,6 +76,9 @@ public class Level implements Disposable {
         height = levelPixmap.getHeight();
         blocks = new AbstractBlock[width][height];
 
+        boolean multipleStarts = false;
+        boolean multipleGoals = false;
+
         for (int pixelY = 0; pixelY < height; pixelY++) {
             for (int pixelX = 0; pixelX < width; pixelX++) {
 
@@ -90,9 +93,17 @@ public class Level implements Disposable {
                 }
 
                 if (newBlock.getClass().equals(StartBlock.class)) {
+                    if (start != null) {
+                        drawBlock(start, BlockFactory.getBlockByName(EmptyBlock.LABEL));
+                        multipleStarts = true;
+                    }
                     startDirection = newBlock.getDirection();
                     start = new GridPoint2(pixelX, posY);
                 } else if (newBlock.getClass().equals(GoalBlock.class)) {
+                    if (goal != null) {
+                        drawBlock(goal, BlockFactory.getBlockByName(EmptyBlock.LABEL));
+                        multipleGoals = true;
+                    }
                     goal = new GridPoint2(pixelX, posY);
                 }
 
@@ -103,6 +114,16 @@ public class Level implements Disposable {
         resetLevel();
 
         Gdx.app.debug(TAG, "level '" + levelName + "' loaded: " + width + "x" + height);
+        String errMsg = "";
+        if (multipleStarts) {
+            errMsg += "Multiple starts found in level! All but last have been replaced with empty blocks.";
+        }
+        if (multipleGoals) {
+            errMsg += "Multiple goals found in level! All but last have been replaced with emtpy blocks.";
+        }
+        if (!errMsg.isEmpty()) {
+            Gdx.app.debug(TAG, errMsg);
+        }
     }
 
     public void updateSprites(Camera camera) {
@@ -167,20 +188,23 @@ public class Level implements Disposable {
 
         if (BlockFactory.isStart(newBlock)) {
             if (start != null) {
-                blocks[start.x][start.y] = BlockFactory.getBlockByName(EmptyBlock.LABEL);
+                drawBlock(start, BlockFactory.getBlockByName(EmptyBlock.LABEL));
             }
             startDirection = newBlock.getDirection();
             start = new GridPoint2(pos);
         } else if (BlockFactory.isGoal(newBlock)) {
             if (goal != null) {
-                blocks[goal.x][goal.y] = BlockFactory.getBlockByName(EmptyBlock.LABEL);
+                drawBlock(goal, BlockFactory.getBlockByName(EmptyBlock.LABEL));
             }
             goal = new GridPoint2(pos);
         }
+        drawBlock(pos, newBlock);
+        isChangesPending = true;
+    }
 
+    private void drawBlock(GridPoint2 pos, AbstractBlock newBlock) {
         blocks[pos.x][pos.y] = newBlock;
         levelPixmap.drawPixel(pos.x, height - 1 - pos.y, newBlock.getColorInLevel());
-        isChangesPending = true;
     }
 
     public GridPoint2 getBlockPosition(Vector2 pos) {
