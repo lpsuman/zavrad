@@ -175,8 +175,18 @@ public class AutomatonTransition {
         if (transitionLabels.contains(newLabel)) {
             return;
         }
+        if (startState.getTransitions().get(newLabel) != null) {
+            return;
+        }
         transitionLabels.add(newLabel);
         startState.getTransitions().put(newLabel, endState);
+    }
+
+    public void removeLabel(String label) {
+        if (transitionLabels.contains(label)) {
+            transitionLabels.remove(label);
+            startState.getTransitions().remove(label);
+        }
     }
 
     public Vector2 getEndPoint() {

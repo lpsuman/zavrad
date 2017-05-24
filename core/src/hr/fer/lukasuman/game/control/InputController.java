@@ -208,6 +208,9 @@ public class InputController extends InputAdapter {
 
             if (distance <= Constants.STATE_SIZE / 2) {
                 String newLabel = gameRenderer.getTransitionSelectBox().getSelected();
+                if (transitionStartState.getTransitions().containsKey(newLabel)) {
+                    automaton.removeTransition(transitionStartState, newLabel);
+                }
                 AutomatonTransition existingTransition = automaton.getTransition(transitionStartState, endState);
                 if (existingTransition == null) {
                     //TODO maybe reuse temp transition

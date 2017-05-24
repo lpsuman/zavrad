@@ -71,6 +71,20 @@ public class DrawableAutomaton extends Automaton {
         }
     }
 
+    public void removeTransition(AutomatonState state, String label) {
+        Iterator<AutomatonTransition> it = transitionSet.iterator();
+        while (it.hasNext()) {
+            AutomatonTransition transition = it.next();
+            if (transition.getStartState().equals(state) && transition.getTransitionLabels().contains(label)) {
+                transition.removeLabel(label);
+                if (transition.getTransitionLabels().isEmpty()) {
+                    transitionSet.remove(transition);
+                }
+                return;
+            }
+        }
+    }
+
     public AutomatonTransition getClosestTransition(Vector2 position, float maxDistance) {
         float minDistance = Float.MAX_VALUE;
         AutomatonTransition closestTransition = null;

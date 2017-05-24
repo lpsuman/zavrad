@@ -34,6 +34,7 @@ public class AutomataController implements Disposable {
              ObjectOutputStream objOut = new ObjectOutputStream(fileOut)) {
             Automaton automaton = currentAutomaton.getSerializable();
             objOut.writeObject(automaton);
+            currentAutomaton.setChangesPending(false);
         } catch (FileNotFoundException exc) {
             exc.printStackTrace();
             return false;
