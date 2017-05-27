@@ -93,7 +93,7 @@ public class LevelController {
     }
 
     private void showMessage(String message) {
-        gameController.getGameRenderer().showInformation(message);
+        gameController.getGameRenderer().getStageManager().showInformation(message);
     }
 
     private static String calculateNewLevelName(String fileName) {
@@ -151,7 +151,7 @@ public class LevelController {
     public boolean createNewLevel(int width, int height) {
         if (width < Constants.MIN_LEVEL_WIDTH || width > Constants.MAX_LEVEL_WIDTH
                 || height < Constants.MIN_LEVEL_HEIGHT || height > Constants.MAX_LEVEL_HEIGHT) {
-            gameController.getGameRenderer().showInformation("Invalid level dimensions! Width must be ["
+            gameController.getGameRenderer().getStageManager().showInformation("Invalid level dimensions! Width must be ["
                 + Constants.MIN_LEVEL_WIDTH + "-" + Constants.MAX_LEVEL_WIDTH + "] and height must be ["
                 + Constants.MIN_LEVEL_HEIGHT + "-" + Constants.MAX_LEVEL_HEIGHT + "].");
             return false;

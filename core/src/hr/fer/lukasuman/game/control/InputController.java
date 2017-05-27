@@ -1,5 +1,6 @@
 package hr.fer.lukasuman.game.control;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.math.GridPoint2;
@@ -9,6 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import hr.fer.lukasuman.game.Constants;
+import hr.fer.lukasuman.game.GamePreferences;
 import hr.fer.lukasuman.game.automata.AutomatonState;
 import hr.fer.lukasuman.game.automata.AutomatonTransition;
 import hr.fer.lukasuman.game.automata.DrawableAutomaton;
@@ -16,7 +18,9 @@ import hr.fer.lukasuman.game.level.Direction;
 import hr.fer.lukasuman.game.level.Level;
 import hr.fer.lukasuman.game.level.blocks.AbstractBlock;
 import hr.fer.lukasuman.game.level.blocks.BlockFactory;
+import hr.fer.lukasuman.game.level.blocks.BlockLabel;
 import hr.fer.lukasuman.game.render.GameRenderer;
+import hr.fer.lukasuman.game.render.StageManager;
 import hr.fer.lukasuman.game.screens.MenuScreen;
 import hr.fer.lukasuman.game.screens.ScreenTransition;
 import hr.fer.lukasuman.game.screens.ScreenTransitionSlide;
@@ -27,6 +31,7 @@ public class InputController extends InputAdapter {
 
     private GameController gameController;
     private GameRenderer gameRenderer;
+    private StageManager stageManager;
 
     private boolean wasStateMoved;
     private boolean touchedDown;
@@ -39,12 +44,16 @@ public class InputController extends InputAdapter {
         this.gameController = gameController;
         this.gameRenderer = gameRenderer;
         this.menuScreen = menuScreen;
+        this.stageManager = gameRenderer.getStageManager();
     }
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
         if (gameController.isIgnoreNextClick()) {
             gameController.setIgnoreNextClick(false);
+            return false;
+        }
+        if (gameController.isSimulationStarted()) {
             return false;
         }
         touchedDown = true;
@@ -67,8 +76,8 @@ public class InputController extends InputAdapter {
             AutomatonState closestState = automaton.getClosestState(posInGame.x, posInGame.y);
             float distance = DrawableAutomaton.pointDistance(closestState, posInGame.x, posInGame.y);
 
-            Button checkedButton = gameRenderer.getAutomatonButtonGroup().getChecked();
-            if (checkedButton.equals(gameRenderer.getSelectionButton())) {
+            Button checkedButton = stageManager.getAutomatonButtonGroup().getChecked();
+            if (checkedButton.equals(stageManager.getSelectionButton())) {
                 if (closestState != null) {
                     if (distance <= Constants.STATE_SIZE / 2) {
                         gameController.setSelectedState(closestState);
@@ -78,12 +87,12 @@ public class InputController extends InputAdapter {
                                 automaton.getClosestTransition(posInGame, Constants.STATE_SIZE / 2.0f));
                     }
                 }
-            } else if (checkedButton.equals(gameRenderer.getCreateStateButton())) {
+            } else if (checkedButton.equals(stageManager.getCreateStateButton())) {
                 if (closestState == null || distance > Constants.STATE_SIZE) {
                     gameController.setSelectedState(automaton.createState(
-                            posInGame.x, posInGame.y, gameRenderer.getActionSelectBox().getSelected()));
+                            posInGame.x, posInGame.y, stageManager.getActionSelectBox().getSelected()));
                 }
-            } else if (checkedButton.equals(gameRenderer.getDeleteStateButton())) {
+            } else if (checkedButton.equals(stageManager.getDeleteStateButton())) {
                 if (closestState != null) {
                     if (distance <= Constants.STATE_SIZE / 2) {
                         if (closestState.equals(gameController.getSelectedState())) {
@@ -92,15 +101,15 @@ public class InputController extends InputAdapter {
                         automaton.removeState(closestState);
                     }
                 }
-            } else if (checkedButton.equals(gameRenderer.getCreateTransitionButton())) {
+            } else if (checkedButton.equals(stageManager.getCreateTransitionButton())) {
                 if (closestState != null) {
                     if (distance <= Constants.STATE_SIZE / 2) {
                         transitionStartState = closestState;
                         gameRenderer.setTempTransition(new AutomatonTransition(
-                                gameRenderer.getTransitionSelectBox().getSelected(), closestState, posInGame));
+                                stageManager.getTransitionSelectBox().getSelected().getLabel(), closestState, posInGame));
                     }
                 }
-            } else if (checkedButton.equals(gameRenderer.getDeleteTransitionButton())) {
+            } else if (checkedButton.equals(stageManager.getDeleteTransitionButton())) {
                 AutomatonTransition closestTransition = automaton.getClosestTransition(posInGame, Constants.STATE_SIZE / 2.0f);
                 if (closestTransition != null) {
                     if (closestTransition.equals(gameController.getSelectedTransition())) {
@@ -108,7 +117,7 @@ public class InputController extends InputAdapter {
                     }
                     automaton.removeTransition(closestTransition);
                 }
-            } else if (checkedButton.equals(gameRenderer.getSetStartStateButton())) {
+            } else if (checkedButton.equals(stageManager.getSetStartStateButton())) {
                 if (closestState != null) {
                     automaton.setStartState(closestState);
                 }
@@ -145,8 +154,8 @@ public class InputController extends InputAdapter {
 
     private void automataTouchDragged(Vector2 posInGame) {
         AutomatonState selectedState = gameController.getSelectedState();
-        Button checkedButton = gameRenderer.getAutomatonButtonGroup().getChecked();
-        if (checkedButton.equals(gameRenderer.getSelectionButton())) {
+        Button checkedButton = stageManager.getAutomatonButtonGroup().getChecked();
+        if (checkedButton.equals(stageManager.getSelectionButton())) {
             if (selectedState != null) {
                 wasStateMoved = true;
                 selectedState.setX(posInGame.x);
@@ -155,7 +164,7 @@ public class InputController extends InputAdapter {
                 //might be cpu intensive
                 gameController.getAutomataController().getCurrentAutomaton().recalculateTransitions();
             }
-        } else if (checkedButton.equals(gameRenderer.getCreateTransitionButton())) {
+        } else if (checkedButton.equals(stageManager.getCreateTransitionButton())) {
             gameRenderer.getTempTransition().setEndPoint(posInGame);
             gameRenderer.getTempTransition().recalculate();
         }
@@ -166,20 +175,23 @@ public class InputController extends InputAdapter {
     }
 
     private void levelTouch(Vector2 posInGame) {
-        Button checkedButton = gameRenderer.getLevelButtonGroup().getChecked();
-        SelectBox<String> blockTypeSelectBox = gameRenderer.getBlockTypeSelectBox();
-        SelectBox<Direction> blockDirectionSelectBox = gameRenderer.getBlockDirectionSelectBox();
+        Button checkedButton = stageManager.getLevelButtonGroup().getChecked();
+        SelectBox<BlockLabel> blockTypeSelectBox = stageManager.getBlockTypeSelectBox();
+        SelectBox<Direction> blockDirectionSelectBox = stageManager.getBlockDirectionSelectBox();
         Level currentLevel = gameController.getLevelController().getCurrentLevel();
         GridPoint2 levelPos = currentLevel.getBlockPosition(posInGame);
+        if (levelPos == null) {
+            return;
+        }
 
-        if (checkedButton.equals(gameRenderer.getSelectBlockButton())) {
+        if (checkedButton.equals(stageManager.getSelectBlockButton())) {
             AbstractBlock selectedBlock = currentLevel.getBlockAt(levelPos);
-            blockTypeSelectBox.setSelected(selectedBlock.getLabel());
+            blockTypeSelectBox.setSelected(BlockLabel.getByLabel(selectedBlock.getLabel()));
             if (selectedBlock.isDirectional()) {
                 blockDirectionSelectBox.setSelected(selectedBlock.getDirection());
             }
-        } else if (checkedButton.equals(gameRenderer.getPaintBlockButton())) {
-            AbstractBlock newBlock = BlockFactory.getBlockByName(blockTypeSelectBox.getSelected());
+        } else if (checkedButton.equals(stageManager.getPaintBlockButton())) {
+            AbstractBlock newBlock = BlockFactory.getBlockByName(blockTypeSelectBox.getSelected().getLabel());
             if (newBlock == null) {
                 newBlock = BlockFactory.getBlockByName(blockTypeSelectBox.getSelected()
                         + " " + blockDirectionSelectBox.getSelected().toString());
@@ -191,23 +203,26 @@ public class InputController extends InputAdapter {
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         touchedDown = false;
+        if (gameController.isSimulationStarted()) {
+            return false;
+        }
         Vector2 posInGame = getPosInGame(screenX, screenY, gameRenderer.getLeftViewport());
         if (!gameController.checkInside(posInGame)) {
             return false;
         }
         DrawableAutomaton automaton = gameController.getAutomataController().getCurrentAutomaton();
-        Button checkedButton = gameRenderer.getAutomatonButtonGroup().getChecked();
-        if (checkedButton.equals(gameRenderer.getSelectionButton())) {
+        Button checkedButton = stageManager.getAutomatonButtonGroup().getChecked();
+        if (checkedButton.equals(stageManager.getSelectionButton())) {
             if (wasStateMoved) {
                 wasStateMoved = false;
                 automaton.recalculateTransitions();
             }
-        } else if (checkedButton.equals(gameRenderer.getCreateTransitionButton()) && (transitionStartState != null)) {
+        } else if (checkedButton.equals(stageManager.getCreateTransitionButton()) && (transitionStartState != null)) {
             AutomatonState endState = automaton.getClosestState(posInGame.x, posInGame.y);
             float distance = DrawableAutomaton.pointDistance(endState, posInGame.x, posInGame.y);
 
             if (distance <= Constants.STATE_SIZE / 2) {
-                String newLabel = gameRenderer.getTransitionSelectBox().getSelected();
+                String newLabel = stageManager.getTransitionSelectBox().getSelected().getLabel();
                 if (transitionStartState.getTransitions().containsKey(newLabel)) {
                     automaton.removeTransition(transitionStartState, newLabel);
                 }
@@ -220,7 +235,9 @@ public class InputController extends InputAdapter {
                     existingTransition.addLabel(newLabel);
                 }
             }
-
+            if (GamePreferences.getInstance().debug) {
+                gameRenderer.getTempTransition().debug();
+            }
             gameRenderer.setTempTransition(null);
         }
         return false;
@@ -228,7 +245,8 @@ public class InputController extends InputAdapter {
 
     @Override
     public boolean keyUp(int keycode) {
-        if (gameController.getAutomataController().getCurrentAutomaton().getCurrentState() != null) {
+        if (gameController.getAutomataController().getCurrentAutomaton().getCurrentState() != null
+                && !gameController.isSimulationStarted()) {
             if (keycode == Input.Keys.FORWARD_DEL) {
                 gameController.removeSelectedState();
             }

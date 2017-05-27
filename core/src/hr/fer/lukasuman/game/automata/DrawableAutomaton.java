@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
+import hr.fer.lukasuman.game.level.blocks.BlockFactory;
 
 import java.util.*;
 
@@ -14,10 +15,11 @@ public class DrawableAutomaton extends Automaton {
     private Texture stateTexture;
     private Map<AutomatonState, Sprite> stateSprites;
     private AutomatonState currentState;
-    private int stateID = 1;
+    private int stateID = 0;
     private Set<AutomatonTransition> transitionSet;
 
     private boolean changesPending;
+    private boolean isValid;
 
     public DrawableAutomaton(String name) {
         this(Assets.getInstance().getAssetManager().get(Constants.AUTOMATA_STATE_TEXTURE), name);
@@ -165,6 +167,35 @@ public class DrawableAutomaton extends Automaton {
         super.removeState(state);
         stateSprites.remove(state);
         changesPending = true;
+    }
+
+    public boolean checkIfAutomatonValid() {
+        isValid = true;
+        for (AutomatonState state : getStates()) {
+            if (isStateValid(state)) {
+                state.setValid(true);
+            } else {
+                state.setValid(false);
+                isValid = false;
+            }
+        }
+        return isValid;
+    }
+
+    private boolean isStateValid(AutomatonState state) {
+        if (state.getTransitions().keySet().containsAll(BlockFactory.getBlockTypeNames())) {
+            if (state.getTransitions().size() == BlockFactory.getBlockTypeNames().size()) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            if (state.getTransitions().containsKey(Constants.REMAINING_TRANSITIONS_LABEL)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 
     public Automaton getSerializable() {

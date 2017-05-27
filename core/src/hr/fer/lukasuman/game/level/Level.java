@@ -217,6 +217,9 @@ public class Level implements Disposable {
         } else {
             result.y -= difference;
         }
+        if (result.x < 0 || result.x >= width || result.y < 0 || result.y >= height) {
+            return null;
+        }
         return result;
     }
 

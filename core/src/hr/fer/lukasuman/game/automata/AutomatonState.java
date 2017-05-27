@@ -13,6 +13,8 @@ public class AutomatonState implements Serializable {
     private AutomatonAction action;
     private Automaton parent;
 
+    private boolean isValid;
+
     private Map<String, AutomatonState> transitions;
     private Set<AutomatonState> incomingStates;
 
@@ -134,6 +136,14 @@ public class AutomatonState implements Serializable {
 
     public Map<String, AutomatonState> getTransitions() {
         return transitions;
+    }
+
+    public boolean isValid() {
+        return isValid;
+    }
+
+    public void setValid(boolean valid) {
+        isValid = valid;
     }
 
     @Override

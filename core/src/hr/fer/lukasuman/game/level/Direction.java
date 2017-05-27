@@ -1,6 +1,9 @@
 package hr.fer.lukasuman.game.level;
 
 import com.badlogic.gdx.math.GridPoint2;
+import com.badlogic.gdx.utils.I18NBundle;
+import hr.fer.lukasuman.game.Assets;
+import hr.fer.lukasuman.game.Constants;
 
 public enum Direction {
     NORTH(0, 1, 0, "north"),
@@ -51,6 +54,6 @@ public enum Direction {
 
     @Override
     public String toString() {
-        return name;
+        return ((I18NBundle)Assets.getInstance().getAssetManager().get(Constants.BUNDLE)).get(name);
     }
 }

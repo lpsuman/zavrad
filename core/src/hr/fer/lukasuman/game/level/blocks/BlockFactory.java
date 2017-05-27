@@ -1,5 +1,6 @@
 package hr.fer.lukasuman.game.level.blocks;
 
+import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.level.Direction;
 
 import java.lang.reflect.Constructor;
@@ -38,13 +39,22 @@ public class BlockFactory {
 
     private static final Direction DEFAULT_DIRECTION = Direction.NORTH;
 
-    private static Set<String> blockTypes;
+    private static Set<String> blockTypeNames;
+    private static Set<AbstractBlock> blockTypes;
+    private static Set<String> transitionTypes;
     private static Map<String, ClassDirectionPair> nameToBlockMap;
     private static Map<Integer, ClassDirectionPair> colorToBlockMap;
 
     static {
         //TODO add more general block mapping
-        blockTypes = new HashSet<>(Arrays.asList(StartBlock.LABEL, GoalBlock.LABEL, EmptyBlock.LABEL, WallBlock.LABEL));
+        blockTypeNames = new HashSet<>(Arrays.asList(StartBlock.LABEL, GoalBlock.LABEL, EmptyBlock.LABEL, WallBlock.LABEL));
+        blockTypes = new HashSet<>(Arrays.asList(
+                new EmptyBlock(DEFAULT_DIRECTION),
+                new WallBlock(DEFAULT_DIRECTION),
+                new StartBlock(DEFAULT_DIRECTION),
+                new GoalBlock(DEFAULT_DIRECTION)));
+        transitionTypes = new HashSet<>(Arrays.asList(StartBlock.LABEL, GoalBlock.LABEL, EmptyBlock.LABEL,
+                WallBlock.LABEL, Constants.REMAINING_TRANSITIONS_LABEL));
         nameToBlockMap = new HashMap<>();
         nameToBlockMap.put(EmptyBlock.LABEL, new ClassDirectionPair(EmptyBlock.class, DEFAULT_DIRECTION));
         nameToBlockMap.put(WallBlock.LABEL, new ClassDirectionPair(WallBlock.class, DEFAULT_DIRECTION));
@@ -101,8 +111,16 @@ public class BlockFactory {
         return null;
     }
 
-    public static Set<String> getBlockTypes() {
+    public static Set<String> getBlockTypeNames() {
+        return blockTypeNames;
+    }
+
+    public static Set<AbstractBlock> getBlockTypes() {
         return blockTypes;
+    }
+
+    public static Set<String> getTransitionTypes() {
+        return transitionTypes;
     }
 
     public static boolean isStart(AbstractBlock block) {

@@ -4,7 +4,9 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.I18NBundle;
 import hr.fer.lukasuman.game.Assets;
+import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.level.Direction;
 
 public abstract class AbstractBlock {
@@ -22,6 +24,7 @@ public abstract class AbstractBlock {
                             Direction direction, Texture texture) {
         this.label = label;
         this.isTraversable = isTraversable;
+        this.isDirectional = isDirectional;
         this.colorInLevel = colorInLevel;
         this.direction = direction;
         if (texture != null) {
@@ -82,5 +85,10 @@ public abstract class AbstractBlock {
 
     public boolean isDirectional() {
         return isDirectional;
+    }
+
+    @Override
+    public String toString() {
+        return ((I18NBundle)Assets.getInstance().getAssetManager().get(Constants.BUNDLE)).get(label);
     }
 }

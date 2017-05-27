@@ -28,17 +28,18 @@ public class Constants {
     public static final float DIALOG_WIDTH_FACTOR = 0.4f;
     public static final float DIALOG_HEIGHT_FACTOR = 0.4f;
 
-    public static final float STATE_SIZE = VIEWPORT_WIDTH / 15;
-    public static final String DEFAULT_STATE_LABEL = "state";
+    public static final float STATE_SIZE = VIEWPORT_WIDTH / 10;
+    public static final String DEFAULT_STATE_LABEL = "S";
     public static final float STATE_FONT_SCALE = STATE_SIZE * 15 / VIEWPORT_WIDTH;
     public static final int STATE_CIRCLES_PIXMAP_SIZE = 127;
-    public static final float STATE_CIRCLES_LINE_WIDTH_RATIO = 0.1f;
-    public static final float STATE_CIRCLES_SIZE = 1.2f * STATE_SIZE;
+    public static final float START_STATE_CIRCLE_LINE_WIDTH_RATIO = 0.1f;
+    public static final float STATE_BORDER_LINE_WIDTH_RATIO = 0.1f;
+    public static final Color SELECTED_STATE_BORDER_COLOR = new Color(1.0f, 1.0f, 0.0f, 1.0f);
+    public static final float START_STATE_CIRCLE_SIZE = 1.2f * STATE_SIZE;
 
     public static final float TRANSITIONS_LINE_WIDTH = 3.0f;
     public static final Color TRANSITION_COLOR = new Color(0x000000ff);
     public static final Color SELECTED_TRANSITION_COLOR = new Color(0xdd0000ff);
-    public static final float TRANSITION_FONT_SIZE = 20.0f;
     public static final float BEZIER_FIDELITY = 1.0f;
 
     public static final String PREFERENCES_FILE = "preferences";
@@ -56,7 +57,7 @@ public class Constants {
 
     public static final String IMAGE_FOLDER = "images";
     public static final String AUTOMATA_STATE_TEXTURE = IMAGE_FOLDER + "/state.png";
-    public static final String AUTOMATA_SELECTED_STATE_TEXTURE = IMAGE_FOLDER + "/state_selected.png";
+//    public static final String AUTOMATA_SELECTED_STATE_TEXTURE = IMAGE_FOLDER + "/state_selected.png";
     public static final String AUTOMATA_RUNNING_STATE_TEXTURE = IMAGE_FOLDER + "/state_running.png";
     public static final String PLAYER_TEXTURE = IMAGE_FOLDER + "/box_arrow.png";
     public static final String MENU_BACKGROUND_TEXTURE = IMAGE_FOLDER + "/gear_background.jpg";
@@ -70,17 +71,11 @@ public class Constants {
 
     public static final float SIMULATION_SPEED_FACTOR = 1.0f;
 
-    public static final String START_SIM_BTN_TEXT = "start";
-    public static final String STOP_SIM_BTN_TEXT = "stop";
-    public static final String PAUSE_SIM_BTN_TEXT = "pause";
-    public static final String RESUME_SIM_BTN_TEXT = "resume";
-
     public static final AutomatonAction DEFAULT_ACTION = AutomatonAction.MOVE_FORWARD;
     public static final String DEFAULT_TRANSITION_TRIGGER = EmptyBlock.LABEL;
+    public static final String REMAINING_TRANSITIONS_LABEL = "*";
 
-    public static final String AUTOMATON_CONFIRM_MESSAGE = "Current automaton is unsaved. Would you like to save it?";
-    public static final String LEVEL_CONFIRM_MESSAGE = "Current level is unsaved. Would you like to save it?";
-    public static final String LEVEL_PASSED_FORMAT_MESSAGE = "Congratulations! You have passed the current level" +
-            " with %d state%s.\nWould you like to load the next level?";
-    public static final String NEW_LEVEL_CONFIRM_MESSAGE = "Create new level with the specified dimensions?";
+    private static final String LOCALIZATION_FOLDER = "i18n";
+    private static final String BASE_BUNDLE_NAME = "translations";
+    public static final String BUNDLE = LOCALIZATION_FOLDER + "/" + BASE_BUNDLE_NAME;
 }

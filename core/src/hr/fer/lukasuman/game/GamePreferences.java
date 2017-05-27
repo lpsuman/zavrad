@@ -8,8 +8,13 @@ public class GamePreferences {
 
     private static final GamePreferences instance = new GamePreferences();
 
+    private static final String DEBUG_KEY = "debug";
+    private static final String FPS_KEY = "showFpsCounter";
+    private static final String LANG_KEY = "language";
+
     public boolean debug;
     public boolean showFpsCounter;
+    public String language;
     //TODO add more options (state size, various colors, choose skin, allow level editing)
 
     private Preferences prefs;
@@ -18,14 +23,16 @@ public class GamePreferences {
         prefs = Gdx.app.getPreferences(Constants.PREFERENCES_FILE);
     }
 
-    public void load () {
-        debug = prefs.getBoolean("debug", false);
-        showFpsCounter = prefs.getBoolean("showFpsCounter", false);
+    public void load() {
+        debug = prefs.getBoolean(DEBUG_KEY, false);
+        showFpsCounter = prefs.getBoolean(FPS_KEY, false);
+        language = prefs.getString(LANG_KEY, "hr");
     }
 
-    public void save () {
-        prefs.putBoolean("debug", debug);
-        prefs.putBoolean("showFpsCounter", showFpsCounter);
+    public void save() {
+        prefs.putBoolean(DEBUG_KEY, debug);
+        prefs.putBoolean(FPS_KEY, showFpsCounter);
+        prefs.putString(LANG_KEY, language);
         prefs.flush();
     }
 

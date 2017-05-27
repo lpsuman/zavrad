@@ -9,19 +9,23 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.I18NBundle;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.FillViewport;
 import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.GamePreferences;
+import hr.fer.lukasuman.game.LocalizationKeys;
 
 public class MenuScreen extends AbstractGameScreen {
+    private static final I18NBundle BUNDLE = Assets.getInstance().getAssetManager().get(Constants.BUNDLE);
     private static final String TAG = MenuScreen.class.getName();
 
     private Stage stage;
     private Stack stack;
     private Image imgBackground;
     private TextButton btnMenuPlay;
+    private TextButton btnMenuCustomPlay;
     private TextButton btnMenuOptions;
     private Window winOptions;
     private TextButton btnWinOptSave;
@@ -36,6 +40,7 @@ public class MenuScreen extends AbstractGameScreen {
     private float debugRebuildStage;
 
     private GameScreen gameScreen;
+    private GameScreen customGameScreen;
 
     public MenuScreen (DirectedGame game) {
         super(game);
@@ -67,7 +72,7 @@ public class MenuScreen extends AbstractGameScreen {
 
     private Table buildControlsLayer () {
         Table layer = new Table();
-        btnMenuPlay = new TextButton("Play", skin);
+        btnMenuPlay = new TextButton(BUNDLE.get(LocalizationKeys.PLAY), skin);
         layer.add(btnMenuPlay);
         btnMenuPlay.addListener(new ChangeListener() {
             @Override
@@ -76,7 +81,16 @@ public class MenuScreen extends AbstractGameScreen {
             }
         });
         layer.row();
-        btnMenuOptions = new TextButton("Options", skin);
+        btnMenuCustomPlay = new TextButton(BUNDLE.get(LocalizationKeys.CUSTOM_PLAY), skin);
+        layer.add(btnMenuCustomPlay);
+        btnMenuCustomPlay.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                onCustomPlayClicked();
+            }
+        });
+        layer.row();
+        btnMenuOptions = new TextButton(BUNDLE.get(LocalizationKeys.OPTIONS), skin);
         layer.add(btnMenuOptions);
         btnMenuOptions.addListener(new ChangeListener() {
             @Override
@@ -165,15 +179,23 @@ public class MenuScreen extends AbstractGameScreen {
         return tbl;
     }
 
-    private void onPlayClicked () {
+    private void onPlayClicked() {
         ScreenTransition transition = ScreenTransitionFade.init(0.75f);
         if (gameScreen == null) {
-            gameScreen = new GameScreen(game, this);
+            gameScreen = new GameScreen(game, this, false);
         }
         game.setScreen(gameScreen, transition);
     }
 
-    private void onOptionsClicked () {
+    private void onCustomPlayClicked() {
+        ScreenTransition transition = ScreenTransitionFade.init(0.75f);
+        if (customGameScreen == null) {
+            customGameScreen = new GameScreen(game, this, true);
+        }
+        game.setScreen(customGameScreen, transition);
+    }
+
+    private void onOptionsClicked() {
         loadSettings();
         btnMenuPlay.setVisible(false);
         btnMenuOptions.setVisible(false);

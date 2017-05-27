@@ -8,6 +8,7 @@ import hr.fer.lukasuman.game.control.GameController;
 import hr.fer.lukasuman.game.GamePreferences;
 import hr.fer.lukasuman.game.control.InputController;
 import hr.fer.lukasuman.game.render.GameRenderer;
+import hr.fer.lukasuman.game.render.StageManager;
 
 public class GameScreen extends AbstractGameScreen {
     private static final String TAG = GameScreen.class.getName();
@@ -18,12 +19,14 @@ public class GameScreen extends AbstractGameScreen {
     private boolean paused;
     private InputMultiplexer inputMultiplexer;
 
+    private boolean isCustomPlay;
     private MenuScreen menuScreen;
     private boolean isGameLoaded;
 
-    public GameScreen (DirectedGame game, MenuScreen menuScreen) {
+    public GameScreen (DirectedGame game, MenuScreen menuScreen, boolean isCustomPlay) {
         super(game);
         this.menuScreen = menuScreen;
+        this.isCustomPlay = isCustomPlay;
     }
 
     @Override
@@ -50,14 +53,15 @@ public class GameScreen extends AbstractGameScreen {
             gameController = new GameController(game);
             isGameLoaded = true;
         }
-        gameRenderer = new GameRenderer(gameController, this);
+        gameRenderer = new GameRenderer(gameController, this, isCustomPlay);
         gameController.setGameRenderer(gameRenderer);
+        StageManager stageManager = gameRenderer.getStageManager();
 
         inputMultiplexer = new InputMultiplexer();
-        inputMultiplexer.addProcessor(gameRenderer.getUpperLeftStage());
-        inputMultiplexer.addProcessor(gameRenderer.getUpperRightStage());
-        inputMultiplexer.addProcessor(gameRenderer.getLowerLeftStage());
-        inputMultiplexer.addProcessor(gameRenderer.getLowerRightStage());
+        inputMultiplexer.addProcessor(stageManager.getUpperLeftStage());
+        inputMultiplexer.addProcessor(stageManager.getUpperRightStage());
+        inputMultiplexer.addProcessor(stageManager.getLowerLeftStage());
+        inputMultiplexer.addProcessor(stageManager.getLowerRightStage());
         inputController = new InputController(gameController, gameRenderer, menuScreen);
         inputMultiplexer.addProcessor(inputController);
 

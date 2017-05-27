@@ -4,12 +4,16 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.I18NBundle;
+import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
+import hr.fer.lukasuman.game.LocalizationKeys;
 import hr.fer.lukasuman.game.automata.*;
 import hr.fer.lukasuman.game.level.Level;
 import hr.fer.lukasuman.game.level.blocks.AbstractBlock;
 import hr.fer.lukasuman.game.level.blocks.BlockFactory;
 import hr.fer.lukasuman.game.level.blocks.WallBlock;
+import hr.fer.lukasuman.game.render.StageManager;
 import hr.fer.lukasuman.game.screens.DirectedGame;
 import hr.fer.lukasuman.game.render.GameRenderer;
 import hr.fer.lukasuman.game.level.LevelController;
@@ -18,8 +22,10 @@ import java.util.Map;
 
 public class GameController {
     private static final String TAG = GameController.class.getName();
+    private static final I18NBundle BUNDLE = Assets.getInstance().getAssetManager().get(Constants.BUNDLE, I18NBundle.class);
 
     private GameRenderer gameRenderer;
+    private StageManager stageManager;
 
     private DirectedGame game;
     private AutomataController automataController;
@@ -30,6 +36,7 @@ public class GameController {
 
     private boolean isSimulationStarted;
     private boolean isSimulationRunning;
+    private boolean isCustomPlay;
     private float simulationSpeed;
     private float timeUntilNextMove;
 
@@ -70,7 +77,7 @@ public class GameController {
             fullReset();
             isSimulationStarted = true;
             isSimulationRunning = true;
-            gameRenderer.getStartSimulationButton().setText(Constants.STOP_SIM_BTN_TEXT);
+            stageManager.getStartSimulationButton().setText(BUNDLE.get(LocalizationKeys.STOP_SIM_BTN_TEXT));
         }
     }
 
@@ -80,7 +87,7 @@ public class GameController {
             isSimulationStarted = false;
             isSimulationRunning = false;
             automataController.getCurrentAutomaton().setCurrentState(null);
-            gameRenderer.getStartSimulationButton().setText(Constants.START_SIM_BTN_TEXT);
+            stageManager.getStartSimulationButton().setText(BUNDLE.get(LocalizationKeys.START_SIM_BTN_TEXT));
         }
     }
 
@@ -97,14 +104,14 @@ public class GameController {
     private void pauseSimulation() {
         if (isSimulationStarted) {
             isSimulationRunning = false;
-            gameRenderer.getPauseSimulationButton().setText(Constants.RESUME_SIM_BTN_TEXT);
+            stageManager.getPauseSimulationButton().setText(BUNDLE.get(LocalizationKeys.RESUME_SIM_BTN_TEXT));
         }
     }
 
     private void resumeSimulation() {
         if (isSimulationStarted) {
             isSimulationRunning = true;
-            gameRenderer.getPauseSimulationButton().setText(Constants.PAUSE_SIM_BTN_TEXT);
+            stageManager.getPauseSimulationButton().setText(BUNDLE.get(LocalizationKeys.PAUSE_SIM_BTN_TEXT));
         }
     }
 
@@ -118,7 +125,7 @@ public class GameController {
 
     public void update(float deltaTime) {
         ignoreNextClick = false;
-        gameRenderer.getUpperLeftStage().act(deltaTime);
+        stageManager.getUpperLeftStage().act(deltaTime);
         if (isSimulationRunning) {
             timeUntilNextMove -= deltaTime * simulationSpeed * Constants.SIMULATION_SPEED_FACTOR;
             if (timeUntilNextMove <= 0) {
@@ -141,9 +148,14 @@ public class GameController {
         AbstractBlock currentBlock = level.getBlockAt(currentPosition);
         if (currentBlock != null && BlockFactory.isGoal(currentBlock)) {
             pauseSimulation();
-            gameRenderer.showConfirmationDialog(levelController::loadNextLevel, null,
-                    String.format(Constants.LEVEL_PASSED_FORMAT_MESSAGE,
-                            getNumberOfStates(), getNumberOfStates() == 1 ? "" : "s"));
+            String stateMsg = null;
+            if (getNumberOfStates() == 1) {
+                stateMsg = BUNDLE.get(LocalizationKeys.STATE);
+            } else {
+                stateMsg = BUNDLE.get(LocalizationKeys.STATES);
+            }
+            stageManager.showConfirmationDialog(levelController::loadNextLevel, null,
+                    BUNDLE.format(LocalizationKeys.LEVEL_PASSED_FORMAT_MESSAGE, getNumberOfStates(), stateMsg));
             return;
         }
 
@@ -212,7 +224,7 @@ public class GameController {
     public void setSelectedState(AutomatonState selectedState) {
         this.selectedState = selectedState;
         if (this.selectedState != null) {
-            gameRenderer.getActionSelectBox().setSelected(this.selectedState.getAction());
+            stageManager.getActionSelectBox().setSelected(this.selectedState.getAction());
         }
     }
 
@@ -250,6 +262,7 @@ public class GameController {
 
     public void setGameRenderer(GameRenderer gameRenderer) {
         this.gameRenderer = gameRenderer;
+        this.stageManager = gameRenderer.getStageManager();
     }
 
     public boolean isIgnoreNextClick() {
@@ -266,5 +279,13 @@ public class GameController {
 
     public void setFileProcessor(FileProcessor fileProcessor) {
         this.fileProcessor = fileProcessor;
+    }
+
+    public boolean isSimulationStarted() {
+        return isSimulationStarted;
+    }
+
+    public boolean isSimulationRunning() {
+        return isSimulationRunning;
     }
 }

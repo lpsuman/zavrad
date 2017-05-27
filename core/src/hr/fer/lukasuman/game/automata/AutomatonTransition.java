@@ -1,17 +1,24 @@
 package hr.fer.lukasuman.game.automata;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Bezier;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.I18NBundle;
+import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.GamePreferences;
 
 import java.util.*;
 
 public class AutomatonTransition {
+    private static final String TAG = AutomatonTransition.class.getName();
+    private static final I18NBundle BUNDLE = Assets.getInstance().getAssetManager().get(Constants.BUNDLE);
 
     private static final float CURVE_DEPTH = 0.25f;
     private static final float CURVE_STEEPNESS = 0.25f;
@@ -34,6 +41,11 @@ public class AutomatonTransition {
     private Vector2 endPoint;
     private Vector2 middlePoint;
     private Vector2 shiftedMiddlePoint;
+
+    private Matrix4 mat4;
+    private float dx;
+    private float dy;
+    private float angle;
 
     private Vector2 leftArrowPoint;
     private Vector2 rightArrowPoint;
@@ -77,6 +89,7 @@ public class AutomatonTransition {
         calculateControlPoints();
         calculateBezierPoints();
         calculateArrowPoints();
+        calculateTextRotationMatrix();
     }
 
     private void calculateControlPoints() {
@@ -141,6 +154,24 @@ public class AutomatonTransition {
         leftArrowPoint.set(temp);
     }
 
+    private void calculateTextRotationMatrix() {
+        dx = dataSet[3].x - dataSet[0].x;
+        dy = dataSet[3].y - dataSet[0].y;
+        angle = (float)Math.atan2(dy, dx);
+        if (angle > Math.PI / 2.0) {
+            angle -= Math.PI;
+        } else if (angle < -Math.PI / 2.0) {
+            angle += Math.PI;
+        }
+        mat4 = new Matrix4();
+        mat4.rotate(new Vector3(0, 0, 1), (float)Math.toDegrees(angle));
+        mat4.trn(middlePoint.x, middlePoint.y, 0);
+    }
+
+    public void debug() {
+        Gdx.app.debug(TAG, String.format("dx=%.4f dy=%.4f angle=%.4f degrees=%.4f", dx, dy, angle, Math.toDegrees(angle)));
+    }
+
     public void drawLines(ShapeRenderer transitionRenderer) {
         if (GamePreferences.getInstance().debug) {
             drawControlPolygon(transitionRenderer);
@@ -154,15 +185,18 @@ public class AutomatonTransition {
     }
 
     public void drawLabels(SpriteBatch batch, BitmapFont font) {
+        batch.setTransformMatrix(mat4);
+        batch.begin();
         float posY = 0.0f;
         for (String label : transitionLabels) {
             glyphLayout.setText(font, label);
             if (posY == 0.0f) {
-                posY = middlePoint.y + (transitionLabels.size() / 2.0f) * glyphLayout.height;
+                posY = (transitionLabels.size() / 2.0f) * glyphLayout.height;
             }
-            font.draw(batch, label, middlePoint.x - glyphLayout.width / 2.0f, posY);
+            font.draw(batch, BUNDLE.get(label), -glyphLayout.width / 2.0f, posY);
             posY -= glyphLayout.height;
         }
+        batch.end();
     }
 
     private void drawControlPolygon(ShapeRenderer transitionRenderer) {
