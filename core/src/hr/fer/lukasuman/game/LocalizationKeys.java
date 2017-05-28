@@ -13,6 +13,8 @@ public class LocalizationKeys {
     public static final String SHOW_DEBUG = "showDebug";
     public static final String SAVE = "save";
 
+    public static final String SET_LABEL = "setLabel";
+    public static final String DUPLICATE_LABEL_MESSAGE = "duplicateLabelMsg";
     public static final String NEW_AUTOMATON = "newAutomaton";
     public static final String SAVE_AUTOMATON = "saveAutomaton";
     public static final String LOAD_AUTOMATON = "loadAutomaton";

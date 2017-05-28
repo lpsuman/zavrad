@@ -80,10 +80,11 @@ public class GameRenderer implements Disposable {
         selectedStateOverlay.setSize(Constants.STATE_SIZE, Constants.STATE_SIZE);
         selectedStateOverlay.setOriginCenter();
 
-        stateFont = new BitmapFont();
-        stateFont.getData().setScale(Constants.STATE_FONT_SCALE);
-        stateFont.setColor(0.0f, 0.0f, 0.0f, 1.0f);
-        stateFont.getRegion().getTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+//        stateFont = new BitmapFont();
+//        stateFont.getData().setScale(Constants.STATE_FONT_SCALE);
+//        stateFont.setColor(0.0f, 0.0f, 0.0f, 1.0f);
+//        stateFont.getRegion().getTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        stateFont = Assets.getInstance().getFonts().defaultBig;
 
         stageManager = new StageManager(this);
 
@@ -143,7 +144,7 @@ public class GameRenderer implements Disposable {
             stateFont.draw(batch, text, state.getX() - glyphLayout.width / 2.0f, state.getY() + glyphLayout.height);
             text = "[" + state.getAction().toString() + "]";
             glyphLayout.setText(stateFont, text);
-            stateFont.draw(batch, text, state.getX() - glyphLayout.width / 2.0f, state.getY());
+            stateFont.draw(batch, text, state.getX() - glyphLayout.width / 2.0f, state.getY() - Constants.STATE_LABEL_PADDING);
         }
 
         AutomatonState startState = automaton.getStartState();

@@ -4,6 +4,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
@@ -53,7 +55,8 @@ public class StageManager implements Disposable {
     private Viewport lowerRightViewport;
     private Viewport fullViewport;
 
-    private Label scoreLabel;
+    private TextField stateLabelTextField;
+    private TextButton stateLabelButton;
     private SelectBox<AutomatonAction> actionSelectBox;
     private SelectBox<BlockLabel> transitionSelectBox;
     private TextButton newAutomatonButton;
@@ -75,6 +78,7 @@ public class StageManager implements Disposable {
     private TextButton deleteTransitionButton;
     private TextButton setStartStateButton;
 //    private TextButton setGoalStateButton;
+    private Label scoreLabel;
 
     private ButtonGroup levelButtonGroup;
     private TextButton selectBlockButton;
@@ -137,7 +141,12 @@ public class StageManager implements Disposable {
         upperRightTable.setFillParent(true);
         upperRightTable.setDebug(prefs.debug);
 
-        //TODO fix widget sizes within stages
+        upperLeftStage.getRoot().addCaptureListener(new InputListener() {
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+                if (!(event.getTarget() instanceof TextField)) upperLeftStage.setKeyboardFocus(null);
+                return false;
+            }
+        });
 
         float upperRatio = Constants.UPPER_BORDER_RATIO * 2.0f;
         Value upperWidthValue = Value.percentWidth(1.0f, upperLeftTable);
@@ -168,8 +177,20 @@ public class StageManager implements Disposable {
     private Table rebuildAutomataNorth() {
         Table automataNorth = new Table();
         automataNorth.setDebug(prefs.debug);
-        scoreLabel = new Label("", skin, Constants.DEFAULT_FONT_NAME, Color.WHITE);
-        automataNorth.add(scoreLabel).expandX();
+
+        stateLabelTextField = new TextField("0", skin);
+        stateLabelTextField.setMaxLength(2);
+        stateLabelTextField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
+        automataNorth.add(stateLabelTextField).width(50);
+
+        stateLabelButton = new TextButton(getBundle().get(LocalizationKeys.SET_LABEL), skin);
+        stateLabelButton.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                setStateLabelClicked();
+            }
+        });
+        automataNorth.add(stateLabelButton).expandX();
 
         actionSelectBox = new SelectBox<>(skin);
         actionSelectBox.setItems(AutomatonAction.MOVE_FORWARD, AutomatonAction.ROTATE_LEFT, AutomatonAction.ROTATE_RIGHT);
@@ -240,6 +261,25 @@ public class StageManager implements Disposable {
         //TODO add buttons for next/previous automaton
 
         return automataNorth;
+    }
+
+    private void setStateLabelClicked() {
+        AutomatonState selectedState = gameController.getSelectedState();
+        if (gameController.isSimulationRunning() || selectedState == null) return;
+        String newLabel = null;
+        try {
+            newLabel = Constants.DEFAULT_STATE_LABEL + Integer.parseInt(stateLabelTextField.getText());
+        } catch (NumberFormatException exc) {
+            Gdx.app.debug(TAG, "invalid number");
+            return;
+        }
+        for (AutomatonState existingState : gameController.getAutomataController().getCurrentAutomaton().getStates()) {
+            if (newLabel.equals(existingState.getLabel())) {
+                showInformation(getBundle().format(LocalizationKeys.DUPLICATE_LABEL_MESSAGE, newLabel));
+                return;
+            }
+        }
+        selectedState.setLabel(newLabel);
     }
 
     private void newAutomatonClicked() {
@@ -403,6 +443,9 @@ public class StageManager implements Disposable {
 //        setGoalStateButton = new TextButton("set\ngoal", skin, "toggle");
 //        automatonButtonGroup.add(setGoalStateButton);
 //        automataSouth.add(setGoalStateButton).expandX();
+
+        scoreLabel = new Label("", skin, Constants.DEFAULT_FONT_NAME, Color.WHITE);
+        automataSouth.add(scoreLabel).expandX();
 
         return automataSouth;
     }

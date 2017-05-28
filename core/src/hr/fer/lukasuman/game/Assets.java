@@ -142,7 +142,7 @@ public class Assets implements Disposable, AssetErrorListener {
             FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
             parameter.characters = "abcćčdđefghijklmnopqrsštuvwxyzž" +
                     "ABCĆČDĐEFGHIJKLMNOPQRSŠTUVWXYZŽ" +
-                    "1234567890*[]().,\n:\"\'";
+                    "1234567890*[]().,\n:\"\'!?/#$%&|-_<>";
             parameter.size = 12;
             defaultSmall = generator.generateFont(parameter);
             parameter.size = 16;

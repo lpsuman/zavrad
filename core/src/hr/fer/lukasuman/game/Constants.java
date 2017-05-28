@@ -12,7 +12,7 @@ public class Constants {
 
     public static final float MENU_BUTTON_PADDING = 4.0f;
 
-    private static final int BASE_SIZE = 500;
+    private static final int BASE_SIZE = 700;
     public static final float UPPER_BORDER_RATIO = 0.1f;
     public static final float LOWER_BORDER_RATIO = 0.1f;
     public static final int DEFAULT_WINDOW_WIDTH = BASE_SIZE * 2;
@@ -32,7 +32,8 @@ public class Constants {
 
     public static final float STATE_SIZE = VIEWPORT_WIDTH / 10;
     public static final String DEFAULT_STATE_LABEL = "S";
-    public static final float STATE_FONT_SCALE = STATE_SIZE * 15 / VIEWPORT_WIDTH;
+    public static final float STATE_FONT_SCALE = STATE_SIZE * 12 / VIEWPORT_WIDTH;
+    public static final float STATE_LABEL_PADDING = 3.0f;
     public static final int STATE_CIRCLES_PIXMAP_SIZE = 127;
     public static final float START_STATE_CIRCLE_LINE_WIDTH_RATIO = 0.1f;
     public static final float STATE_BORDER_LINE_WIDTH_RATIO = 0.1f;
