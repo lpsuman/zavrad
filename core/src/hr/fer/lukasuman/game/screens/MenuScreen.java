@@ -9,17 +9,17 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.I18NBundle;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.FillViewport;
-import hr.fer.lukasuman.game.Assets;
-import hr.fer.lukasuman.game.Constants;
-import hr.fer.lukasuman.game.GamePreferences;
-import hr.fer.lukasuman.game.LocalizationKeys;
+import hr.fer.lukasuman.game.*;
 
 public class MenuScreen extends AbstractGameScreen {
-    private static final I18NBundle BUNDLE = Assets.getInstance().getAssetManager().get(Constants.BUNDLE);
     private static final String TAG = MenuScreen.class.getName();
+    private static I18NBundle getBundle() {
+        return Assets.getInstance().getAssetManager().get(Constants.BUNDLE);
+    }
 
     private Stage stage;
     private Stack stack;
@@ -27,11 +27,14 @@ public class MenuScreen extends AbstractGameScreen {
     private TextButton btnMenuPlay;
     private TextButton btnMenuCustomPlay;
     private TextButton btnMenuOptions;
+    private TextButton btnMenuExitGame;
     private Window winOptions;
     private TextButton btnWinOptSave;
     private TextButton btnWinOptCancel;
+
     private CheckBox chkDebug;
     private CheckBox chkShowFpsCounter;
+    private SelectBox<String> languageSelectBox;
 
     private Skin skin;
     //debug
@@ -72,8 +75,8 @@ public class MenuScreen extends AbstractGameScreen {
 
     private Table buildControlsLayer () {
         Table layer = new Table();
-        btnMenuPlay = new TextButton(BUNDLE.get(LocalizationKeys.PLAY), skin);
-        layer.add(btnMenuPlay);
+        btnMenuPlay = new TextButton(getBundle().get(LocalizationKeys.PLAY), skin);
+        layer.add(btnMenuPlay).pad(Constants.MENU_BUTTON_PADDING);
         btnMenuPlay.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
@@ -81,8 +84,8 @@ public class MenuScreen extends AbstractGameScreen {
             }
         });
         layer.row();
-        btnMenuCustomPlay = new TextButton(BUNDLE.get(LocalizationKeys.CUSTOM_PLAY), skin);
-        layer.add(btnMenuCustomPlay);
+        btnMenuCustomPlay = new TextButton(getBundle().get(LocalizationKeys.CUSTOM_PLAY), skin);
+        layer.add(btnMenuCustomPlay).pad(Constants.MENU_BUTTON_PADDING);
         btnMenuCustomPlay.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
@@ -90,58 +93,68 @@ public class MenuScreen extends AbstractGameScreen {
             }
         });
         layer.row();
-        btnMenuOptions = new TextButton(BUNDLE.get(LocalizationKeys.OPTIONS), skin);
-        layer.add(btnMenuOptions);
+        btnMenuOptions = new TextButton(getBundle().get(LocalizationKeys.OPTIONS), skin);
+        layer.add(btnMenuOptions).pad(Constants.MENU_BUTTON_PADDING);
         btnMenuOptions.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
                 onOptionsClicked();
             }
         });
-        //TODO exit game button
+        layer.row();
+        btnMenuExitGame = new TextButton(getBundle().get(LocalizationKeys.EXIT), skin);
+        layer.add(btnMenuExitGame).pad(Constants.MENU_BUTTON_PADDING);
+        btnMenuExitGame.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                onExitClicked();
+            }
+        });
         if (debugEnabled) layer.debug();
         return layer;
     }
 
     private Table buildOptionsWindowLayer () {
-        winOptions = new Window("Options", skin);
-        // + Debug: Show FPS Counter
-        winOptions.add(buildOptWinDebug()).row();
-        // + Separator and Buttons (Save, Cancel)
+        winOptions = new Window(getBundle().get(LocalizationKeys.OPTIONS), skin);
+        winOptions.add(buildOptWin()).row();
         winOptions.add(buildOptWinButtons()).pad(10, 0, 10, 0);
-        // Make options window slightly transparent
         winOptions.setColor(1, 1, 1, 0.8f);
-        // Hide options window by default
+        winOptions.pack();
+        winOptions.setPosition((Gdx.graphics.getWidth() - winOptions.getWidth()) / 2.0f,
+                (Gdx.graphics.getHeight() - winOptions.getHeight()) / 2.0f);
         winOptions.setVisible(false);
         if (debugEnabled) winOptions.debug();
-        // Let TableLayout recalculate widget sizes and positions
-        winOptions.pack();
-        // Move options window to bottom right corner
-        winOptions.setPosition
-                (Constants.VIEWPORT_GUI_WIDTH - winOptions.getWidth() - 50,
-                        50);
-        //TODO fix options window position
         return winOptions;
     }
 
-    private Table buildOptWinDebug () {
-        Table tbl = new Table();
+    private Table buildOptWin() {
+        Table table = new Table();
+        table.pad(10, 10, 0, 10);
 
-        tbl.pad(10, 10, 0, 10);
-        tbl.add(new Label("Debug", skin, Constants.DEFAULT_FONT_NAME, Color.RED)).colspan(3);
-        tbl.row();
-        tbl.columnDefaults(0).padRight(10);
-        tbl.columnDefaults(1).padRight(10);
+        Table langTable = new Table();
+        langTable.add(new Label(getBundle().get(LocalizationKeys.LANGUAGE), skin));
+        String[] array = {"hr", "en"};
+        languageSelectBox = new SelectBox<>(skin);
+        languageSelectBox.setItems(array);
+        langTable.add(languageSelectBox);
+        table.add(langTable);
+        table.row();
 
+        table.add(new Label("Debug", skin, Constants.DEFAULT_FONT_NAME, Color.RED));
+        table.row();
+        table.columnDefaults(0).padRight(10);
+        table.columnDefaults(1).padRight(10);
+
+        table.add(new Label(getBundle().get(LocalizationKeys.SHOW_FPS), skin));
         chkShowFpsCounter = new CheckBox("", skin);
-        tbl.add(new Label("Show FPS Counter", skin));
-        tbl.add(chkShowFpsCounter);
-        tbl.row();
+        table.add(chkShowFpsCounter);
+        table.row();
+
+        table.add(new Label(getBundle().get(LocalizationKeys.SHOW_DEBUG), skin));
         chkDebug = new CheckBox("", skin);
-        tbl.add(new Label("Show debug features", skin));
-        tbl.add(chkDebug);
-        tbl.row();
-        return tbl;
+        table.add(chkDebug);
+        table.row();
+        return table;
     }
 
     private Table buildOptWinButtons () {
@@ -159,7 +172,7 @@ public class MenuScreen extends AbstractGameScreen {
         tbl.add(lbl).colspan(2).height(1).width(220).pad(0, 1, 5, 0);
         tbl.row();
         // + Save Button with event handler
-        btnWinOptSave = new TextButton("Save", skin);
+        btnWinOptSave = new TextButton(getBundle().get(LocalizationKeys.SAVE), skin);
         tbl.add(btnWinOptSave).padRight(30);
         btnWinOptSave.addListener(new ChangeListener() {
             @Override
@@ -168,7 +181,7 @@ public class MenuScreen extends AbstractGameScreen {
             }
         });
         // + Cancel Button with event handler
-        btnWinOptCancel = new TextButton("Cancel", skin);
+        btnWinOptCancel = new TextButton(getBundle().get(LocalizationKeys.CANCEL), skin);
         tbl.add(btnWinOptCancel);
         btnWinOptCancel.addListener(new ChangeListener() {
             @Override
@@ -198,8 +211,14 @@ public class MenuScreen extends AbstractGameScreen {
     private void onOptionsClicked() {
         loadSettings();
         btnMenuPlay.setVisible(false);
+        btnMenuCustomPlay.setVisible(false);
         btnMenuOptions.setVisible(false);
+        btnMenuExitGame.setVisible(false);
         winOptions.setVisible(true);
+    }
+
+    private void onExitClicked() {
+        Gdx.app.exit();
     }
 
     private void loadSettings() {
@@ -207,22 +226,34 @@ public class MenuScreen extends AbstractGameScreen {
         prefs.load();
         chkDebug.setChecked(prefs.debug);
         chkShowFpsCounter.setChecked(prefs.showFpsCounter);
+        languageSelectBox.setSelected(prefs.language);
     }
 
     private void saveSettings() {
         GamePreferences prefs = GamePreferences.getInstance();
         prefs.debug = chkDebug.isChecked();
         prefs.showFpsCounter = chkShowFpsCounter.isChecked();
-        prefs.save();
+        if (!prefs.language.equals(languageSelectBox.getSelected())) {
+            prefs.language = languageSelectBox.getSelected();
+            prefs.save();
+            Assets.getInstance().loadLocale();
+            rebuildStage();
+            AutomataGame.updateTitle();
+        } else {
+            prefs.save();
+        }
     }
 
     private void onSaveClicked() {
         saveSettings();
         onCancelClicked();
     }
+
     private void onCancelClicked() {
         btnMenuPlay.setVisible(true);
+        btnMenuCustomPlay.setVisible(true);
         btnMenuOptions.setVisible(true);
+        btnMenuExitGame.setVisible(true);
         winOptions.setVisible(false);
     }
 
@@ -257,7 +288,6 @@ public class MenuScreen extends AbstractGameScreen {
     @Override
     public void hide() {
         stage.dispose();
-        skin.dispose();
     }
 
     @Override

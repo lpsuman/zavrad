@@ -10,6 +10,8 @@ public class Constants {
 
     public static final String TITLE = "Automata Game";
 
+    public static final float MENU_BUTTON_PADDING = 4.0f;
+
     private static final int BASE_SIZE = 500;
     public static final float UPPER_BORDER_RATIO = 0.1f;
     public static final float LOWER_BORDER_RATIO = 0.1f;
@@ -39,7 +41,7 @@ public class Constants {
 
     public static final float TRANSITIONS_LINE_WIDTH = 3.0f;
     public static final Color TRANSITION_COLOR = new Color(0x000000ff);
-    public static final Color SELECTED_TRANSITION_COLOR = new Color(0xdd0000ff);
+    public static final Color SELECTED_TRANSITION_COLOR = new Color(0xffff00ff);
     public static final float BEZIER_FIDELITY = 1.0f;
 
     public static final String PREFERENCES_FILE = "preferences";

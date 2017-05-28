@@ -22,7 +22,9 @@ import java.util.Map;
 
 public class GameController {
     private static final String TAG = GameController.class.getName();
-    private static final I18NBundle BUNDLE = Assets.getInstance().getAssetManager().get(Constants.BUNDLE, I18NBundle.class);
+    private static I18NBundle getBundle() {
+        return Assets.getInstance().getAssetManager().get(Constants.BUNDLE);
+    }
 
     private GameRenderer gameRenderer;
     private StageManager stageManager;
@@ -73,11 +75,15 @@ public class GameController {
     }
 
     private void startSimulation() {
+        if (!automataController.getCurrentAutomaton().checkIfAutomatonValid()) {
+            gameRenderer.getStageManager().showInformation(getBundle().get(LocalizationKeys.AUTOMATON_INVALID_MESSAGE));
+            return;
+        }
         if (!automataController.getCurrentAutomaton().getStates().isEmpty() && isSimulationStarted == false) {
             fullReset();
             isSimulationStarted = true;
             isSimulationRunning = true;
-            stageManager.getStartSimulationButton().setText(BUNDLE.get(LocalizationKeys.STOP_SIM_BTN_TEXT));
+            stageManager.getStartSimulationButton().setText(getBundle().get(LocalizationKeys.STOP_SIM_BTN_TEXT));
         }
     }
 
@@ -87,7 +93,8 @@ public class GameController {
             isSimulationStarted = false;
             isSimulationRunning = false;
             automataController.getCurrentAutomaton().setCurrentState(null);
-            stageManager.getStartSimulationButton().setText(BUNDLE.get(LocalizationKeys.START_SIM_BTN_TEXT));
+            stageManager.getStartSimulationButton().setText(getBundle().get(LocalizationKeys.START_SIM_BTN_TEXT));
+            stageManager.getPauseSimulationButton().setText(getBundle().get(LocalizationKeys.PAUSE_SIM_BTN_TEXT));
         }
     }
 
@@ -104,14 +111,14 @@ public class GameController {
     private void pauseSimulation() {
         if (isSimulationStarted) {
             isSimulationRunning = false;
-            stageManager.getPauseSimulationButton().setText(BUNDLE.get(LocalizationKeys.RESUME_SIM_BTN_TEXT));
+            stageManager.getPauseSimulationButton().setText(getBundle().get(LocalizationKeys.RESUME_SIM_BTN_TEXT));
         }
     }
 
     private void resumeSimulation() {
         if (isSimulationStarted) {
             isSimulationRunning = true;
-            stageManager.getPauseSimulationButton().setText(BUNDLE.get(LocalizationKeys.PAUSE_SIM_BTN_TEXT));
+            stageManager.getPauseSimulationButton().setText(getBundle().get(LocalizationKeys.PAUSE_SIM_BTN_TEXT));
         }
     }
 
@@ -150,12 +157,12 @@ public class GameController {
             pauseSimulation();
             String stateMsg = null;
             if (getNumberOfStates() == 1) {
-                stateMsg = BUNDLE.get(LocalizationKeys.STATE);
+                stateMsg = getBundle().get(LocalizationKeys.STATE);
             } else {
-                stateMsg = BUNDLE.get(LocalizationKeys.STATES);
+                stateMsg = getBundle().get(LocalizationKeys.STATES);
             }
             stageManager.showConfirmationDialog(levelController::loadNextLevel, null,
-                    BUNDLE.format(LocalizationKeys.LEVEL_PASSED_FORMAT_MESSAGE, getNumberOfStates(), stateMsg));
+                    getBundle().format(LocalizationKeys.LEVEL_PASSED_FORMAT_MESSAGE, getNumberOfStates(), stateMsg));
             return;
         }
 
@@ -185,7 +192,8 @@ public class GameController {
                 if (!isBorderInFront && blockInFront.isTraversable()) {
                     level.setCurrentPosition(newPosition);
                 } else {
-                    //TODO illegal move forward
+                    pauseSimulation();
+                    stageManager.showInformation(getBundle().get(LocalizationKeys.ILLEGAL_MOVE));
                 }
                 break;
             case ROTATE_LEFT:

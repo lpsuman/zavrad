@@ -26,7 +26,6 @@ import hr.fer.lukasuman.game.screens.GameScreen;
 import java.util.Map;
 
 public class GameRenderer implements Disposable {
-
     private static final String TAG = GameRenderer.class.getName();
 
     private GameController gameController;
@@ -124,12 +123,13 @@ public class GameRenderer implements Disposable {
         for (Map.Entry<AutomatonState, Sprite> entry : automaton.getStateSprites().entrySet()) {
             AutomatonState state = entry.getKey();
             Sprite sprite = entry.getValue();
-            if (state.equals(automaton.getCurrentState())) {
+            if (state.equals(automaton.getCurrentState())
+                    || (!gameController.isSimulationStarted() && !state.isValid())) {
                 sprite.setTexture(runningStateTexture);
             }
             sprite.draw(batch);
             sprite.setTexture(stateTexture);
-            if (state.equals(gameController.getSelectedState())) {
+            if (state.equals(gameController.getSelectedState()) && !gameController.isSimulationStarted()) {
                 selectedStateOverlay.setPosition(state.getX() - Constants.STATE_SIZE / 2.0f,
                         state.getY() - Constants.STATE_SIZE / 2.0f);
                 selectedStateOverlay.draw(batch);
@@ -141,7 +141,7 @@ public class GameRenderer implements Disposable {
             String text = state.getLabel();
             glyphLayout.setText(stateFont, text);
             stateFont.draw(batch, text, state.getX() - glyphLayout.width / 2.0f, state.getY() + glyphLayout.height);
-            text = state.getAction().toString();
+            text = "[" + state.getAction().toString() + "]";
             glyphLayout.setText(stateFont, text);
             stateFont.draw(batch, text, state.getX() - glyphLayout.width / 2.0f, state.getY());
         }
@@ -167,16 +167,18 @@ public class GameRenderer implements Disposable {
                 blocks[x][y].render(batch);
             }
         }
-        playerSprite.setSize(level.getBlockSize(), level.getBlockSize());
-        float halfWidth = playerSprite.getWidth() / 2.0f;
-        float halfHeight = playerSprite.getHeight() / 2.0f;
-        playerSprite.setOrigin(halfWidth, halfHeight);
-        GridPoint2 currentPlayerPositon = level.getCurrentPosition();
-        if (currentPlayerPositon != null && level.isPositionWithinLevel(currentPlayerPositon)) {
-            Vector2 playerPos = level.calcPos(currentPlayerPositon.x, currentPlayerPositon.y);
-            playerSprite.setPosition(playerPos.x - halfWidth, playerPos.y - halfHeight);
-            playerSprite.setRotation(-90.0f * level.getCurrentDirection().getDegrees());
-            playerSprite.draw(batch);
+        if (gameController.isSimulationStarted()) {
+            playerSprite.setSize(level.getBlockSize(), level.getBlockSize());
+            float halfWidth = playerSprite.getWidth() / 2.0f;
+            float halfHeight = playerSprite.getHeight() / 2.0f;
+            playerSprite.setOrigin(halfWidth, halfHeight);
+            GridPoint2 currentPlayerPositon = level.getCurrentPosition();
+            if (currentPlayerPositon != null && level.isPositionWithinLevel(currentPlayerPositon)) {
+                Vector2 playerPos = level.calcPos(currentPlayerPositon.x, currentPlayerPositon.y);
+                playerSprite.setPosition(playerPos.x - halfWidth, playerPos.y - halfHeight);
+                playerSprite.setRotation(-90.0f * level.getCurrentDirection().getDegrees());
+                playerSprite.draw(batch);
+            }
         }
         batch.end();
     }
@@ -188,12 +190,13 @@ public class GameRenderer implements Disposable {
         transitionRenderer.setColor(Constants.TRANSITION_COLOR);
 
         for (AutomatonTransition transition : gameController.getAutomataController().getCurrentAutomaton().getTransitionSet()) {
-            if (transition.equals(gameController.getSelectedTransition())) {
+            if (transition.equals(gameController.getSelectedTransition()) && !gameController.isSimulationStarted()) {
                 transitionRenderer.setColor(Constants.SELECTED_TRANSITION_COLOR);
                 transition.drawLines(transitionRenderer);
                 transitionRenderer.setColor(Constants.TRANSITION_COLOR);
+            } else {
+                transition.drawLines(transitionRenderer);
             }
-            transition.drawLines(transitionRenderer);
         }
         if (tempTransition != null) {
             tempTransition.drawLines(transitionRenderer);

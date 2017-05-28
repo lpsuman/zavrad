@@ -31,9 +31,10 @@ import hr.fer.lukasuman.game.screens.GameScreen;
 import java.util.Set;
 
 public class StageManager implements Disposable {
-
     private static final String TAG = StageManager.class.getName();
-    private static final I18NBundle BUNDLE = Assets.getInstance().getAssetManager().get(Constants.BUNDLE, I18NBundle.class);
+    private static I18NBundle getBundle() {
+        return Assets.getInstance().getAssetManager().get(Constants.BUNDLE);
+    }
 
     private GameRenderer gameRenderer;
     private GameController gameController;
@@ -195,14 +196,14 @@ public class StageManager implements Disposable {
         });
         automataNorth.add(transitionSelectBox).expandX();
 
-        newAutomatonButton = new TextButton(BUNDLE.get(LocalizationKeys.NEW_AUTOMATON), skin);
+        newAutomatonButton = new TextButton(getBundle().get(LocalizationKeys.NEW_AUTOMATON), skin);
         newAutomatonButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
                 if (gameController.isSimulationRunning()) return;
                 if (gameController.getAutomataController().getCurrentAutomaton().isChangesPending()) {
                     showConfirmationDialog(StageManager.this::saveAutomatonClicked,
-                            StageManager.this::newAutomatonClicked, BUNDLE.get(LocalizationKeys.AUTOMATON_CONFIRM_MESSAGE));
+                            StageManager.this::newAutomatonClicked, getBundle().get(LocalizationKeys.AUTOMATON_CONFIRM_MESSAGE));
                 } else {
                     newAutomatonClicked();
                 }
@@ -210,7 +211,7 @@ public class StageManager implements Disposable {
         });
         automataNorth.add(newAutomatonButton).expandX();
 
-        saveAutomatonButton = new TextButton(BUNDLE.get(LocalizationKeys.SAVE_AUTOMATON), skin);
+        saveAutomatonButton = new TextButton(getBundle().get(LocalizationKeys.SAVE_AUTOMATON), skin);
         saveAutomatonButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
@@ -220,7 +221,7 @@ public class StageManager implements Disposable {
         });
         automataNorth.add(saveAutomatonButton).expandX();
 
-        loadAutomatonButton = new TextButton(BUNDLE.get(LocalizationKeys.LOAD_AUTOMATON), skin);
+        loadAutomatonButton = new TextButton(getBundle().get(LocalizationKeys.LOAD_AUTOMATON), skin);
         loadAutomatonButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
@@ -228,7 +229,7 @@ public class StageManager implements Disposable {
                 if (gameController.getAutomataController().getCurrentAutomaton().isChangesPending()) {
                     showConfirmationDialog(StageManager.this::saveAutomatonClicked,
                             StageManager.this::loadAutomatonClicked,
-                            BUNDLE.get(LocalizationKeys.AUTOMATON_CONFIRM_MESSAGE));
+                            getBundle().get(LocalizationKeys.AUTOMATON_CONFIRM_MESSAGE));
                 } else {
                     loadAutomatonClicked();
                 }
@@ -288,14 +289,14 @@ public class StageManager implements Disposable {
         levelNorth.add(blockDirectionSelectBox).expandX();
 
         if (gameRenderer.isCustomPlay()) {
-            newLevelButton = new TextButton(BUNDLE.get(LocalizationKeys.NEW_LEVEL), skin);
+            newLevelButton = new TextButton(getBundle().get(LocalizationKeys.NEW_LEVEL), skin);
             newLevelButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
                     if (gameController.isSimulationRunning()) return;
                     if (gameController.getLevelController().getCurrentLevel().isChangesPending()) {
                         showConfirmationDialog(StageManager.this::saveLevelClicked,
-                                StageManager.this::newLevelClicked, BUNDLE.get(LocalizationKeys.LEVEL_CONFIRM_MESSAGE));
+                                StageManager.this::newLevelClicked, getBundle().get(LocalizationKeys.LEVEL_CONFIRM_MESSAGE));
                     } else {
                         newLevelClicked();
                     }
@@ -303,7 +304,7 @@ public class StageManager implements Disposable {
             });
             levelNorth.add(newLevelButton).expandX();
 
-            saveLevelButton = new TextButton(BUNDLE.get(LocalizationKeys.SAVE_LEVEL), skin);
+            saveLevelButton = new TextButton(getBundle().get(LocalizationKeys.SAVE_LEVEL), skin);
             saveLevelButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
@@ -313,14 +314,14 @@ public class StageManager implements Disposable {
             });
             levelNorth.add(saveLevelButton).expandX();
 
-            loadLevelButton = new TextButton(BUNDLE.get(LocalizationKeys.LOAD_LEVEL), skin);
+            loadLevelButton = new TextButton(getBundle().get(LocalizationKeys.LOAD_LEVEL), skin);
             loadLevelButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
                     if (gameController.isSimulationRunning()) return;
                     if (gameController.getLevelController().getCurrentLevel().isChangesPending()) {
                         showConfirmationDialog(StageManager.this::saveLevelClicked,
-                                StageManager.this::loadLevelClicked, BUNDLE.get(LocalizationKeys.LEVEL_CONFIRM_MESSAGE));
+                                StageManager.this::loadLevelClicked, getBundle().get(LocalizationKeys.LEVEL_CONFIRM_MESSAGE));
                     } else {
                         loadLevelClicked();
                     }
@@ -340,7 +341,7 @@ public class StageManager implements Disposable {
     private void newLevelClicked() {
         levelDimensionTable.setVisible(true);
         showConfirmationDialog(StageManager.this::createNewLevel, null,
-                BUNDLE.get(LocalizationKeys.NEW_LEVEL_CONFIRM_MESSAGE),
+                getBundle().get(LocalizationKeys.NEW_LEVEL_CONFIRM_MESSAGE),
                 () -> levelDimensionTable.setVisible(false));
     }
 
@@ -375,27 +376,27 @@ public class StageManager implements Disposable {
         automataSouth.setDebug(prefs.debug);
 
         automatonButtonGroup = new ButtonGroup();
-        selectionButton = new TextButton(BUNDLE.get(LocalizationKeys.SELECT_STATE), skin, "toggle");
+        selectionButton = new TextButton(getBundle().get(LocalizationKeys.SELECT_STATE), skin, "toggle");
         automatonButtonGroup.add(selectionButton);
         automataSouth.add(selectionButton).expandX();
 
-        createStateButton = new TextButton(BUNDLE.get(LocalizationKeys.ADD_STATE), skin, "toggle");
+        createStateButton = new TextButton(getBundle().get(LocalizationKeys.ADD_STATE), skin, "toggle");
         automatonButtonGroup.add(createStateButton);
         automataSouth.add(createStateButton).expandX();
 
-        deleteStateButton = new TextButton(BUNDLE.get(LocalizationKeys.DELETE_STATE), skin, "toggle");
+        deleteStateButton = new TextButton(getBundle().get(LocalizationKeys.DELETE_STATE), skin, "toggle");
         automatonButtonGroup.add(deleteStateButton);
         automataSouth.add(deleteStateButton).expandX();
 
-        createTransitionButton = new TextButton(BUNDLE.get(LocalizationKeys.CREATE_TRANSITION), skin, "toggle");
+        createTransitionButton = new TextButton(getBundle().get(LocalizationKeys.CREATE_TRANSITION), skin, "toggle");
         automatonButtonGroup.add(createTransitionButton);
         automataSouth.add(createTransitionButton).expandX();
 
-        deleteTransitionButton = new TextButton(BUNDLE.get(LocalizationKeys.DELETE_TRANSITION), skin, "toggle");
+        deleteTransitionButton = new TextButton(getBundle().get(LocalizationKeys.DELETE_TRANSITION), skin, "toggle");
         automatonButtonGroup.add(deleteTransitionButton);
         automataSouth.add(deleteTransitionButton).expandX();
 
-        setStartStateButton = new TextButton(BUNDLE.get(LocalizationKeys.SET_START), skin, "toggle");
+        setStartStateButton = new TextButton(getBundle().get(LocalizationKeys.SET_START), skin, "toggle");
         automatonButtonGroup.add(setStartStateButton);
         automataSouth.add(setStartStateButton).expandX();
 
@@ -414,23 +415,23 @@ public class StageManager implements Disposable {
         simulationTable.setDebug(prefs.debug);
         levelSouth.add(simulationTable).expandX();
 
-        startSimulationButton = new TextButton(BUNDLE.get(LocalizationKeys.START_SIM_BTN_TEXT), skin);
+        startSimulationButton = new TextButton(getBundle().get(LocalizationKeys.START_SIM_BTN_TEXT), skin);
         startSimulationButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
                 gameController.toggleSimulationStarted();
             }
         });
-        simulationTable.add(startSimulationButton).expandX();
+        simulationTable.add(startSimulationButton).pad(3.0f).expandX();
 
-        pauseSimulationButton = new TextButton(BUNDLE.get(LocalizationKeys.PAUSE_SIM_BTN_TEXT), skin);
+        pauseSimulationButton = new TextButton(getBundle().get(LocalizationKeys.PAUSE_SIM_BTN_TEXT), skin);
         pauseSimulationButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
                 gameController.toggleSimulationPaused();
             }
         });
-        simulationTable.add(pauseSimulationButton).expandX();
+        simulationTable.add(pauseSimulationButton).pad(3.0f).expandX();
 
         simulationSpeedSlider = new Slider(1.0f, 10.0f, 1.0f, false, skin);
         simulationSpeedSlider.addListener(new ChangeListener() {
@@ -447,12 +448,12 @@ public class StageManager implements Disposable {
 
         levelButtonGroup = new ButtonGroup();
 
-        selectBlockButton = new TextButton(BUNDLE.get(LocalizationKeys.SELECT_BLOCK), skin, "toggle");
+        selectBlockButton = new TextButton(getBundle().get(LocalizationKeys.SELECT_BLOCK), skin, "toggle");
         levelButtonGroup.add(selectBlockButton);
         editTable.add(selectBlockButton).expandX();
 
         if (gameRenderer.isCustomPlay()) {
-            paintBlockButton = new TextButton(BUNDLE.get(LocalizationKeys.PAINT_BLOCK), skin, "toggle");
+            paintBlockButton = new TextButton(getBundle().get(LocalizationKeys.PAINT_BLOCK), skin, "toggle");
             levelButtonGroup.add(paintBlockButton);
             editTable.add(paintBlockButton).expandX();
         }
@@ -496,7 +497,7 @@ public class StageManager implements Disposable {
 
     private void initConfirmationDialog() {
         //TODO fix dialog size/position when resizing the screen
-        confirmationDialog = new Dialog(BUNDLE.get(LocalizationKeys.CONFIRM), skin) {
+        confirmationDialog = new Dialog(getBundle().get(LocalizationKeys.CONFIRM), skin) {
             @Override
             public float getPrefWidth() {
                 return Gdx.graphics.getWidth() * Constants.DIALOG_WIDTH_FACTOR;
@@ -523,19 +524,19 @@ public class StageManager implements Disposable {
         levelDimensionTable.setVisible(false);
         contentTable.add(levelDimensionTable).width(fullWidthValue);
 
-        levelDimensionTable.add(new Label(BUNDLE.get(LocalizationKeys.LEVEL_WIDTH) + ": ", skin));
+        levelDimensionTable.add(new Label(getBundle().get(LocalizationKeys.LEVEL_WIDTH) + ": ", skin));
         levelWidthTextField = new TextField("", skin);
         levelWidthTextField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
         levelWidthTextField.setMaxLength(3);
         levelDimensionTable.add(levelWidthTextField);
-        levelDimensionTable.add(new Label(BUNDLE.get(LocalizationKeys.BLOCKS), skin));
+        levelDimensionTable.add(new Label(getBundle().get(LocalizationKeys.BLOCKS), skin));
         levelDimensionTable.row();
-        levelDimensionTable.add(new Label(BUNDLE.get(LocalizationKeys.LEVEL_HEIGHT) + ": ", skin));
+        levelDimensionTable.add(new Label(getBundle().get(LocalizationKeys.LEVEL_HEIGHT) + ": ", skin));
         levelHeightTextField = new TextField("", skin);
         levelHeightTextField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
         levelHeightTextField.setMaxLength(3);
         levelDimensionTable.add(levelHeightTextField);
-        levelDimensionTable.add(new Label(BUNDLE.get(LocalizationKeys.BLOCKS), skin));
+        levelDimensionTable.add(new Label(getBundle().get(LocalizationKeys.BLOCKS), skin));
 
         Stack buttonStack = new Stack();
         confirmationDialog.getButtonTable().add(buttonStack);
@@ -543,7 +544,7 @@ public class StageManager implements Disposable {
         buttonTableYesNoCancel = new Table();
         buttonStack.add(buttonTableYesNoCancel);
 
-        TextButton yesButton = new TextButton(BUNDLE.get(LocalizationKeys.YES), skin);
+        TextButton yesButton = new TextButton(getBundle().get(LocalizationKeys.YES), skin);
         yesButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
@@ -552,7 +553,7 @@ public class StageManager implements Disposable {
         });
         buttonTableYesNoCancel.add(yesButton).expandX();
 
-        TextButton noButton = new TextButton(BUNDLE.get(LocalizationKeys.NO), skin);
+        TextButton noButton = new TextButton(getBundle().get(LocalizationKeys.NO), skin);
         noButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
@@ -561,7 +562,7 @@ public class StageManager implements Disposable {
         });
         buttonTableYesNoCancel.add(noButton).expandX();
 
-        TextButton cancelButton = new TextButton(BUNDLE.get(LocalizationKeys.CANCEL), skin);
+        TextButton cancelButton = new TextButton(getBundle().get(LocalizationKeys.CANCEL), skin);
         cancelButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
@@ -574,7 +575,7 @@ public class StageManager implements Disposable {
         buttonTableOK.setVisible(false);
         buttonStack.add(buttonTableOK);
 
-        TextButton okButton = new TextButton(BUNDLE.get(LocalizationKeys.OK), skin);
+        TextButton okButton = new TextButton(getBundle().get(LocalizationKeys.OK), skin);
         okButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -681,7 +682,7 @@ public class StageManager implements Disposable {
     }
 
     private void updateScore() {
-        scoreLabel.setText(BUNDLE.get(LocalizationKeys.STATES) + ": " + gameController.getAutomataController().getCurrentAutomaton().getStates().size());
+        scoreLabel.setText(getBundle().get(LocalizationKeys.STATES) + ": " + gameController.getAutomataController().getCurrentAutomaton().getStates().size());
     }
 
     private void updateFpsCounter() {

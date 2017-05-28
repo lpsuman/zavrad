@@ -47,8 +47,6 @@ public class GameScreen extends AbstractGameScreen {
 
     @Override
     public void show () {
-        GamePreferences.getInstance().load();
-
         if (!isGameLoaded) {
             gameController = new GameController(game);
             isGameLoaded = true;
@@ -95,5 +93,9 @@ public class GameScreen extends AbstractGameScreen {
 
     public MenuScreen getMenuScreen() {
         return menuScreen;
+    }
+
+    public GameController getGameController() {
+        return gameController;
     }
 }

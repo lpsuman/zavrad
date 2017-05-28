@@ -1,10 +1,17 @@
 package hr.fer.lukasuman.game;
 
 public class LocalizationKeys {
+    public static final String TITLE = "title";
 
     public static final String PLAY = "play";
     public static final String CUSTOM_PLAY = "customPlay";
     public static final String OPTIONS = "options";
+    public static final String EXIT = "exit";
+
+    public static final String LANGUAGE = "language";
+    public static final String SHOW_FPS = "showFPS";
+    public static final String SHOW_DEBUG = "showDebug";
+    public static final String SAVE = "save";
 
     public static final String NEW_AUTOMATON = "newAutomaton";
     public static final String SAVE_AUTOMATON = "saveAutomaton";
@@ -51,4 +58,6 @@ public class LocalizationKeys {
     public static final String LEVEL_WIDTH = "levelWidth";
     public static final String LEVEL_HEIGHT = "levelHeight";
     public static final String BLOCKS = "blocks";
+    public static final String AUTOMATON_INVALID_MESSAGE = "incompleteMsg";
+    public static final String ILLEGAL_MOVE = "illegalMove";
 }

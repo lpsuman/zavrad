@@ -63,18 +63,27 @@ public class Assets implements Disposable, AssetErrorListener {
         SkinLoader.SkinParameter parameter = new SkinLoader.SkinParameter(Constants.TEXTURE_ATLAS_LIBGDX_UI, fontMap);
         assetManager.load(Constants.SKIN_LIBGDX_UI, Skin.class, parameter);
         loadBlockTextures();
-        Locale locale = Locale.forLanguageTag("hr");
-        assetManager.load(Constants.BUNDLE, I18NBundle.class, new I18NBundleLoader.I18NBundleParameter(locale));
 
+        loadLocale();
         assetManager.finishLoading();
-
+        output();
         initPixmapTextures();
+    }
 
-
-
+    private void output() {
         Gdx.app.debug(TAG, "# of assets loaded: " + assetManager.getAssetNames().size);
         for (String a : assetManager.getAssetNames())
             Gdx.app.debug(TAG, "asset: " + a);
+    }
+
+    public void loadLocale() {
+        Locale locale = Locale.forLanguageTag(GamePreferences.getInstance().language);
+        if (assetManager.isLoaded(Constants.BUNDLE)) {
+            assetManager.unload(Constants.BUNDLE);
+        }
+        assetManager.load(Constants.BUNDLE, I18NBundle.class, new I18NBundleLoader.I18NBundleParameter(locale));
+        assetManager.finishLoading();
+        output();
     }
 
     private void loadBlockTextures() {
@@ -131,11 +140,14 @@ public class Assets implements Disposable, AssetErrorListener {
         public AssetFonts () {
             FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/AbhayaLibre-Regular.ttf"));
             FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+            parameter.characters = "abcćčdđefghijklmnopqrsštuvwxyzž" +
+                    "ABCĆČDĐEFGHIJKLMNOPQRSŠTUVWXYZŽ" +
+                    "1234567890*[]().,\n:\"\'";
             parameter.size = 12;
             defaultSmall = generator.generateFont(parameter);
-            parameter.size = 18;
+            parameter.size = 16;
             defaultNormal = generator.generateFont(parameter);
-            parameter.size = 24;
+            parameter.size = 20;
             defaultBig = generator.generateFont(parameter);
             generator.dispose();
 

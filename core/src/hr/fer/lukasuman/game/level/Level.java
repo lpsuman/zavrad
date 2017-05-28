@@ -133,8 +133,13 @@ public class Level implements Disposable {
 
         for (int j = 0; j < height; j++) {
             for (int i = 0; i < width; i++) {
+                AbstractBlock block = blocks[i][j];
                 Vector2 gamePos = calcPos(i, j);
-                blocks[i][j].setSpriteSize(blockSize);
+                block.setSpriteSize(blockSize);
+                if (block.isDirectional()) {
+                    block.getSprite().setOriginCenter();
+                    block.getSprite().setRotation(block.getDirection().getDegrees() * -90.0f);
+                }
                 blocks[i][j].setSpritePos(gamePos);
             }
         }

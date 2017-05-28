@@ -87,6 +87,10 @@ public abstract class AbstractBlock {
         return isDirectional;
     }
 
+    public Sprite getSprite() {
+        return sprite;
+    }
+
     @Override
     public String toString() {
         return ((I18NBundle)Assets.getInstance().getAssetManager().get(Constants.BUNDLE)).get(label);

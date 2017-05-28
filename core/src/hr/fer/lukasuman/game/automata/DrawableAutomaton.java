@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
+import hr.fer.lukasuman.game.LocalizationKeys;
 import hr.fer.lukasuman.game.level.blocks.BlockFactory;
 
 import java.util.*;
@@ -51,16 +52,18 @@ public class DrawableAutomaton extends Automaton {
     }
 
     public AutomatonTransition addTransition(String trigger, AutomatonState startState, AutomatonState endState) {
-        if (startState.equals(endState)) {
-            return null;
-        }
         AutomatonTransition newTransition = new AutomatonTransition(trigger, startState, endState);
         if (transitionSet.contains(newTransition)) {
-            return null;
+            AutomatonTransition existingTransition = getTransition(startState,endState);
+            if (existingTransition.getTransitionLabels().contains(trigger)) {
+                return null;
+            }
+            existingTransition.addLabel(trigger);
+            changeMade();
         }
         startState.addTransition(trigger, endState);
         transitionSet.add(newTransition);
-        changesPending = true;
+        changeMade();
         return newTransition;
     }
 
@@ -69,7 +72,7 @@ public class DrawableAutomaton extends Automaton {
             for (String label : transition.getTransitionLabels()) {
                 transition.getStartState().getTransitions().remove(label);
             }
-            changesPending = true;
+            changeMade();
         }
     }
 
@@ -82,6 +85,7 @@ public class DrawableAutomaton extends Automaton {
                 if (transition.getTransitionLabels().isEmpty()) {
                     transitionSet.remove(transition);
                 }
+                changeMade();
                 return;
             }
         }
@@ -144,9 +148,12 @@ public class DrawableAutomaton extends Automaton {
 
     @Override
     public void addState(AutomatonState state) {
+        if (getStates().contains(state)) {
+            return;
+        }
         super.addState(state);
         addSpriteForState(state);
-        changesPending = true;
+        changeMade();
     }
 
     @Override
@@ -166,7 +173,7 @@ public class DrawableAutomaton extends Automaton {
         }
         super.removeState(state);
         stateSprites.remove(state);
-        changesPending = true;
+        changeMade();
     }
 
     public boolean checkIfAutomatonValid() {
@@ -190,12 +197,17 @@ public class DrawableAutomaton extends Automaton {
                 return false;
             }
         } else {
-            if (state.getTransitions().containsKey(Constants.REMAINING_TRANSITIONS_LABEL)) {
+            if (state.getTransitions().containsKey(LocalizationKeys.REST)) {
                 return true;
             } else {
                 return false;
             }
         }
+    }
+
+    private void changeMade() {
+        changesPending = true;
+        checkIfAutomatonValid();
     }
 
     public Automaton getSerializable() {

@@ -18,12 +18,17 @@ import java.util.*;
 
 public class AutomatonTransition {
     private static final String TAG = AutomatonTransition.class.getName();
-    private static final I18NBundle BUNDLE = Assets.getInstance().getAssetManager().get(Constants.BUNDLE);
+    private static I18NBundle getBundle() {
+        return Assets.getInstance().getAssetManager().get(Constants.BUNDLE);
+    }
 
     private static final float CURVE_DEPTH = 0.25f;
     private static final float CURVE_STEEPNESS = 0.25f;
     private static final float ARROW_ANGLE = 30.0f;
     private static final float ARROW_LENGTH = Constants.STATE_SIZE / 4.0f;
+    private static final float LOOP_ANGLE = 60.0f;
+    private static final float LOOP_STEEPNESS = 2.0f;
+    private static final Vector2 DEFAULT_LOOP_DIRECTION = new Vector2(0.0f, -1.0f);
 
     private static final GlyphLayout glyphLayout = new GlyphLayout();
 
@@ -40,7 +45,7 @@ public class AutomatonTransition {
     private Vector2 startPoint;
     private Vector2 endPoint;
     private Vector2 middlePoint;
-    private Vector2 shiftedMiddlePoint;
+    private Vector2 manualLoopPositon;
 
     private Matrix4 mat4;
     private float dx;
@@ -55,7 +60,6 @@ public class AutomatonTransition {
         this.transitionLabels = transitionLabels;
         this.startState = startState;
         this.endState = endState;
-
         dataSet = new Vector2[4];
         dataSet[0] = new Vector2();
         dataSet[1] = new Vector2();
@@ -70,7 +74,6 @@ public class AutomatonTransition {
             this.endPoint.set(endPoint);
         }
         middlePoint = new Vector2();
-        shiftedMiddlePoint = new Vector2();
 
         leftArrowPoint = new Vector2();
         rightArrowPoint = new Vector2();
@@ -86,10 +89,57 @@ public class AutomatonTransition {
     }
 
     public void recalculate() {
-        calculateControlPoints();
+        if (startState.equals(endState)) {
+            calculateLoopControlPoints();
+        } else {
+            calculateControlPoints();
+        }
         calculateBezierPoints();
         calculateArrowPoints();
         calculateTextRotationMatrix();
+    }
+
+    private void calculateLoopControlPoints() {
+        startPoint.set(startState.getX(), startState.getY());
+        if (manualLoopPositon == null) {
+            norm.set(0.0f, 0.0f);
+            DrawableAutomaton automaton = (DrawableAutomaton) startState.getParent();
+            for (AutomatonTransition transition : automaton.getTransitionSet()) {
+                if ((transition.startState.equals(this.startState) || transition.endState.equals(this.endState))
+                        && !transition.startState.equals(transition.endState)) {
+                    temp.set(transition.middlePoint.x - this.startPoint.x, transition.middlePoint.y - this.startPoint.y);
+                    temp.nor();
+                    norm.add(temp);
+                }
+            }
+        } else {
+            norm.set(manualLoopPositon);
+        }
+        if (norm.isZero()) {
+            norm.set(DEFAULT_LOOP_DIRECTION);
+        }
+        norm.set(-norm.x, -norm.y);
+        norm.setLength(Constants.STATE_SIZE / 2.0f);
+
+        temp.set(norm);
+        temp.rotate(LOOP_ANGLE / 2.0f);
+        dataSet[0].set(startPoint);
+        dataSet[0].add(temp);
+        temp.setLength(LOOP_STEEPNESS * Constants.STATE_SIZE);
+        dataSet[1].set(startPoint);
+        dataSet[1].add(temp);
+
+        temp.set(norm);
+        temp.rotate(-LOOP_ANGLE / 2.0f);
+        dataSet[3].set(startPoint);
+        dataSet[3].add(temp);
+        temp.setLength(LOOP_STEEPNESS * Constants.STATE_SIZE);
+        dataSet[2].set(startPoint);
+        dataSet[2].add(temp);
+
+        norm.setLength(LOOP_STEEPNESS * 0.75f * Constants.STATE_SIZE);
+        middlePoint.set(startPoint);
+        middlePoint.add(norm);
     }
 
     private void calculateControlPoints() {
@@ -141,6 +191,7 @@ public class AutomatonTransition {
     }
 
     private void calculateArrowPoints() {
+        norm.set(dataSet[2].x - dataSet[3].x, dataSet[2].y - dataSet[3].y);
         norm.setLength(ARROW_LENGTH);
 
         temp.set(dataSet[3]);
@@ -180,20 +231,24 @@ public class AutomatonTransition {
             transitionRenderer.line(points[i], points[i+1]);
         }
 
-        transitionRenderer.line(leftArrowPoint, dataSet[3]);
-        transitionRenderer.line(rightArrowPoint, dataSet[3]);
+        transitionRenderer.line(leftArrowPoint, dataSet[dataSet.length - 1]);
+        transitionRenderer.line(rightArrowPoint, dataSet[dataSet.length - 1]);
     }
 
     public void drawLabels(SpriteBatch batch, BitmapFont font) {
         batch.setTransformMatrix(mat4);
         batch.begin();
         float posY = 0.0f;
+        boolean isFirst = true;
         for (String label : transitionLabels) {
-            glyphLayout.setText(font, label);
-            if (posY == 0.0f) {
-                posY = (transitionLabels.size() / 2.0f) * glyphLayout.height;
+            String text = getBundle().get(label);
+            glyphLayout.reset();
+            glyphLayout.setText(font, text);
+            if (isFirst) {
+                isFirst = false;
+                posY = ((float)transitionLabels.size() / 2.0f) * glyphLayout.height;
             }
-            font.draw(batch, BUNDLE.get(label), -glyphLayout.width / 2.0f, posY);
+            font.draw(batch, text, -glyphLayout.width / 2.0f, posY);
             posY -= glyphLayout.height;
         }
         batch.end();
@@ -245,6 +300,13 @@ public class AutomatonTransition {
 
     public AutomatonState getEndState() {
         return endState;
+    }
+
+    public void setManualLoopPositon(Vector2 manualLoopPositon) {
+        if (this.manualLoopPositon == null) {
+            this.manualLoopPositon = new Vector2();
+        }
+        this.manualLoopPositon.set(startPoint.x - manualLoopPositon.x, startPoint.y - manualLoopPositon.y);
     }
 
     @Override

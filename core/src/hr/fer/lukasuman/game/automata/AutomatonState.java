@@ -1,6 +1,7 @@
 package hr.fer.lukasuman.game.automata;
 
 import hr.fer.lukasuman.game.Constants;
+import hr.fer.lukasuman.game.LocalizationKeys;
 
 import java.io.Serializable;
 import java.util.*;
@@ -50,7 +51,10 @@ public class AutomatonState implements Serializable {
     public AutomatonState transition(String input) {
         AutomatonState nextState = transitions.get(input);
         if (nextState == null) {
-            nextState = this;
+            nextState = transitions.get(LocalizationKeys.REST);
+            if (nextState == null) {
+                nextState = this;
+            }
         }
         return nextState;
     }
