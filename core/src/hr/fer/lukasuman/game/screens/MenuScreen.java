@@ -54,7 +54,8 @@ public class MenuScreen extends AbstractGameScreen {
 
         Table layerBackground = buildBackgroundLayer();
         Table layerControls = buildControlsLayer();
-        Table layerOptionsWindow = buildOptionsWindowLayer();
+        Table layerOptionsWindow = new Table();
+        layerOptionsWindow.add(buildOptionsWindowLayer());
 
         stage.clear();
         stack = new Stack();
@@ -62,7 +63,8 @@ public class MenuScreen extends AbstractGameScreen {
         stack.setSize(Constants.VIEWPORT_GUI_WIDTH, Constants.VIEWPORT_GUI_HEIGHT);
         stack.add(layerBackground);
         stack.add(layerControls);
-        stage.addActor(layerOptionsWindow);
+        stack.add(layerOptionsWindow);
+//        stage.addActor(layerOptionsWindow);
     }
 
     private Table buildBackgroundLayer () {
@@ -114,7 +116,7 @@ public class MenuScreen extends AbstractGameScreen {
         return layer;
     }
 
-    private Table buildOptionsWindowLayer () {
+    private Window buildOptionsWindowLayer () {
         winOptions = new Window(getBundle().get(LocalizationKeys.OPTIONS), skin);
         winOptions.add(buildOptWin()).row();
         winOptions.add(buildOptWinButtons()).pad(10, 0, 10, 0);
