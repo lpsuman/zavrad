@@ -65,13 +65,21 @@ public class LevelController {
     }
 
     public void loadNextLevel() {
+        loadLevel(1);
+    }
+
+    public void loadPreviousLevel() {
+        loadLevel(-1);
+    }
+
+    private void loadLevel(int increment) {
         FileHandle newFile = null;
         try {
             String currentPath = currentLevel.getFile().pathWithoutExtension();
             String fileName = currentLevel.getFile().nameWithoutExtension();
             currentPath = currentPath.substring(0, currentPath.length() - fileName.length());
 
-            String newFileName = calculateNewLevelName(fileName);
+            String newFileName = calculateNewLevelName(fileName, increment);
             if (newFileName == null) {
                 Gdx.app.debug(TAG, "level number not found in level name: " + fileName);
                 newFileName = findNameOfNextLevel(currentLevel.getFile().file());
@@ -96,7 +104,7 @@ public class LevelController {
         gameController.getGameRenderer().getStageManager().showInformation(message);
     }
 
-    private static String calculateNewLevelName(String fileName) {
+    private static String calculateNewLevelName(String fileName, int increment) {
         int numberStart = -1, numberEnd = -1;
         boolean isNumberFound = false;
         for (int i = fileName.length() - 1; i >= 0; i--) {
@@ -119,7 +127,7 @@ public class LevelController {
             int levelNumber = Integer.parseInt(strNumber);
             String strLevelNumber = Integer.toString(levelNumber);
             String leadingZeros = strNumber.substring(0, strNumber.length() - strLevelNumber.length());
-            int incrementedLevelNumber = levelNumber + 1;
+            int incrementedLevelNumber = levelNumber + increment;
             String strIncrementedNumber = Integer.toString(incrementedLevelNumber);
             leadingZeros = leadingZeros.substring(0,
                     leadingZeros.length() - (strIncrementedNumber.length() - strLevelNumber.length()));

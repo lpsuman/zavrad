@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Disposable;
+import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.level.blocks.*;
 
 public class Level implements Disposable {
@@ -35,27 +36,35 @@ public class Level implements Disposable {
     public Level (String fileName) {
         file = Gdx.files.internal(fileName);
         levelPixmap = new Pixmap(file);
+        checkPixmapSize(levelPixmap);
         init();
     }
 
     public Level (FileHandle file) {
         this.file = file;
-        try {
-            levelPixmap = new Pixmap(file);
-        } catch (Exception exc) {
-            Gdx.app.debug(TAG, "couldn't load pixmap from file: " + file.path());
-        }
+        levelPixmap = new Pixmap(file);
+        checkPixmapSize(levelPixmap);
         init();
     }
 
     public Level (int levelWidth, int levelHeight) {
         levelPixmap = new Pixmap(levelWidth, levelHeight, Pixmap.Format.RGBA8888);
+        checkPixmapSize(levelPixmap);
         levelPixmap.setColor(EmptyBlock.COLOR_IN_LEVEL);
         levelPixmap.fill();
         width = levelPixmap.getWidth();
         height = levelPixmap.getHeight();
         drawLevelBorders();
         init();
+    }
+
+    private void checkPixmapSize(Pixmap pixmap) {
+        int width = pixmap.getWidth();
+        int height = pixmap.getHeight();
+        if (width < Constants.MIN_LEVEL_WIDTH || width > Constants.MAX_LEVEL_WIDTH
+                || height < Constants.MIN_LEVEL_HEIGHT || height > Constants.MAX_LEVEL_HEIGHT) {
+            throw new IllegalArgumentException("Level pixmap is too big!");
+        }
     }
 
     private void drawLevelBorders() {

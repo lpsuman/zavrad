@@ -62,12 +62,16 @@ public class StageManager implements Disposable {
     private TextButton newAutomatonButton;
     private TextButton saveAutomatonButton;
     private TextButton loadAutomatonButton;
+    private TextButton nextAutomatonButton;
+    private TextButton prevAutomatonButton;
 
     private SelectBox<BlockLabel> blockTypeSelectBox;
     private SelectBox<Direction> blockDirectionSelectBox;
     private TextButton newLevelButton;
     private TextButton saveLevelButton;
     private TextButton loadLevelButton;
+    private TextButton nextLevelButton;
+    private TextButton prevLevelButton;
     private Label fpsLabel;
 
     private ButtonGroup automatonButtonGroup;
@@ -198,7 +202,7 @@ public class StageManager implements Disposable {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 gameController.setIgnoreNextClick(true);
-                if (gameController.isSimulationRunning()) return;
+                if (gameController.isSimulationStarted()) return;
                 AutomatonState selectedState = gameController.getSelectedState();
                 if (selectedState != null) {
                     selectedState.setAction(actionSelectBox.getSelected());
@@ -221,7 +225,7 @@ public class StageManager implements Disposable {
         newAutomatonButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
-                if (gameController.isSimulationRunning()) return;
+                if (gameController.isSimulationStarted()) return;
                 if (gameController.getAutomataController().getCurrentAutomaton().isChangesPending()) {
                     showConfirmationDialog(StageManager.this::saveAutomatonClicked,
                             StageManager.this::newAutomatonClicked, getBundle().get(LocalizationKeys.AUTOMATON_CONFIRM_MESSAGE));
@@ -236,7 +240,7 @@ public class StageManager implements Disposable {
         saveAutomatonButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
-                if (gameController.isSimulationRunning()) return;
+                if (gameController.isSimulationStarted()) return;
                 saveAutomatonClicked();
             }
         });
@@ -246,7 +250,7 @@ public class StageManager implements Disposable {
         loadAutomatonButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
-                if (gameController.isSimulationRunning()) return;
+                if (gameController.isSimulationStarted()) return;
                 if (gameController.getAutomataController().getCurrentAutomaton().isChangesPending()) {
                     showConfirmationDialog(StageManager.this::saveAutomatonClicked,
                             StageManager.this::loadAutomatonClicked,
@@ -258,7 +262,29 @@ public class StageManager implements Disposable {
         });
         automataNorth.add(loadAutomatonButton).expandX();
 
-        //TODO add buttons for next/previous automaton
+        Table nextPrevTable = new Table();
+        nextPrevTable.setDebug(prefs.debug);
+
+        nextAutomatonButton = new TextButton("->", skin);
+        nextAutomatonButton.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                if (gameController.isSimulationStarted()) return;
+                gameController.getAutomataController().selectNextAutomaton();
+            }
+        });
+        nextPrevTable.add(nextAutomatonButton);
+        nextPrevTable.row();
+        prevAutomatonButton = new TextButton("<-", skin);
+        prevAutomatonButton.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                if (gameController.isSimulationStarted()) return;
+                gameController.getAutomataController().selectPrevAutomaton();
+            }
+        });
+        nextPrevTable.add(prevAutomatonButton);
+        automataNorth.add(nextPrevTable).expandX();
 
         return automataNorth;
     }
@@ -333,7 +359,7 @@ public class StageManager implements Disposable {
             newLevelButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
-                    if (gameController.isSimulationRunning()) return;
+                    if (gameController.isSimulationStarted()) return;
                     if (gameController.getLevelController().getCurrentLevel().isChangesPending()) {
                         showConfirmationDialog(StageManager.this::saveLevelClicked,
                                 StageManager.this::newLevelClicked, getBundle().get(LocalizationKeys.LEVEL_CONFIRM_MESSAGE));
@@ -348,7 +374,7 @@ public class StageManager implements Disposable {
             saveLevelButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
-                    if (gameController.isSimulationRunning()) return;
+                    if (gameController.isSimulationStarted()) return;
                     saveLevelClicked();
                 }
             });
@@ -358,7 +384,7 @@ public class StageManager implements Disposable {
             loadLevelButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
-                    if (gameController.isSimulationRunning()) return;
+                    if (gameController.isSimulationStarted()) return;
                     if (gameController.getLevelController().getCurrentLevel().isChangesPending()) {
                         showConfirmationDialog(StageManager.this::saveLevelClicked,
                                 StageManager.this::loadLevelClicked, getBundle().get(LocalizationKeys.LEVEL_CONFIRM_MESSAGE));
@@ -370,7 +396,29 @@ public class StageManager implements Disposable {
             levelNorth.add(loadLevelButton).expandX();
         }
 
-        //TODO add buttons for next/previous levels
+        Table nextPrevTable = new Table();
+        nextPrevTable.setDebug(prefs.debug);
+
+        nextLevelButton = new TextButton("->", skin);
+        nextLevelButton.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                if (gameController.isSimulationStarted()) return;
+                gameController.getLevelController().loadNextLevel();
+            }
+        });
+        nextPrevTable.add(nextLevelButton);
+        nextPrevTable.row();
+        prevLevelButton = new TextButton("<-", skin);
+        prevLevelButton.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                if (gameController.isSimulationStarted()) return;
+                gameController.getLevelController().loadPreviousLevel();
+            }
+        });
+        nextPrevTable.add(prevLevelButton);
+        levelNorth.add(nextPrevTable).expandX();
 
         fpsLabel = new Label("", skin);
         levelNorth.add(fpsLabel).right();

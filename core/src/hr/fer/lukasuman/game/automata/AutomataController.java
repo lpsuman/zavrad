@@ -26,6 +26,7 @@ public class AutomataController implements Disposable {
         automata = new ArrayList<>();
         stateTexture = new Texture(Constants.AUTOMATA_STATE_TEXTURE);
         currentAutomaton = new DrawableAutomaton(stateTexture, DEFAULT_AUTOMATON_LABEL);
+        automata.add(currentAutomaton);
         automatonID = 0;
     }
 
@@ -73,6 +74,24 @@ public class AutomataController implements Disposable {
             return;
         }
         this.currentAutomaton = currentAutomaton;
+    }
+
+    public void selectNextAutomaton() {
+        int currentIndex = automata.indexOf(currentAutomaton);
+        currentIndex++;
+        if (currentIndex >= automata.size()) {
+            currentIndex -= automata.size();
+        }
+        currentAutomaton = automata.get(currentIndex);
+    }
+
+    public void selectPrevAutomaton() {
+        int currentIndex = automata.indexOf(currentAutomaton);
+        currentIndex--;
+        if (currentIndex < 0) {
+            currentIndex += automata.size();
+        }
+        currentAutomaton = automata.get(currentIndex);
     }
 
     public void addNewAutomaton() {
