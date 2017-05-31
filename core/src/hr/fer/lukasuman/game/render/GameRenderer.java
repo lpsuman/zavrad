@@ -139,7 +139,7 @@ public class GameRenderer implements Disposable {
                         state.getY() - Constants.STATE_SIZE / 2.0f);
                 normalStateOverlay.draw(batch);
             }
-            String text = state.getLabel();
+            String text = Constants.DEFAULT_STATE_LABEL + state.getLabel();
             glyphLayout.setText(stateFont, text);
             stateFont.draw(batch, text, state.getX() - glyphLayout.width / 2.0f, state.getY() + glyphLayout.height);
             text = "[" + state.getAction().toString() + "]";
@@ -219,20 +219,6 @@ public class GameRenderer implements Disposable {
 
     private void renderGUI() {
         stageManager.renderStages();
-
-        if (GamePreferences.getInstance().debug) {
-            fullCameraViewport.apply();
-            Gdx.gl.glLineWidth(3);
-            transitionRenderer.setProjectionMatrix(fullCamera.combined);
-            transitionRenderer.begin(ShapeRenderer.ShapeType.Line);
-            transitionRenderer.setColor(0.0f, 0.0f, 0.0f, 1.0f);
-            transitionRenderer.line(0.0f, fullCameraViewport.getScreenHeight() / 2.0f,
-                    fullCameraViewport.getWorldWidth(), fullCameraViewport.getScreenHeight() / 2.0f);
-            transitionRenderer.line(0.0f, Gdx.graphics.getHeight() / 2.0f, Gdx.graphics.getWidth(),
-                    Gdx.graphics.getHeight() / 2.0f);
-            transitionRenderer.end();
-            Gdx.gl.glLineWidth(1);
-        }
     }
 
     public void resize(int width, int height) {

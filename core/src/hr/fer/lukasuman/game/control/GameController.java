@@ -175,25 +175,27 @@ public class GameController {
         }
 
         DrawableAutomaton automaton = automataController.getCurrentAutomaton();
+        AutomatonState currentState = automaton.getCurrentState();
         if (automaton == null || automaton.getCurrentState() == null) {
             toggleSimulationStarted();
             return;
         }
 
-        if (blockInFront != null) {
-            automaton.setCurrentState(automaton.getCurrentState().transition(blockInFront.getLabel()));
-        } else {
-            automaton.setCurrentState(automaton.getCurrentState().transition(WallBlock.LABEL));
+        String transitionLabel = blockInFront == null ? WallBlock.LABEL : blockInFront.getLabel();
+        AutomatonState nextState = currentState.transition(transitionLabel);
+        if (nextState == null) {
+            illegalAction();
+            return;
         }
-        AutomatonAction action = automaton.getCurrentState().getAction();
+        AutomatonAction action = nextState.getAction();
 
         switch (action) {
             case MOVE_FORWARD:
                 if (!isBorderInFront && blockInFront.isTraversable()) {
                     level.setCurrentPosition(newPosition);
                 } else {
-                    pauseSimulation();
-                    stageManager.showInformation(getBundle().get(LocalizationKeys.ILLEGAL_MOVE));
+                    illegalAction();
+                    return;
                 }
                 break;
             case ROTATE_LEFT:
@@ -205,6 +207,12 @@ public class GameController {
             default:
                 Gdx.app.error(TAG, "unsupported action");
         }
+        automaton.setCurrentState(nextState);
+    }
+
+    private void illegalAction() {
+        pauseSimulation();
+        stageManager.showInformation(getBundle().get(LocalizationKeys.ILLEGAL_MOVE));
     }
 
     private void updateStateObjects() {
@@ -233,6 +241,7 @@ public class GameController {
         this.selectedState = selectedState;
         if (this.selectedState != null) {
             stageManager.getActionSelectBox().setSelected(this.selectedState.getAction());
+            stageManager.getStateLabelTextField().setText(selectedState.getLabel());
         }
     }
 

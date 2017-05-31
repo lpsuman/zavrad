@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class Automaton implements Serializable {
 
-    private List<AutomatonState> states;
+    protected List<AutomatonState> states;
     private AutomatonState startState;
     private String name;
 

@@ -53,6 +53,7 @@ public class Constants {
     public static final String DEFAULT_FONT_NAME = "default-font";
 //    private static final String SKIN_NAME = "shade-ui/uiskin";
 //    public static final String DEFAULT_FONT_NAME = "font-button";
+    public static final float FONT_RESOLUTION_FACTOR = 2.0f;
 
     private static final String SKIN_FOLDER = "skins";
     public static final String TEXTURE_ATLAS_LIBGDX_UI = SKIN_FOLDER + "/" + SKIN_NAME + ".atlas";
@@ -81,4 +82,6 @@ public class Constants {
     private static final String LOCALIZATION_FOLDER = "i18n";
     private static final String BASE_BUNDLE_NAME = "translations";
     public static final String BUNDLE = LOCALIZATION_FOLDER + "/" + BASE_BUNDLE_NAME;
+
+    public static final float GUI_PADDING = 3.0f;
 }

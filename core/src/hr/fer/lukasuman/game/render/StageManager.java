@@ -2,7 +2,6 @@ package hr.fer.lukasuman.game.render;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
@@ -23,14 +22,14 @@ import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.GamePreferences;
 import hr.fer.lukasuman.game.LocalizationKeys;
+import hr.fer.lukasuman.game.automata.Automaton;
 import hr.fer.lukasuman.game.automata.AutomatonAction;
 import hr.fer.lukasuman.game.automata.AutomatonState;
 import hr.fer.lukasuman.game.control.GameController;
 import hr.fer.lukasuman.game.level.Direction;
+import hr.fer.lukasuman.game.level.Level;
 import hr.fer.lukasuman.game.level.blocks.*;
 import hr.fer.lukasuman.game.screens.GameScreen;
-
-import java.util.Set;
 
 public class StageManager implements Disposable {
     private static final String TAG = StageManager.class.getName();
@@ -55,8 +54,8 @@ public class StageManager implements Disposable {
     private Viewport lowerRightViewport;
     private Viewport fullViewport;
 
-    private TextField stateLabelTextField;
-    private TextButton stateLabelButton;
+    private Label automataNameLabel;
+    private Label scoreLabel;
     private SelectBox<AutomatonAction> actionSelectBox;
     private SelectBox<BlockLabel> transitionSelectBox;
     private TextButton newAutomatonButton;
@@ -65,6 +64,8 @@ public class StageManager implements Disposable {
     private TextButton nextAutomatonButton;
     private TextButton prevAutomatonButton;
 
+    private Label levelNameLabel;
+    private Label levelDimensionsLabel;
     private SelectBox<BlockLabel> blockTypeSelectBox;
     private SelectBox<Direction> blockDirectionSelectBox;
     private TextButton newLevelButton;
@@ -81,8 +82,9 @@ public class StageManager implements Disposable {
     private TextButton createTransitionButton;
     private TextButton deleteTransitionButton;
     private TextButton setStartStateButton;
-//    private TextButton setGoalStateButton;
-    private Label scoreLabel;
+    private Label stateNameLabel;
+    private TextField stateLabelTextField;
+    private TextButton sortStateLabelsButton;
 
     private ButtonGroup levelButtonGroup;
     private TextButton selectBlockButton;
@@ -152,6 +154,13 @@ public class StageManager implements Disposable {
             }
         });
 
+        lowerLeftStage.getRoot().addCaptureListener(new InputListener() {
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+                if (!(event.getTarget() instanceof TextField)) lowerLeftStage.setKeyboardFocus(null);
+                return false;
+            }
+        });
+
         float upperRatio = Constants.UPPER_BORDER_RATIO * 2.0f;
         Value upperWidthValue = Value.percentWidth(1.0f, upperLeftTable);
         Value upperHeightValue = Value.percentHeight(upperRatio / (1.0f + upperRatio), upperLeftTable);
@@ -182,19 +191,15 @@ public class StageManager implements Disposable {
         Table automataNorth = new Table();
         automataNorth.setDebug(prefs.debug);
 
-        stateLabelTextField = new TextField("0", skin);
-        stateLabelTextField.setMaxLength(2);
-        stateLabelTextField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
-        automataNorth.add(stateLabelTextField).width(50);
+        Table nameAndScoreTable = new Table();
+        nameAndScoreTable.setDebug(prefs.debug);
+        automataNorth.add(nameAndScoreTable).expandX();
 
-        stateLabelButton = new TextButton(getBundle().get(LocalizationKeys.SET_LABEL), skin);
-        stateLabelButton.addListener(new ChangeListener() {
-            @Override
-            public void changed (ChangeEvent event, Actor actor) {
-                setStateLabelClicked();
-            }
-        });
-        automataNorth.add(stateLabelButton).expandX();
+        automataNameLabel = new Label("", skin);
+        nameAndScoreTable.add(automataNameLabel);
+        nameAndScoreTable.row();
+        scoreLabel = new Label("", skin);
+        nameAndScoreTable.add(scoreLabel);
 
         actionSelectBox = new SelectBox<>(skin);
         actionSelectBox.setItems(AutomatonAction.MOVE_FORWARD, AutomatonAction.ROTATE_LEFT, AutomatonAction.ROTATE_RIGHT);
@@ -262,29 +267,31 @@ public class StageManager implements Disposable {
         });
         automataNorth.add(loadAutomatonButton).expandX();
 
-        Table nextPrevTable = new Table();
-        nextPrevTable.setDebug(prefs.debug);
+        if (gameRenderer.isCustomPlay()) {
+            Table nextPrevTable = new Table();
+            nextPrevTable.setDebug(prefs.debug);
 
-        nextAutomatonButton = new TextButton("->", skin);
-        nextAutomatonButton.addListener(new ChangeListener() {
-            @Override
-            public void changed (ChangeEvent event, Actor actor) {
-                if (gameController.isSimulationStarted()) return;
-                gameController.getAutomataController().selectNextAutomaton();
-            }
-        });
-        nextPrevTable.add(nextAutomatonButton);
-        nextPrevTable.row();
-        prevAutomatonButton = new TextButton("<-", skin);
-        prevAutomatonButton.addListener(new ChangeListener() {
-            @Override
-            public void changed (ChangeEvent event, Actor actor) {
-                if (gameController.isSimulationStarted()) return;
-                gameController.getAutomataController().selectPrevAutomaton();
-            }
-        });
-        nextPrevTable.add(prevAutomatonButton);
-        automataNorth.add(nextPrevTable).expandX();
+            nextAutomatonButton = new TextButton("->", skin);
+            nextAutomatonButton.addListener(new ChangeListener() {
+                @Override
+                public void changed(ChangeEvent event, Actor actor) {
+                    if (gameController.isSimulationStarted()) return;
+                    gameController.getAutomataController().selectNextAutomaton();
+                }
+            });
+            nextPrevTable.add(nextAutomatonButton);
+            nextPrevTable.row();
+            prevAutomatonButton = new TextButton("<-", skin);
+            prevAutomatonButton.addListener(new ChangeListener() {
+                @Override
+                public void changed(ChangeEvent event, Actor actor) {
+                    if (gameController.isSimulationStarted()) return;
+                    gameController.getAutomataController().selectPrevAutomaton();
+                }
+            });
+            nextPrevTable.add(prevAutomatonButton);
+            automataNorth.add(nextPrevTable).expandX();
+        }
 
         return automataNorth;
     }
@@ -294,18 +301,22 @@ public class StageManager implements Disposable {
         if (gameController.isSimulationRunning() || selectedState == null) return;
         String newLabel = null;
         try {
-            newLabel = Constants.DEFAULT_STATE_LABEL + Integer.parseInt(stateLabelTextField.getText());
+            newLabel = "" + Integer.parseInt(stateLabelTextField.getText());
         } catch (NumberFormatException exc) {
             Gdx.app.debug(TAG, "invalid number");
             return;
         }
         for (AutomatonState existingState : gameController.getAutomataController().getCurrentAutomaton().getStates()) {
-            if (newLabel.equals(existingState.getLabel())) {
+            if (newLabel.equals(existingState.getLabel()) && !existingState.equals(selectedState)) {
                 showInformation(getBundle().format(LocalizationKeys.DUPLICATE_LABEL_MESSAGE, newLabel));
                 return;
             }
         }
         selectedState.setLabel(newLabel);
+    }
+
+    private void sortStateLabelsClicked() {
+        gameController.getAutomataController().getCurrentAutomaton().sortStateLabels();
     }
 
     private void newAutomatonClicked() {
@@ -332,6 +343,16 @@ public class StageManager implements Disposable {
     private Table rebuildLevelNorth() {
         Table levelNorth = new Table();
         levelNorth.setDebug(prefs.debug);
+
+        Table levelInfoTable = new Table();
+        levelInfoTable.setDebug(prefs.debug);
+        levelNorth.add(levelInfoTable).padLeft(Constants.GUI_PADDING).expandX();
+
+        levelNameLabel = new Label("", skin);
+        levelInfoTable.add(levelNameLabel);
+        levelInfoTable.row();
+        levelDimensionsLabel = new Label("", skin);
+        levelInfoTable.add(levelDimensionsLabel);
 
         blockTypeSelectBox = new SelectBox<>(skin);
         BlockLabel[] array = {BlockLabel.EMPTY, BlockLabel.WALL, BlockLabel.START, BlockLabel.GOAL};
@@ -396,32 +417,34 @@ public class StageManager implements Disposable {
             levelNorth.add(loadLevelButton).expandX();
         }
 
-        Table nextPrevTable = new Table();
-        nextPrevTable.setDebug(prefs.debug);
+        if (gameRenderer.isCustomPlay()) {
+            Table nextPrevTable = new Table();
+            nextPrevTable.setDebug(prefs.debug);
 
-        nextLevelButton = new TextButton("->", skin);
-        nextLevelButton.addListener(new ChangeListener() {
-            @Override
-            public void changed (ChangeEvent event, Actor actor) {
-                if (gameController.isSimulationStarted()) return;
-                gameController.getLevelController().loadNextLevel();
-            }
-        });
-        nextPrevTable.add(nextLevelButton);
-        nextPrevTable.row();
-        prevLevelButton = new TextButton("<-", skin);
-        prevLevelButton.addListener(new ChangeListener() {
-            @Override
-            public void changed (ChangeEvent event, Actor actor) {
-                if (gameController.isSimulationStarted()) return;
-                gameController.getLevelController().loadPreviousLevel();
-            }
-        });
-        nextPrevTable.add(prevLevelButton);
-        levelNorth.add(nextPrevTable).expandX();
+            nextLevelButton = new TextButton("->", skin);
+            nextLevelButton.addListener(new ChangeListener() {
+                @Override
+                public void changed(ChangeEvent event, Actor actor) {
+                    if (gameController.isSimulationStarted()) return;
+                    gameController.getLevelController().loadNextLevel();
+                }
+            });
+            nextPrevTable.add(nextLevelButton);
+            nextPrevTable.row();
+            prevLevelButton = new TextButton("<-", skin);
+            prevLevelButton.addListener(new ChangeListener() {
+                @Override
+                public void changed(ChangeEvent event, Actor actor) {
+                    if (gameController.isSimulationStarted()) return;
+                    gameController.getLevelController().loadPreviousLevel();
+                }
+            });
+            nextPrevTable.add(prevLevelButton);
+            levelNorth.add(nextPrevTable).expandX();
+        }
 
         fpsLabel = new Label("", skin);
-        levelNorth.add(fpsLabel).right();
+        levelNorth.add(fpsLabel).padRight(Constants.GUI_PADDING).right();
 
         return levelNorth;
     }
@@ -488,12 +511,33 @@ public class StageManager implements Disposable {
         automatonButtonGroup.add(setStartStateButton);
         automataSouth.add(setStartStateButton).expandX();
 
-//        setGoalStateButton = new TextButton("set\ngoal", skin, "toggle");
-//        automatonButtonGroup.add(setGoalStateButton);
-//        automataSouth.add(setGoalStateButton).expandX();
+        Table stateLabelTable = new Table();
+        stateLabelTable.setDebug(prefs.debug);
+        Value tableHeight = Value.percentHeight(0.5f, deleteTransitionButton);
+        automataSouth.add(stateLabelTable).expandX();
 
-        scoreLabel = new Label("", skin, Constants.DEFAULT_FONT_NAME, Color.WHITE);
-        automataSouth.add(scoreLabel).expandX();
+        stateNameLabel = new Label(getBundle().get(LocalizationKeys.NAME), skin);
+        stateLabelTable.add(stateNameLabel).height(tableHeight);
+        stateLabelTable.row();
+
+        stateLabelTextField = new TextField("0", skin);
+        stateLabelTextField.setMaxLength(2);
+        stateLabelTextField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
+        stateLabelTextField.setTextFieldListener((textField, key) -> {
+            if ((key == '\r' || key == '\n')){
+                setStateLabelClicked();
+            }
+        });
+        stateLabelTable.add(stateLabelTextField).height(tableHeight).width(40.0f);
+
+        sortStateLabelsButton = new TextButton(getBundle().get(LocalizationKeys.SORT_LABEL), skin);
+        sortStateLabelsButton.addListener(new ChangeListener() {
+            @Override
+            public void changed (ChangeEvent event, Actor actor) {
+                sortStateLabelsClicked();
+            }
+        });
+        automataSouth.add(sortStateLabelsButton).expandX();
 
         return automataSouth;
     }
@@ -513,7 +557,7 @@ public class StageManager implements Disposable {
                 gameController.toggleSimulationStarted();
             }
         });
-        simulationTable.add(startSimulationButton).pad(3.0f).expandX();
+        simulationTable.add(startSimulationButton).padRight(Constants.GUI_PADDING).expandX();
 
         pauseSimulationButton = new TextButton(getBundle().get(LocalizationKeys.PAUSE_SIM_BTN_TEXT), skin);
         pauseSimulationButton.addListener(new ChangeListener() {
@@ -522,7 +566,7 @@ public class StageManager implements Disposable {
                 gameController.toggleSimulationPaused();
             }
         });
-        simulationTable.add(pauseSimulationButton).pad(3.0f).expandX();
+        simulationTable.add(pauseSimulationButton).padRight(Constants.GUI_PADDING).expandX();
 
         simulationSpeedSlider = new Slider(1.0f, 10.0f, 1.0f, false, skin);
         simulationSpeedSlider.addListener(new ChangeListener() {
@@ -541,7 +585,7 @@ public class StageManager implements Disposable {
 
         selectBlockButton = new TextButton(getBundle().get(LocalizationKeys.SELECT_BLOCK), skin, "toggle");
         levelButtonGroup.add(selectBlockButton);
-        editTable.add(selectBlockButton).expandX();
+        editTable.add(selectBlockButton).padRight(Constants.GUI_PADDING).expandX();
 
         if (gameRenderer.isCustomPlay()) {
             paintBlockButton = new TextButton(getBundle().get(LocalizationKeys.PAINT_BLOCK), skin, "toggle");
@@ -579,6 +623,7 @@ public class StageManager implements Disposable {
                 Gdx.input.setInputProcessor(gameScreen.getInputProcessor());
             }
         });
+        fileChooser.setDirectory(System.getProperty("user.dir"));
     }
 
     public void showFileChooser() {
@@ -596,7 +641,7 @@ public class StageManager implements Disposable {
 
             @Override
             public float getPrefHeight() {
-                return Gdx.graphics.getWidth() * Constants.DIALOG_HEIGHT_FACTOR;
+                return Gdx.graphics.getHeight() * Constants.DIALOG_HEIGHT_FACTOR;
             }
         };
         confirmationDialog.setModal(true);
@@ -722,7 +767,8 @@ public class StageManager implements Disposable {
 
     public void renderStages() {
         upperLeftViewport.apply();
-        updateScore();
+        updateAutomatonInfo();
+        updateLevelInfo();
         upperLeftStage.act();
         upperLeftStage.draw();
 
@@ -772,8 +818,16 @@ public class StageManager implements Disposable {
         fullStage.dispose();
     }
 
-    private void updateScore() {
-        scoreLabel.setText(getBundle().get(LocalizationKeys.STATES) + ": " + gameController.getAutomataController().getCurrentAutomaton().getStates().size());
+    private void updateAutomatonInfo() {
+        Automaton currentAutomaton = gameController.getAutomataController().getCurrentAutomaton();
+        automataNameLabel.setText(currentAutomaton.getName());
+        scoreLabel.setText(getBundle().get(LocalizationKeys.STATES) + ": " + currentAutomaton.getStates().size());
+    }
+
+    private void updateLevelInfo() {
+        Level currentLevel = gameController.getLevelController().getCurrentLevel();
+        levelNameLabel.setText(currentLevel.getLevelName());
+        levelDimensionsLabel.setText(currentLevel.getWidth() + "x" + currentLevel.getHeight());
     }
 
     private void updateFpsCounter() {
@@ -878,5 +932,9 @@ public class StageManager implements Disposable {
 
     public FileChooser getFileChooser() {
         return fileChooser;
+    }
+
+    public TextField getStateLabelTextField() {
+        return stateLabelTextField;
     }
 }

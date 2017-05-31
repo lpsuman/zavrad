@@ -143,17 +143,20 @@ public class Assets implements Disposable, AssetErrorListener {
             parameter.characters = "abcćčdđefghijklmnopqrsštuvwxyzž" +
                     "ABCĆČDĐEFGHIJKLMNOPQRSŠTUVWXYZŽ" +
                     "1234567890*[]().,\n:\"\'!?/#$%&|-_<>";
-            parameter.size = 12;
+            parameter.size = (int)(12 * Constants.FONT_RESOLUTION_FACTOR);
             defaultSmall = generator.generateFont(parameter);
-            parameter.size = 16;
+            parameter.size = (int)(16 * Constants.FONT_RESOLUTION_FACTOR);
             defaultNormal = generator.generateFont(parameter);
-            parameter.size = 20;
+            parameter.size = (int)(20 * Constants.FONT_RESOLUTION_FACTOR);
             defaultBig = generator.generateFont(parameter);
             generator.dispose();
 
             defaultSmall.getRegion().getTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+            defaultSmall.getData().setScale(1 / Constants.FONT_RESOLUTION_FACTOR);
             defaultNormal.getRegion().getTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+            defaultNormal.getData().setScale(1 / Constants.FONT_RESOLUTION_FACTOR);
             defaultBig.getRegion().getTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+            defaultBig.getData().setScale(1 / Constants.FONT_RESOLUTION_FACTOR);
         }
     }
 

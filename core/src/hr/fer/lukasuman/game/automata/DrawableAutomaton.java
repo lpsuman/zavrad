@@ -1,5 +1,6 @@
 package hr.fer.lukasuman.game.automata;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -12,12 +13,13 @@ import hr.fer.lukasuman.game.level.blocks.BlockFactory;
 import java.util.*;
 
 public class DrawableAutomaton extends Automaton {
+    private static final String TAG = DrawableAutomaton.class.getName();
 
     private Texture stateTexture;
     private Map<AutomatonState, Sprite> stateSprites;
     private AutomatonState currentState;
-    private int stateID = 0;
     private Set<AutomatonTransition> transitionSet;
+    private int uniqueStateID = 0;
 
     private boolean changesPending;
     private boolean isValid;
@@ -140,10 +142,35 @@ public class DrawableAutomaton extends Automaton {
     }
 
     public AutomatonState createState(float posX, float posY, AutomatonAction action) {
-        AutomatonState newState = new AutomatonState(Constants.DEFAULT_STATE_LABEL + (stateID++), posX, posY, this);
+        AutomatonState newState = new AutomatonState(uniqueStateID++, "" + findNextStateID(), posX, posY, this);
         newState.setAction(action);
         addState(newState);
         return newState;
+    }
+
+    private int findNextStateID() {
+        int nextID = 0;
+        for (AutomatonState state : getStates()) {
+            try {
+                int currentID = Integer.parseInt(state.getLabel());
+                if (currentID >= nextID) {
+                    nextID = currentID + 1;
+                }
+            } catch (NumberFormatException exc) {
+                Gdx.app.debug(TAG, "invalid state label - not a number");
+            }
+        }
+        return nextID;
+    }
+
+    public void sortStateLabels() {
+        List<AutomatonState> sortedStates = new ArrayList<>(getStates());
+        Collections.sort(sortedStates, Comparator.comparingInt(s -> Integer.parseInt(s.getLabel())));
+        int currentID = 0;
+        for (AutomatonState state : sortedStates) {
+            state.setLabel("" + currentID++);
+        }
+        changeMade();
     }
 
     @Override

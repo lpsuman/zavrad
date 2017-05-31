@@ -8,6 +8,7 @@ import java.util.*;
 
 public class AutomatonState implements Serializable {
 
+    private int uniqueID;
     private String label;
     private float x;
     private float y;
@@ -19,11 +20,12 @@ public class AutomatonState implements Serializable {
     private Map<String, AutomatonState> transitions;
     private Set<AutomatonState> incomingStates;
 
-    public AutomatonState(String label, float x, float y, Automaton parent) {
-        this(label, x, y, Constants.DEFAULT_ACTION, parent);
+    public AutomatonState(int uniqueID, String label, float x, float y, Automaton parent) {
+        this(uniqueID, label, x, y, Constants.DEFAULT_ACTION, parent);
     }
 
-    public AutomatonState(String label, float x, float y, AutomatonAction action, Automaton parent) {
+    public AutomatonState(int uniqueID, String label, float x, float y, AutomatonAction action, Automaton parent) {
+        this.uniqueID = uniqueID;
         this.label = label;
         this.x = x;
         this.y = y;
@@ -34,6 +36,7 @@ public class AutomatonState implements Serializable {
     }
 
     public AutomatonState(AutomatonState other) {
+        this.uniqueID = other.uniqueID;
         this.label = other.label;
         this.x = other.x;
         this.y = other.y;
@@ -52,9 +55,9 @@ public class AutomatonState implements Serializable {
         AutomatonState nextState = transitions.get(input);
         if (nextState == null) {
             nextState = transitions.get(LocalizationKeys.REST);
-            if (nextState == null) {
-                nextState = this;
-            }
+//            if (nextState == null) {
+//                nextState = this;
+//            }
         }
         return nextState;
     }
@@ -157,14 +160,12 @@ public class AutomatonState implements Serializable {
 
         AutomatonState that = (AutomatonState) o;
 
-        if (label != null ? !label.equals(that.label) : that.label != null) return false;
-
-        return true;
+        return uniqueID == that.uniqueID;
     }
 
     @Override
     public int hashCode() {
-        return label != null ? label.hashCode() : 0;
+        return uniqueID;
     }
 
     @Override

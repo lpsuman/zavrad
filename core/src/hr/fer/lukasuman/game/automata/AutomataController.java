@@ -3,14 +3,19 @@ package hr.fer.lukasuman.game.automata;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.I18NBundle;
+import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
+import hr.fer.lukasuman.game.LocalizationKeys;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class AutomataController implements Disposable {
-
+    private static I18NBundle getBundle() {
+        return Assets.getInstance().getAssetManager().get(Constants.BUNDLE);
+    }
     private static final String DEFAULT_AUTOMATON_LABEL = "automaton";
 
     private List<DrawableAutomaton> automata;
@@ -25,7 +30,7 @@ public class AutomataController implements Disposable {
     public void init() {
         automata = new ArrayList<>();
         stateTexture = new Texture(Constants.AUTOMATA_STATE_TEXTURE);
-        currentAutomaton = new DrawableAutomaton(stateTexture, DEFAULT_AUTOMATON_LABEL);
+        currentAutomaton = new DrawableAutomaton(stateTexture, getBundle().get((LocalizationKeys.AUTOMATON)));
         automata.add(currentAutomaton);
         automatonID = 0;
     }
@@ -33,6 +38,7 @@ public class AutomataController implements Disposable {
     public boolean saveAutomaton(FileHandle file) {
         try (FileOutputStream fileOut = new FileOutputStream(file.path());
              ObjectOutputStream objOut = new ObjectOutputStream(fileOut)) {
+            currentAutomaton.setName(file.nameWithoutExtension());
             Automaton automaton = currentAutomaton.getSerializable();
             objOut.writeObject(automaton);
             currentAutomaton.setChangesPending(false);
@@ -95,7 +101,7 @@ public class AutomataController implements Disposable {
     }
 
     public void addNewAutomaton() {
-        this.addAutomaton(new DrawableAutomaton(DEFAULT_AUTOMATON_LABEL + ++automatonID));
+        this.addAutomaton(new DrawableAutomaton(getBundle().get(LocalizationKeys.AUTOMATON)));
     }
 
     public void addAutomaton(DrawableAutomaton automaton) {
