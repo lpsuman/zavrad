@@ -7,11 +7,17 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.I18NBundle;
+import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
+import hr.fer.lukasuman.game.LocalizationKeys;
 import hr.fer.lukasuman.game.level.blocks.*;
 
 public class Level implements Disposable {
     public static final String TAG = Level.class.getName();
+    private static I18NBundle getBundle() {
+        return Assets.getInstance().getAssetManager().get(Constants.BUNDLE);
+    }
 
     private int width;
     private int height;
@@ -79,7 +85,7 @@ public class Level implements Disposable {
         if (file != null) {
             levelName = file.nameWithoutExtension();
         } else {
-            levelName = "new level";
+            levelName = getBundle().get(LocalizationKeys.NEW_LEVEL_NAME);
         }
         width = levelPixmap.getWidth();
         height = levelPixmap.getHeight();
@@ -183,7 +189,8 @@ public class Level implements Disposable {
     }
 
     public void setBlockAt(AbstractBlock newBlock, GridPoint2 pos) {
-        if (newBlock == null || blocks[pos.x][pos.y].equals(newBlock)) {
+        if (newBlock == null || blocks[pos.x][pos.y].equals(newBlock)
+                || pos.x <= 0 || pos.x >= width - 1 || pos.y <= 0 || pos.y >= height - 1) {
             return;
         }
 

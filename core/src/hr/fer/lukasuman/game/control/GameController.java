@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.I18NBundle;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
 import hr.fer.lukasuman.game.LocalizationKeys;
@@ -52,7 +53,7 @@ public class GameController {
     }
 
     private void init() {
-        automataController = new AutomataController();
+        automataController = new AutomataController(this);
         levelController = new LevelController(this);
         isSimulationStarted = false;
         isSimulationRunning = false;
@@ -222,11 +223,6 @@ public class GameController {
             Sprite sprite = entry.getValue();
             sprite.setPosition(state.getX() - sprite.getWidth() / 2.0f, state.getY() - sprite.getHeight() / 2.0f);
         }
-    }
-
-    public boolean checkInside(Vector2 pos) {
-        return ((Math.abs(pos.x) < Constants.VIEWPORT_WIDTH / 2)
-                && (Math.abs(pos.y) < Constants.VIEWPORT_WIDTH / 2));
     }
 
     public void removeSelectedState() {

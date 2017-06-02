@@ -54,9 +54,12 @@ public class LocalizationKeys {
     public static final String OK = "ok";
 
     public static final String AUTOMATON_CONFIRM_MESSAGE = "automatonConfirmMessage";
+    public static final String AUTOMATON_VERSION_ERROR_MESSAGE = "automatonVersionErrMsg";
     public static final String LEVEL_CONFIRM_MESSAGE = "levelConfirmMessage";
     public static final String LEVEL_PASSED_FORMAT_MESSAGE = "levelPassedMessage";
     public static final String NEW_LEVEL_CONFIRM_MESSAGE = "newLevelMessage";
+    public static final String INVALID_LEVEL_DIMENSIONS_MESSAGE = "invalidDimensions";
+    public static final String NO_MORE_LEVELS_MESSAGE = "noMoreLevels";
     public static final String LEVEL_WIDTH = "levelWidth";
     public static final String LEVEL_HEIGHT = "levelHeight";
     public static final String BLOCKS = "blocks";
@@ -65,4 +68,6 @@ public class LocalizationKeys {
 
     public static final String AUTOMATON = "automaton";
     public static final String NAME = "name";
+    public static final String NEW_LEVEL_NAME = "newLevelName";
+    public static final String DIMENSIONS = "dimensions";
 }

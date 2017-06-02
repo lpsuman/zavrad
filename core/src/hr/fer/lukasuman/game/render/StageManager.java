@@ -346,7 +346,7 @@ public class StageManager implements Disposable {
 
         Table levelInfoTable = new Table();
         levelInfoTable.setDebug(prefs.debug);
-        levelNorth.add(levelInfoTable).padLeft(Constants.GUI_PADDING).expandX();
+        levelNorth.add(levelInfoTable).padLeft(Constants.GUI_PADDING).width(Value.percentWidth(0.25f, levelNorth));
 
         levelNameLabel = new Label("", skin);
         levelInfoTable.add(levelNameLabel);
@@ -462,6 +462,7 @@ public class StageManager implements Disposable {
             int height = Integer.parseInt(levelHeightTextField.getText().trim());
             gameController.getLevelController().createNewLevel(width, height);
         } catch (NumberFormatException exc) {
+            gameController.getLevelController().invalidDimensionsErrMsg();
             Gdx.app.debug(TAG, "invalid dimensions "
                     + levelWidthTextField.getText() + " " + levelHeightTextField.getText());
             return;
@@ -524,7 +525,7 @@ public class StageManager implements Disposable {
         stateLabelTextField.setMaxLength(2);
         stateLabelTextField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
         stateLabelTextField.setTextFieldListener((textField, key) -> {
-            if ((key == '\r' || key == '\n')){
+            if (!gameController.isSimulationStarted() && (key == '\r' || key == '\n')){
                 setStateLabelClicked();
             }
         });
@@ -534,7 +535,9 @@ public class StageManager implements Disposable {
         sortStateLabelsButton.addListener(new ChangeListener() {
             @Override
             public void changed (ChangeEvent event, Actor actor) {
-                sortStateLabelsClicked();
+                if (!gameController.isSimulationStarted()) {
+                    sortStateLabelsClicked();
+                }
             }
         });
         automataSouth.add(sortStateLabelsButton).expandX();
@@ -612,15 +615,15 @@ public class StageManager implements Disposable {
         fileChooser.setListener(new FileChooserAdapter() {
             @Override
             public void canceled() {
-                gameController.setFileProcessor(null);
                 Gdx.input.setInputProcessor(gameScreen.getInputProcessor());
+                gameController.setFileProcessor(null);
             }
 
             @Override
             public void selected (Array<FileHandle> file) {
+                Gdx.input.setInputProcessor(gameScreen.getInputProcessor());
                 gameController.getFileProcessor().processFile(file.first());
                 gameController.setFileProcessor(null);
-                Gdx.input.setInputProcessor(gameScreen.getInputProcessor());
             }
         });
         fileChooser.setDirectory(System.getProperty("user.dir"));
@@ -826,8 +829,13 @@ public class StageManager implements Disposable {
 
     private void updateLevelInfo() {
         Level currentLevel = gameController.getLevelController().getCurrentLevel();
-        levelNameLabel.setText(currentLevel.getLevelName());
-        levelDimensionsLabel.setText(currentLevel.getWidth() + "x" + currentLevel.getHeight());
+        String levelName = currentLevel.getLevelName();
+        if (levelName.length() > Constants.LEVEL_NAME_NUM_OF_CHAR_DISPLAYED) {
+            levelName = levelName.substring(0, Constants.LEVEL_NAME_NUM_OF_CHAR_DISPLAYED) + "...";
+        }
+        levelNameLabel.setText(levelName);
+        levelDimensionsLabel.setText(getBundle().get(LocalizationKeys.DIMENSIONS) + ": "
+                + currentLevel.getWidth() + "x" + currentLevel.getHeight());
     }
 
     private void updateFpsCounter() {

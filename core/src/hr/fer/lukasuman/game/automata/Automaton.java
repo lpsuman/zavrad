@@ -11,11 +11,13 @@ public class Automaton implements Serializable {
     protected List<AutomatonState> states;
     private AutomatonState startState;
     private String name;
+    private int uniqueID;
 
-    public Automaton(List<AutomatonState> states, AutomatonState startState, String name) {
+    public Automaton(List<AutomatonState> states, AutomatonState startState, String name, int uniqueID) {
         this.states = states;
         this.startState = startState;
         this.name = name;
+        this.uniqueID = uniqueID;
     }
 
     public Automaton(Automaton other) {
@@ -38,10 +40,11 @@ public class Automaton implements Serializable {
             this.startState = parentMap.get(other.startState);
         }
         name = other.name;
+        this.uniqueID = other.uniqueID;
     }
 
-    public Automaton(String name) {
-        this(new ArrayList<>(), null, name);
+    public Automaton(String name, int uniqueID) {
+        this(new ArrayList<>(), null, name, uniqueID);
     }
 
     public List<AutomatonState> getStates() {
@@ -87,6 +90,14 @@ public class Automaton implements Serializable {
         return states.size();
     }
 
+    public int getUniqueID() {
+        return uniqueID;
+    }
+
+    public void setUniqueID(int uniqueID) {
+        this.uniqueID = uniqueID;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -94,11 +105,11 @@ public class Automaton implements Serializable {
 
         Automaton automaton = (Automaton) o;
 
-        return name.equals(automaton.name);
+        return uniqueID == automaton.uniqueID;
     }
 
     @Override
     public int hashCode() {
-        return name.hashCode();
+        return uniqueID;
     }
 }

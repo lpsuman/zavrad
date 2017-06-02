@@ -3,7 +3,10 @@ package hr.fer.lukasuman.game.level;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.PixmapIO;
+import com.badlogic.gdx.utils.I18NBundle;
+import hr.fer.lukasuman.game.Assets;
 import hr.fer.lukasuman.game.Constants;
+import hr.fer.lukasuman.game.LocalizationKeys;
 import hr.fer.lukasuman.game.control.GameController;
 
 import java.io.File;
@@ -13,6 +16,9 @@ import java.util.List;
 
 public class LevelController {
     private static final String TAG = LevelController.class.getName();
+    private static I18NBundle getBundle() {
+        return Assets.getInstance().getAssetManager().get(Constants.BUNDLE);
+    }
 
     private List<Level> levels;
     private Level currentLevel;
@@ -81,6 +87,9 @@ public class LevelController {
 
             String newFileName = calculateNewLevelName(fileName, increment);
             if (newFileName == null) {
+                if (increment < 0) {
+                    return;
+                }
                 Gdx.app.debug(TAG, "level number not found in level name: " + fileName);
                 newFileName = findNameOfNextLevel(currentLevel.getFile().file());
                 if (newFileName == null) {
@@ -92,7 +101,7 @@ public class LevelController {
             }
             newFile = new FileHandle(new File(currentPath + newFileName + ".png"));
             if (!loadLevel(newFile)) {
-                showMessage("There are no more levels in the same directory: " + currentPath);
+                showMessage(getBundle().format(LocalizationKeys.NO_MORE_LEVELS_MESSAGE, currentPath));
             }
         } catch (Exception exc) {
             Gdx.app.debug(TAG, "Couldn't load next level");
@@ -128,6 +137,9 @@ public class LevelController {
             String strLevelNumber = Integer.toString(levelNumber);
             String leadingZeros = strNumber.substring(0, strNumber.length() - strLevelNumber.length());
             int incrementedLevelNumber = levelNumber + increment;
+            if (incrementedLevelNumber < 1) {
+                return null;
+            }
             String strIncrementedNumber = Integer.toString(incrementedLevelNumber);
             leadingZeros = leadingZeros.substring(0,
                     leadingZeros.length() - (strIncrementedNumber.length() - strLevelNumber.length()));
@@ -159,9 +171,7 @@ public class LevelController {
     public boolean createNewLevel(int width, int height) {
         if (width < Constants.MIN_LEVEL_WIDTH || width > Constants.MAX_LEVEL_WIDTH
                 || height < Constants.MIN_LEVEL_HEIGHT || height > Constants.MAX_LEVEL_HEIGHT) {
-            gameController.getGameRenderer().getStageManager().showInformation("Invalid level dimensions! Width must be ["
-                + Constants.MIN_LEVEL_WIDTH + "-" + Constants.MAX_LEVEL_WIDTH + "] and height must be ["
-                + Constants.MIN_LEVEL_HEIGHT + "-" + Constants.MAX_LEVEL_HEIGHT + "].");
+            invalidDimensionsErrMsg();
             return false;
         }
         try {
@@ -174,6 +184,12 @@ public class LevelController {
             exc.printStackTrace();
             return false;
         }
+    }
+
+    public void invalidDimensionsErrMsg() {
+        gameController.getGameRenderer().getStageManager().showInformation(getBundle().format(
+                LocalizationKeys.INVALID_LEVEL_DIMENSIONS_MESSAGE, Constants.MIN_LEVEL_WIDTH,
+                Constants.MAX_LEVEL_WIDTH, Constants.MIN_LEVEL_HEIGHT, Constants.MAX_LEVEL_HEIGHT));
     }
 
     private void levelChanged() {

@@ -12,7 +12,7 @@ public class Constants {
 
     public static final float MENU_BUTTON_PADDING = 4.0f;
 
-    private static final int BASE_SIZE = 700;
+    public static final int BASE_SIZE = 700;
     public static final float UPPER_BORDER_RATIO = 0.1f;
     public static final float LOWER_BORDER_RATIO = 0.1f;
     public static final int DEFAULT_WINDOW_WIDTH = BASE_SIZE * 2;
@@ -83,5 +83,6 @@ public class Constants {
     private static final String BASE_BUNDLE_NAME = "translations";
     public static final String BUNDLE = LOCALIZATION_FOLDER + "/" + BASE_BUNDLE_NAME;
 
+    public static final int LEVEL_NAME_NUM_OF_CHAR_DISPLAYED = 14;
     public static final float GUI_PADDING = 3.0f;
 }

@@ -24,12 +24,12 @@ public class DrawableAutomaton extends Automaton {
     private boolean changesPending;
     private boolean isValid;
 
-    public DrawableAutomaton(String name) {
-        this(Assets.getInstance().getAssetManager().get(Constants.AUTOMATA_STATE_TEXTURE), name);
+    public DrawableAutomaton(String name, int uniqueID) {
+        this(Assets.getInstance().getAssetManager().get(Constants.AUTOMATA_STATE_TEXTURE), name, uniqueID);
     }
 
-    public DrawableAutomaton(Texture stateTexture, String name) {
-        super(name);
+    public DrawableAutomaton(Texture stateTexture, String name, int uniqueID) {
+        super(name, uniqueID);
         this.stateTexture = stateTexture;
         stateSprites = new HashMap<>();
         transitionSet = new HashSet<>();

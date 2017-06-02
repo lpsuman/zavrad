@@ -3,6 +3,7 @@ package hr.fer.lukasuman.game.control;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Vector2;
@@ -60,11 +61,11 @@ public class InputController extends InputAdapter {
         }
         touchedDown = true;
         Vector2 posInGame = getPosInGame(screenX, screenY, gameRenderer.getLeftViewport());
-        if (gameController.checkInside(posInGame)) {
+        if (posInGame != null) {
             automataTouchDown(posInGame, button);
         } else {
             posInGame = getPosInGame(screenX, screenY, gameRenderer.getRightViewport());
-            if (gameController.checkInside(posInGame)) {
+            if (posInGame != null) {
                 levelTouchDown(posInGame, button);
             }
         }
@@ -150,11 +151,11 @@ public class InputController extends InputAdapter {
             return false;
         }
         Vector2 posInGame = getPosInGame(screenX, screenY, gameRenderer.getLeftViewport());
-        if (gameController.checkInside(posInGame)) {
+        if (posInGame != null) {
             automataTouchDragged(posInGame);
         } else {
             posInGame = getPosInGame(screenX, screenY, gameRenderer.getRightViewport());
-            if (gameController.checkInside(posInGame)) {
+            if (posInGame != null) {
                 levelTouchDragged(posInGame);
             }
         }
@@ -179,8 +180,11 @@ public class InputController extends InputAdapter {
                 selectedTransition.recalculate();
             }
         } else if (checkedButton.equals(stageManager.getCreateTransitionButton())) {
-            gameRenderer.getTempTransition().setEndPoint(posInGame);
-            gameRenderer.getTempTransition().recalculate();
+            AutomatonTransition tempTransition = gameRenderer.getTempTransition();
+            if (tempTransition != null) {
+                tempTransition.setEndPoint(posInGame);
+                tempTransition.recalculate();
+            }
         }
     }
 
@@ -221,7 +225,7 @@ public class InputController extends InputAdapter {
             return false;
         }
         Vector2 posInGame = getPosInGame(screenX, screenY, gameRenderer.getLeftViewport());
-        if (!gameController.checkInside(posInGame)) {
+        if (posInGame == null) {
             return false;
         }
         DrawableAutomaton automaton = gameController.getAutomataController().getCurrentAutomaton();
@@ -271,7 +275,14 @@ public class InputController extends InputAdapter {
         gameController.getGame().setScreen(menuScreen, transition);
     }
 
-    public Vector2 getPosInGame(int x, int y, Viewport viewPort) {
-        return viewPort.unproject(new Vector2(x, y));
+    public Vector2 getPosInGame(int x, int y, Viewport viewport) {
+        float zoom = ((OrthographicCamera) viewport.getCamera()).zoom;
+        Vector2 pos = viewport.unproject(new Vector2(x, y));
+        if ((Math.abs(pos.x) < viewport.getWorldWidth() * zoom / 2.0f)
+                && (Math.abs(pos.y) < viewport.getWorldHeight() * zoom / 2.0f)) {
+            return pos;
+        } else {
+            return null;
+        }
     }
 }
