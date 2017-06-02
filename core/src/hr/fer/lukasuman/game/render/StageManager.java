@@ -193,7 +193,7 @@ public class StageManager implements Disposable {
 
         Table nameAndScoreTable = new Table();
         nameAndScoreTable.setDebug(prefs.debug);
-        automataNorth.add(nameAndScoreTable).expandX();
+        automataNorth.add(nameAndScoreTable).padLeft(Constants.GUI_PADDING).width(Value.percentWidth(0.25f, automataNorth));
 
         automataNameLabel = new Label("", skin);
         nameAndScoreTable.add(automataNameLabel);
@@ -823,7 +823,11 @@ public class StageManager implements Disposable {
 
     private void updateAutomatonInfo() {
         Automaton currentAutomaton = gameController.getAutomataController().getCurrentAutomaton();
-        automataNameLabel.setText(currentAutomaton.getName());
+        String automatonName = currentAutomaton.getName();
+        if (automatonName.length() > Constants.LEVEL_NAME_NUM_OF_CHAR_DISPLAYED) {
+            automatonName = automatonName.substring(0, Constants.LEVEL_NAME_NUM_OF_CHAR_DISPLAYED) + "...";
+        }
+        automataNameLabel.setText(automatonName);
         scoreLabel.setText(getBundle().get(LocalizationKeys.STATES) + ": " + currentAutomaton.getStates().size());
     }
 

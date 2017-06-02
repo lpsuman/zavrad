@@ -68,8 +68,8 @@ public class Constants {
 
     private static final String LEVEL_FOLDER = "levels";
     public static final String LEVEL_PATH = LEVEL_FOLDER + "/level_01.png";
-    public static final int MIN_LEVEL_WIDTH = 2;
-    public static final int MIN_LEVEL_HEIGHT = 2;
+    public static final int MIN_LEVEL_WIDTH = 3;
+    public static final int MIN_LEVEL_HEIGHT = 3;
     public static final int MAX_LEVEL_WIDTH = 100;
     public static final int MAX_LEVEL_HEIGHT = 100;
 

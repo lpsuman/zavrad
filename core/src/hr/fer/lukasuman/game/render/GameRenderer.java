@@ -124,7 +124,7 @@ public class GameRenderer implements Disposable {
         for (Map.Entry<AutomatonState, Sprite> entry : automaton.getStateSprites().entrySet()) {
             AutomatonState state = entry.getKey();
             Sprite sprite = entry.getValue();
-            if (state.equals(automaton.getCurrentState())
+            if (gameController.isSimulationStarted() && state.equals(automaton.getCurrentState())
                     || (!gameController.isSimulationStarted() && !state.isValid())) {
                 sprite.setTexture(runningStateTexture);
             }
