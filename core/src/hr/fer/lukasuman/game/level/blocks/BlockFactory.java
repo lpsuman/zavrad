@@ -61,7 +61,7 @@ public class BlockFactory {
         nameToBlockMap.put(GoalBlock.LABEL, new ClassDirectionPair(GoalBlock.class, DEFAULT_DIRECTION));
 
         for (int i = 0; i < Direction.values().length; i++) {
-            nameToBlockMap.put(StartBlock.LABEL + " " + Direction.getByIndex(i).toString(),
+            nameToBlockMap.put(StartBlock.LABEL + " " + Direction.getByIndex(i).getName(),
                     new ClassDirectionPair(StartBlock.class, Direction.getByIndex(i)));
         }
 

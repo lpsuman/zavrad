@@ -211,8 +211,8 @@ public class InputController extends InputAdapter {
         } else if (checkedButton.equals(stageManager.getPaintBlockButton())) {
             AbstractBlock newBlock = BlockFactory.getBlockByName(blockTypeSelectBox.getSelected().getLabel());
             if (newBlock == null) {
-                newBlock = BlockFactory.getBlockByName(blockTypeSelectBox.getSelected()
-                        + " " + blockDirectionSelectBox.getSelected().toString());
+                newBlock = BlockFactory.getBlockByName(blockTypeSelectBox.getSelected().getLabel()
+                        + " " + blockDirectionSelectBox.getSelected().getName());
             }
             currentLevel.setBlockAt(newBlock, levelPos);
         }

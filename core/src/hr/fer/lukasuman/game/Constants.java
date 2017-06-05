@@ -66,7 +66,7 @@ public class Constants {
     public static final String PLAYER_TEXTURE = IMAGE_FOLDER + "/box_arrow.png";
     public static final String MENU_BACKGROUND_TEXTURE = IMAGE_FOLDER + "/gear_background.jpg";
 
-    private static final String LEVEL_FOLDER = "levels";
+    public static final String LEVEL_FOLDER = "levels";
     public static final String LEVEL_PATH = LEVEL_FOLDER + "/level_01.png";
     public static final int MIN_LEVEL_WIDTH = 3;
     public static final int MIN_LEVEL_HEIGHT = 3;

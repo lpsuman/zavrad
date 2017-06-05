@@ -52,6 +52,10 @@ public enum Direction {
         }
     }
 
+    public String getName() {
+        return name;
+    }
+
     @Override
     public String toString() {
         return ((I18NBundle)Assets.getInstance().getAssetManager().get(Constants.BUNDLE)).get(name);

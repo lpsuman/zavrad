@@ -32,10 +32,14 @@ public class LevelController {
 
     private void init() {
         levels = new ArrayList<>();
-        try {
-            currentLevel = new Level(Constants.LEVEL_PATH);
-        } catch (Exception exc) {
+        if (gameController.isCustomPlay()) {
             currentLevel = new Level(10, 10);
+        } else {
+            try {
+                currentLevel = new Level(Gdx.files.classpath(Constants.LEVEL_PATH));
+            } catch (Exception exc) {
+                currentLevel = new Level(Gdx.files.internal(Constants.LEVEL_PATH));
+            }
         }
         levels.add(currentLevel);
     }
@@ -99,9 +103,22 @@ public class LevelController {
                     return;
                 }
             }
-            newFile = new FileHandle(new File(currentPath + newFileName + ".png"));
-            if (!loadLevel(newFile)) {
-                showMessage(getBundle().format(LocalizationKeys.NO_MORE_LEVELS_MESSAGE, currentPath));
+            if (gameController.isCustomPlay()) {
+                newFile = new FileHandle(new File(currentPath + newFileName + ".png"));
+                if (!loadLevel(newFile)) {
+                    newFile = Gdx.files.internal(Constants.LEVEL_FOLDER + "/" + newFileName + ".png");
+                    if (!loadLevel(newFile)) {
+                        showMessage(getBundle().format(LocalizationKeys.NO_MORE_LEVELS_MESSAGE, currentPath));
+                    }
+                }
+            } else {
+                newFile = Gdx.files.internal(Constants.LEVEL_FOLDER + "/" + newFileName + ".png");
+                if (!loadLevel(newFile)) {
+                    newFile = new FileHandle(new File(currentPath + newFileName + ".png"));
+                    if (!loadLevel(newFile)) {
+                        showMessage(getBundle().format(LocalizationKeys.NO_MORE_LEVELS_MESSAGE, currentPath));
+                    }
+                }
             }
         } catch (Exception exc) {
             Gdx.app.debug(TAG, "Couldn't load next level");

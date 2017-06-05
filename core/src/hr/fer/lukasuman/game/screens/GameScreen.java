@@ -48,7 +48,7 @@ public class GameScreen extends AbstractGameScreen {
     @Override
     public void show () {
         if (!isGameLoaded) {
-            gameController = new GameController(game);
+            gameController = new GameController(game, isCustomPlay);
             isGameLoaded = true;
         }
         gameRenderer = new GameRenderer(gameController, this, isCustomPlay);

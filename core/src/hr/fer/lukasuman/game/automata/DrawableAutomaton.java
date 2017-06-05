@@ -19,7 +19,6 @@ public class DrawableAutomaton extends Automaton {
     private Map<AutomatonState, Sprite> stateSprites;
     private AutomatonState currentState;
     private Set<AutomatonTransition> transitionSet;
-    private int uniqueStateID = 0;
 
     private boolean changesPending;
     private boolean isValid;
@@ -49,6 +48,9 @@ public class DrawableAutomaton extends Automaton {
             for (Map.Entry<String, AutomatonState> entry : startState.getTransitions().entrySet()) {
                 addTransition(entry.getKey(), startState, entry.getValue());
             }
+        }
+        for (AutomatonTransition transition : transitionSet) {
+            transition.recalculate();
         }
         reset();
     }
@@ -142,7 +144,8 @@ public class DrawableAutomaton extends Automaton {
     }
 
     public AutomatonState createState(float posX, float posY, AutomatonAction action) {
-        AutomatonState newState = new AutomatonState(uniqueStateID++, "" + findNextStateID(), posX, posY, this);
+        int uniqueID = findNextStateID();
+        AutomatonState newState = new AutomatonState(uniqueID, "" + uniqueID, posX, posY, this);
         newState.setAction(action);
         addState(newState);
         return newState;
@@ -204,6 +207,9 @@ public class DrawableAutomaton extends Automaton {
     }
 
     public boolean checkIfAutomatonValid() {
+        if (getStates().isEmpty()) {
+            return false;
+        }
         isValid = true;
         for (AutomatonState state : getStates()) {
             if (isStateValid(state)) {
@@ -300,6 +306,9 @@ public class DrawableAutomaton extends Automaton {
     }
 
     public boolean isChangesPending() {
+        if (getNumberOfState() == 0) {
+            return false;
+        }
         return changesPending;
     }
 

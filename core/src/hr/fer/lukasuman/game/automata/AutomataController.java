@@ -59,6 +59,8 @@ public class AutomataController {
             Automaton automaton = (Automaton)objOut.readObject();
             DrawableAutomaton newAutomaton = new DrawableAutomaton(automaton);
             newAutomaton.setUniqueID(findAvailableID());
+            newAutomaton.setChangesPending(false);
+            newAutomaton.setCurrentState(null);
             addAutomaton(newAutomaton);
         } catch (FileNotFoundException exc) {
             exc.printStackTrace();
@@ -85,6 +87,8 @@ public class AutomataController {
             return;
         }
         this.currentAutomaton = currentAutomaton;
+        gameController.setSelectedState(null);
+        gameController.setSelectedTransition(null);
     }
 
     public void selectNextAutomaton() {
@@ -95,7 +99,7 @@ public class AutomataController {
             currentIndex -= automata.size();
         }
         Gdx.app.debug(TAG, "automatons: " + automata.size() + " next index: " + currentIndex);
-        currentAutomaton = automata.get(currentIndex);
+        setCurrentAutomaton(automata.get(currentIndex));
     }
 
     public void selectPrevAutomaton() {
@@ -106,7 +110,7 @@ public class AutomataController {
             currentIndex += automata.size();
         }
         Gdx.app.debug(TAG, "automatons: " + automata.size() + " previous index: " + currentIndex);
-        currentAutomaton = automata.get(currentIndex);
+        setCurrentAutomaton(automata.get(currentIndex));
     }
 
     public void addNewAutomaton() {

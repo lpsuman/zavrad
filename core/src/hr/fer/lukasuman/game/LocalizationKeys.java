@@ -64,6 +64,7 @@ public class LocalizationKeys {
     public static final String LEVEL_HEIGHT = "levelHeight";
     public static final String BLOCKS = "blocks";
     public static final String AUTOMATON_INVALID_MESSAGE = "incompleteMsg";
+    public static final String LEVEL_INVALID_MESSAGE = "levelInvalidMsg";
     public static final String ILLEGAL_MOVE = "illegalMove";
 
     public static final String AUTOMATON = "automaton";

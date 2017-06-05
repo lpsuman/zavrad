@@ -47,8 +47,9 @@ public class GameController {
 
     private FileProcessor fileProcessor;
 
-    public GameController(DirectedGame game) {
+    public GameController(DirectedGame game, boolean isCustomPlay) {
         this.game = game;
+        this.isCustomPlay = isCustomPlay;
         init();
     }
 
@@ -78,6 +79,10 @@ public class GameController {
     private void startSimulation() {
         if (!automataController.getCurrentAutomaton().checkIfAutomatonValid()) {
             gameRenderer.getStageManager().showInformation(getBundle().get(LocalizationKeys.AUTOMATON_INVALID_MESSAGE));
+            return;
+        }
+        if (levelController.getCurrentLevel().getStart() == null) {
+            gameRenderer.getStageManager().showInformation(getBundle().get(LocalizationKeys.LEVEL_INVALID_MESSAGE));
             return;
         }
         if (!automataController.getCurrentAutomaton().getStates().isEmpty() && isSimulationStarted == false) {
@@ -300,5 +305,9 @@ public class GameController {
 
     public boolean isSimulationRunning() {
         return isSimulationRunning;
+    }
+
+    public boolean isCustomPlay() {
+        return isCustomPlay;
     }
 }
